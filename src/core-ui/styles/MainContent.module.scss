@@ -1,0 +1,29 @@
+.mainContent {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #f9fafb; // Tailwind's bg-gray-50
+    padding: 1.5rem;
+    width: calc(100% - 192px);
+    @apply mt-16 ml-48;
+}
+
+.heading {
+    font-size: 1.875rem;
+    font-weight: bold;
+    color: #1f2937; // Tailwind's text-gray-800
+    margin-bottom: 1rem;
+}
+
+.paragraph {
+    color: #4b5563; // Tailwind's text-gray-700
+    line-height: 1.75;
+
+    .link {
+        color: #2563eb; // Tailwind's text-blue-600
+        text-decoration: underline;
+
+        &:hover {
+            color: #1d4ed8; // Slightly darker blue
+        }
+    }
+}
