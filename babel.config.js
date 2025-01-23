@@ -1,6 +1,6 @@
 module.exports = {
     presets: [
-        '@babel/preset-env',  // Transpile modern JavaScript
+        ["@babel/preset-env", { "modules": false }], // Do not transpile modules to CommonJS
         ["@babel/preset-react", { "runtime": "automatic" }], // Enable JSX support
         '@babel/preset-typescript'  // Transforms TypeScript to JavaScript
     ],

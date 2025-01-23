@@ -1,7 +1,12 @@
+Network hosting:
+npm run dev -- -H 192.168.68.67
+
 npm i:
     sass
     clsx
     axios
+    @reduxjs/toolkit react-redux
+    next-i18next react-i18next i18next
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
