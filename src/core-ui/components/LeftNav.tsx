@@ -5,7 +5,7 @@ import clsx from "clsx";
 // Internal
 import styles from "../styles/LeftNav.module.scss";
 
-const LeftNav: React.FC = () => {
+export const LeftNav: React.FC = () => {
     return (
         <aside className={styles.leftNav}>
             <ul className={styles.navList}>
@@ -25,5 +25,3 @@ const LeftNav: React.FC = () => {
         </aside>
     );
 };
-
-export default LeftNav;

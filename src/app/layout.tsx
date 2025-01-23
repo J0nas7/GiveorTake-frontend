@@ -1,7 +1,13 @@
+// External
 import React from "react"
 import type { Metadata } from "next"
-import "@/core-ui/styles/globals.scss"
-import { Layout } from "@/core-ui/"
+
+// Internal
+import Providers from "./providers"
+
+// CSS Modules
+import '@/core-ui/styles/Tailwind.scss'
+import '@/core-ui/styles/Global.scss'
 
 export const metadata: Metadata = {
     title: "GiveOrTake - Project Management & Time Tracking",
@@ -16,9 +22,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={`font-sans`}>
-                <Layout>
-                    {children}
-                </Layout>
+                <Providers>{children}</Providers>
             </body>
         </html>
     )

@@ -5,7 +5,7 @@ import React from "react"
 // Internal
 import styles from "../styles/Header.module.scss";
 
-const Header: React.FC = () => {
+export const Header: React.FC = () => {
     return (
         <header className={styles.header}>
             <div className={styles.container}>
@@ -33,5 +33,3 @@ const Header: React.FC = () => {
         </header>
     );
 };
-
-export default Header;

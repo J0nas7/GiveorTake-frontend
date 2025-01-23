@@ -2,13 +2,10 @@
 import React from "react";
 
 // Internal
-import Header from "./Header";
-import Footer from "./Footer";
-import LeftNav from "./LeftNav";
-import MainContent from "./MainContent"
+import { Header, LeftNav, Footer, MainContent } from "../";
 import "../styles/Layout.module.scss"
 
-export const Layout = (
+export const PrivateLayout = (
     { children }: { children: React.ReactNode }
 ) => {
     return (
