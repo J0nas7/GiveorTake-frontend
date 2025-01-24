@@ -3,7 +3,7 @@ import React from "react";
 
 // Internal
 import { Header, LeftNav, Footer, MainContent } from "../";
-import "../styles/Layout.module.scss"
+import "../styles/global/Layout.scss"
 
 export const PrivateLayout = (
     { children }: { children: React.ReactNode }

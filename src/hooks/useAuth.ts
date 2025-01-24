@@ -132,6 +132,7 @@ export const useAuth = () => {
     // Effects
     useEffect(() => {
         if (typeof window !== "undefined") {
+            localStorage.removeItem("isLoggedIn")
             if (window.localStorage.getItem("isLoggedIn")) {
                 const accessToken = localStorage.getItem("isLoggedIn")
                 dispatch(setAccessToken({ "data": accessToken }))

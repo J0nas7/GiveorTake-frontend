@@ -3,7 +3,7 @@ import clsx from "clsx"
 import React from "react"
 
 // Internal
-import styles from "../styles/Header.module.scss";
+import styles from "../styles/modules/Header.module.scss";
 
 export const Header: React.FC = () => {
     return (

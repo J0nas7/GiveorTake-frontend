@@ -8,4 +8,6 @@ export * from "./components/Footer";
 export * from "./components/LeftNav";
 export * from "./components/MainContent"
 
+export * from "./components/guest/Jumbotron"
+
 export { default as LayoutController } from './templates/layout-controller'

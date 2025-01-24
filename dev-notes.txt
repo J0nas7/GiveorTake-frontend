@@ -7,6 +7,8 @@ npm i:
     axios
     @reduxjs/toolkit react-redux
     next-i18next react-i18next i18next
+    @mui/material @emotion/react @emotion/styled
+    react-textarea-autosize
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event

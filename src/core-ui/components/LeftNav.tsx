@@ -3,7 +3,7 @@ import React from "react";
 import clsx from "clsx";
 
 // Internal
-import styles from "../styles/LeftNav.module.scss";
+import styles from "../styles/modules/LeftNav.module.scss";
 
 export const LeftNav: React.FC = () => {
     return (

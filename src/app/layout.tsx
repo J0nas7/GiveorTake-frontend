@@ -5,9 +5,11 @@ import type { Metadata } from "next"
 // Internal
 import Providers from "./providers"
 
-// CSS Modules
-import '@/core-ui/styles/Tailwind.scss'
-import '@/core-ui/styles/Global.scss'
+// Global CSS
+import "@/core-ui/styles/global/Tailwind.scss"
+import "@/core-ui/styles/global/Global.scss"
+import "@/core-ui/styles/global/Layout.scss"
+import "@/core-ui/styles/global/Guest.scss"
 
 export const metadata: Metadata = {
     title: "GiveOrTake - Project Management & Time Tracking",

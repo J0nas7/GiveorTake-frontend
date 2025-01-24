@@ -1,6 +1,6 @@
 import React from "react";
 
-import styles from "../styles/MainContent.module.scss";
+import styles from "../styles/modules/MainContent.module.scss";
 
 export const MainContent = (
     { children }: { children: React.ReactNode }

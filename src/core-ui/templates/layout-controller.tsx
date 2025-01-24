@@ -22,14 +22,14 @@ export default function LayoutController(
         setIsLoading(false)
     }, [])
 
-    if (isLoading) return <div>Loading...</div>
+    if (isLoading) return null
 
     // If authorized, show the PrivateLayout
     // If not authorized, show the GuestLayout
     return (
         <div className="giveortake-wrapper">
             {
-                isLoggedIn ?
+                isLoggedIn === true ?
                     (
                         <PrivateLayout>
                             {children}
