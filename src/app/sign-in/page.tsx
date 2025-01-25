@@ -23,8 +23,8 @@ export default function SignInPage() {
     const [loginPending, setLoginPending] = useState<boolean>(false)
 
     // Methods
-    const doLogin = (e: any = null) => {
-        if (typeof e.preventDefault === 'function') e.preventDefault()
+    const doLogin = (e?: FormEvent) => {
+        e?.preventDefault()
 
         if (loginPending) return
         setLoginPending(true)
@@ -37,21 +37,18 @@ export default function SignInPage() {
                 setLoginPending(false)
             })
     }
-
+    
     const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? doLogin() : null
-
+    
     return (
         <Block className="login-page">
             <Heading variant="h2">
-                {t('guest:h2:Login')}<br />
-                BASE
-                <Text variant="span" className="text-red-600 inline-block">2</Text>
-                SALE {t('guest:h2:account')}
+                {t('guest:h2:Login')}
             </Heading>
             <form onSubmit={doLogin} className="guest-form">
                 <Field
                     type="text"
-                    lbl="Email"
+                    lbl={t('guest:forms:Email')}
                     innerLabel={true}
                     value={userEmail}
                     onChange={(e: string) => setUserEmail(e)}
@@ -89,6 +86,11 @@ export default function SignInPage() {
             <p className="mt-2">
                 <Link className="text-[#1ab11f] font-bold" href="/forgot-password">
                     {t('guest:links:Did-you-forget-your-password')}
+                </Link>
+            </p>
+            <p className="mt-2">
+                <Link className="text-[#1ab11f] font-bold" href="/register-account">
+                    {t('guest:links:Create-a-new-account')}
                 </Link>
             </p>
         </Block>
