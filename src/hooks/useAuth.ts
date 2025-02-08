@@ -126,7 +126,7 @@ export const useAuth = () => {
     }
 
     const handleTokenTest = () => {
-        // TODO dispatch(fetchIsLoggedInStatus())
+        dispatch(fetchIsLoggedInStatus())
     }
 
     // Effects

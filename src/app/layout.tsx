@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 
 // Internal
 import Providers from "./providers"
+import { getTranslations } from "./lib/getTranslations"
 
 // Global CSS
 import "@/core-ui/styles/global/Tailwind.scss"
@@ -16,15 +17,19 @@ export const metadata: Metadata = {
     description: "Project Management & Time Tracking",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
+    params,
 }: Readonly<{
-    children: React.ReactNode
+    children: React.ReactNode,
+    params: { locale: string }
 }>) {
     return (
-        <html lang="en">
+        <html lang={params.locale || "en"}>
             <body className={`font-sans`}>
-                <Providers>{children}</Providers>
+                <Providers>
+                    {children}
+                </Providers>
             </body>
         </html>
     )

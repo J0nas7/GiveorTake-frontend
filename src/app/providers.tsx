@@ -8,20 +8,24 @@ import { LayoutController } from "@/core-ui/"
 
 // Providers
 import appStore from '@/redux/store'
+import { TranslationProvider } from '@/contexts/TranslationContext'
+
 // import { I18nProvider } from '@/contexts/i18n-context'
 
-export function Providers(
-    { children }: { children: React.ReactNode }
-) {
+export default async function Providers({
+    children
+}: {
+    children: React.ReactNode
+}) {    
     return (
         <>
             <Provider store={appStore(undefined)}>
-                <LayoutController>
-                    {children}
-                </LayoutController>
+                <TranslationProvider>
+                    <LayoutController>
+                        {children}
+                    </LayoutController>
+                </TranslationProvider>
             </Provider>
         </>
     )
 }
-
-export default Providers;

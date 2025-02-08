@@ -9,6 +9,8 @@ npm i:
     next-i18next react-i18next i18next
     @mui/material @emotion/react @emotion/styled
     react-textarea-autosize
+    i18next-http-backend
+    i18next-browser-languagedetector
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event

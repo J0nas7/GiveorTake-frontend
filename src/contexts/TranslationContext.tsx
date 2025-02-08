@@ -1,26 +1,25 @@
-import {
-    createContext, 
-    ReactNode, 
-    useContext
-} from "react"
+"use client"
 
-type TranslationContextType = {
-    translations: Record<string, string> // Replace with your actual translation type
-}
+// External
+import React, { createContext, ReactNode, useContext } from "react"
 
-const TranslationContext = createContext<TranslationContextType | undefined>(undefined)
+// Internal
+import { useTranslation, I18nextProvider, UseTranslationResponse } from "react-i18next";
+import i18n from "@/app/lib/i18n"
 
-export const TranslationProvider = ({
-    translations,
+const TranslationContext = createContext<UseTranslationResponse<string, undefined> | undefined>(undefined);
+
+export const TranslationProvider = async ({
     children,
 }: {
-    translations: Record<string, string>
     children: ReactNode
 }) => {
     return (
-        <TranslationContext.Provider value={{ translations }}>
-            {children}
-        </TranslationContext.Provider>
+        <I18nextProvider i18n={i18n}>
+            <TranslationContext.Provider value={useTranslation()}>
+                {children}
+            </TranslationContext.Provider>
+        </I18nextProvider>
     )
 }
 
@@ -29,5 +28,5 @@ export const useTranslations = () => {
     if (!context) {
         throw new Error("useTranslations must be used within a TranslationProvider")
     }
-    return context.translations
+    return context
 }
