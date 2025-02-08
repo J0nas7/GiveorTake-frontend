@@ -9,7 +9,7 @@ import i18n from "@/app/lib/i18n"
 
 const TranslationContext = createContext<UseTranslationResponse<string, undefined> | undefined>(undefined);
 
-export const TranslationProvider = async ({
+export const TranslationProvider = ({
     children,
 }: {
     children: ReactNode

@@ -4,7 +4,6 @@ import type { Metadata } from "next"
 
 // Internal
 import Providers from "./providers"
-import { getTranslations } from "./lib/getTranslations"
 
 // Global CSS
 import "@/core-ui/styles/global/Tailwind.scss"
@@ -25,7 +24,7 @@ export default async function RootLayout({
     params: { locale: string }
 }>) {
     return (
-        <html lang={params.locale || "en"}>
+        <html lang={params.locale || "en-US"}>
             <body className={`font-sans`}>
                 <Providers>
                     {children}

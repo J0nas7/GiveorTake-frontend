@@ -103,7 +103,7 @@ export const useAuth = () => {
         // Send login variables to the API for authentication
         try {
             if (!error) {
-                const data = await httpPostWithData("userLogin", loginVariables)
+                const data = await httpPostWithData("auth/login", loginVariables)
                 return processResult("login", data)
             }
         } catch (e) {
@@ -132,7 +132,8 @@ export const useAuth = () => {
     // Effects
     useEffect(() => {
         if (typeof window !== "undefined") {
-            localStorage.removeItem("isLoggedIn")
+            // localStorage.removeItem("isLoggedIn")
+            console.log("useAuth loginstatus")
             if (window.localStorage.getItem("isLoggedIn")) {
                 const accessToken = localStorage.getItem("isLoggedIn")
                 dispatch(setAccessToken({ "data": accessToken }))

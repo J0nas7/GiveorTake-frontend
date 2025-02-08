@@ -22,6 +22,7 @@ export const useAuthActions = () => {
     const fetchIsLoggedInStatus = () => async (dispatch: Dispatch) => {
         try {
             const data = await httpGetRequest("userLoggedInTest")
+            console.log("fetchIsLoggedInStatus", data)
             if (data.message === "Is logged in") {
                 // Update the Redux store with the user's logged-in status and details
                 // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))
@@ -29,7 +30,7 @@ export const useAuthActions = () => {
                 dispatch(setAuthUser({ "data": data.data }))
             } else {
                 // Optionally handle the "not logged in" scenario
-                // dispatch(setIsLoggedIn({ "data": false }))
+                dispatch(setIsLoggedIn({ "data": false }))
             }
         } catch (e) {
             console.log("fetchIsLoggedInStatus", e)

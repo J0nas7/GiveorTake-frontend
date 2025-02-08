@@ -10,8 +10,6 @@ import { LayoutController } from "@/core-ui/"
 import appStore from '@/redux/store'
 import { TranslationProvider } from '@/contexts/TranslationContext'
 
-// import { I18nProvider } from '@/contexts/i18n-context'
-
 export default async function Providers({
     children
 }: {

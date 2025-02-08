@@ -1,8 +1,8 @@
 /** @type {import('next-i18next').UserConfig} */
 module.exports = {
     i18n: {
-        defaultLocale: 'da',
-        locales: ['en', 'da'],
+        defaultLocale: 'en-US',
+        locales: ['en-US', 'da-DK'],
     },
     react: { useSuspense: false },
 }
