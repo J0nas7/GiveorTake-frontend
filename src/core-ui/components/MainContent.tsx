@@ -7,10 +7,7 @@ export const MainContent = (
 ) => {
     return (
         <main className={styles.mainContent}>
-            <h1 className={styles.heading}>Welcome to the Main Content</h1>
-            <div className={styles.paragraph}>
-                {children}
-            </div>
+            {children}
         </main>
     );
 }

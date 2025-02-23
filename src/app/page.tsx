@@ -2,7 +2,7 @@
 import React from "react"
 
 // Internal
-import { Backlog, KanbanBoard } from "@/components"
+import { Backlog } from "@/components"
 
 export default function Home() {
     return (

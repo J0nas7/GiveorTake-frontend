@@ -16,6 +16,7 @@ const KanbanBoardContainer = () => {
     const columns = {
         todo: "To Do",
         inProgress: "In Progress",
+        review: "Waiting for Review",
         done: "Done"
     }
 
@@ -28,12 +29,12 @@ const KanbanBoardContainer = () => {
                         <Heading variant="h2" className={styles.columnTitle}>{label}</Heading>
                         <Block className={styles.taskList}>
                             {tasks
-                                .filter((task: Task) => task.column === key)
+                                .filter((task: Task) => task.Task_Status === key)
                                 .map((task: Task, index: number) => (
                                     <Block key={index} className={styles.taskCard}>
-                                        <Text>{task.text}</Text>
+                                        <Text>{task.Task_Title}</Text>
                                         <button
-                                            onClick={() => removeTask(task.id)}
+                                            onClick={() => removeTask(task.Task_ID)}
                                             className={styles.removeButton}
                                         >
                                             <FontAwesomeIcon icon={faTrash} />

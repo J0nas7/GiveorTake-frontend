@@ -4,7 +4,7 @@
 import React from "react"
 import { useTranslation } from "next-i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faEllipsis, faPlus } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
@@ -23,8 +23,8 @@ const BacklogContainer = () => {
                     type="text"
                     lbl={t('backlog:list:New task')}
                     innerLabel={true}
-                    value={newTask?.text ?? ''}
-                    onChange={(e: string) => handleChangeNewTask("text", e)}
+                    value={newTask?.Task_Title ?? ''}
+                    onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => null}
                     disabled={false}
                 />
@@ -40,17 +40,19 @@ const BacklogContainer = () => {
                 {tasks.map((task, index) => (
                     <Block key={index} className={styles.taskCard}>
                         <Block className="flex items-center flex-grow">
-                            <Text className="inline-block">{task.text}</Text>
+                            <Text className="inline-block">{task.Task_Title}</Text>
                             <Block variant="span" className="mr-3 italic text-sm ml-auto">
-                                {task.column}
+                                {task.Task_Status}
                             </Block>
                         </Block>
-                        <button
-                            onClick={() => removeTask(task.id)} 
-                            className={`inline-flex items-center justify-center ${styles.removeButton}`}
-                        >
-                            <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                        <Block className="w-6 h-4 items-center">
+                            <button
+                                onClick={() => removeTask(task.Task_ID)} 
+                                className={`inline-flex items-center justify-center ${styles.removeButton}`}
+                            >
+                                <FontAwesomeIcon icon={faEllipsis} />
+                            </button>
+                        </Block>
                     </Block>
                 ))}
             </Block>
