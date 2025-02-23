@@ -30,7 +30,8 @@ export const useAuthActions = () => {
                 dispatch(setAuthUser({ "data": data.data }))
             } else {
                 // Optionally handle the "not logged in" scenario
-                dispatch(setIsLoggedIn({ "data": false }))
+                dispatch(setIsLoggedIn({ "data": true }))
+                // dispatch(setIsLoggedIn({ "data": false }))
             }
         } catch (e) {
             console.log("fetchIsLoggedInStatus", e)

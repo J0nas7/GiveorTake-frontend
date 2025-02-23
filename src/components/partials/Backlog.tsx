@@ -1,3 +1,5 @@
+"use client"
+
 // External
 import React from "react"
 import { useTranslation } from "next-i18next"
@@ -11,7 +13,7 @@ import { TasksProvider, useTasks } from "@/contexts"
 
 const BacklogContainer = () => {
     const { t } = useTranslation(['backlog'])
-    const { tasks, newTask, setNewTask, addTask, removeTask } = useTasks()
+    const { tasks, newTask, handleChangeNewTask, addTask, removeTask } = useTasks()
     
     return (
         <Block className={styles.container}>
@@ -21,8 +23,8 @@ const BacklogContainer = () => {
                     type="text"
                     lbl={t('backlog:list:New task')}
                     innerLabel={true}
-                    value={newTask}
-                    onChange={(e: string) => setNewTask(e)}
+                    value={newTask?.text ?? ''}
+                    onChange={(e: string) => handleChangeNewTask("text", e)}
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => null}
                     disabled={false}
                 />
@@ -37,10 +39,15 @@ const BacklogContainer = () => {
             <Block className={styles.taskList}>
                 {tasks.map((task, index) => (
                     <Block key={index} className={styles.taskCard}>
-                        <Text>{task}</Text>
+                        <Block className="flex items-center flex-grow">
+                            <Text className="inline-block">{task.text}</Text>
+                            <Block variant="span" className="mr-3 italic text-sm ml-auto">
+                                {task.column}
+                            </Block>
+                        </Block>
                         <button
-                            onClick={() => removeTask(index)} 
-                            className={styles.removeButton}
+                            onClick={() => removeTask(task.id)} 
+                            className={`inline-flex items-center justify-center ${styles.removeButton}`}
                         >
                             <FontAwesomeIcon icon={faTrash} />
                         </button>
@@ -51,10 +58,8 @@ const BacklogContainer = () => {
     )
 }
 
-const Backlog = () => (
+export const Backlog = () => (
     <TasksProvider>
         <BacklogContainer />
     </TasksProvider>
 )
-
-export default Backlog

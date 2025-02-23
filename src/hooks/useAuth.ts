@@ -140,7 +140,8 @@ export const useAuth = () => {
                 dispatch(setIsLoggedIn({ "data": true }))
                 handleTokenTest()
             } else {
-                dispatch(setIsLoggedIn({ "data": false }))
+                dispatch(setIsLoggedIn({ "data": true }))
+                // dispatch(setIsLoggedIn({ "data": false }))
             }
         }
     }, [])
