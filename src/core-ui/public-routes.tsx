@@ -35,7 +35,7 @@ export const OnlyPublicRoutes = ({ children }: { children: React.ReactNode }) =>
      * @var pathIsProtected checks if path exists in the the publicRoutes routes array
      */
     const pathIsProtected = publicRoutes.indexOf(pathname) === -1
-
+    
     if (isBrowser() && isLoggedIn === false && pathIsProtected) {
         router.push("/sign-in")
     }

@@ -11,6 +11,7 @@ npm i:
     react-textarea-autosize
     i18next-http-backend
     i18next-browser-languagedetector
+    @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome @fortawesome/free-brands-svg-icons
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event

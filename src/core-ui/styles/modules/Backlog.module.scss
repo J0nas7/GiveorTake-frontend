@@ -1,0 +1,27 @@
+.container {
+    @apply max-w-2xl mx-auto p-6 space-y-4 bg-white shadow-md rounded-lg;
+}
+
+.title {
+    @apply text-2xl font-bold text-gray-900;
+}
+
+.inputContainer {
+    @apply flex gap-2 items-center;
+}
+
+.addButton {
+    @apply flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition;
+}
+
+.taskList {
+    @apply space-y-2;
+}
+
+.taskCard {
+    @apply flex justify-between items-center p-3 bg-gray-100 rounded-md shadow-sm;
+}
+
+.removeButton {
+    @apply text-red-500 hover:text-red-700 transition;
+}
