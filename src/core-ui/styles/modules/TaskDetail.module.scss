@@ -1,0 +1,202 @@
+.taskDetailModalBackground {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.7); /* Transparent white background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.taskDetailContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 1200px;
+    max-height: 80%;
+    overflow-y: scroll;
+    background: white;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.titlePlaceholder {
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: black;
+    @apply w-full p-3;
+    
+    &:hover {
+        @apply bg-gray-100 cursor-text;
+    }
+}
+
+.titleInput {
+    font-size: 1.5rem;
+    font-weight: bold;
+    outline: none;
+    border: 2px rgb(50, 50, 250) solid;
+    @apply w-full p-3;
+}
+
+.ctaButtons {
+    display: flex;
+    gap: 8px;
+}
+
+.content {
+    display: flex;
+    gap: 16px;
+}
+
+.leftPanel, .rightPanel {
+    flex: 1;
+    width: 50%;
+}
+
+.descriptionSection {
+    background-color: #f9f9f9;
+}
+
+.mediaSection, .commentsSection, .detailsSection {
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mediaPlaceholders {
+    display: flex;
+    gap: 8px;
+}
+
+.mediaPlaceholder {
+    width: 80px;
+    height: 80px;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.commentInputContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.commentInput {
+    width: 100%;
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    min-height: 40px;
+    max-height: 150px;
+    font-size: 14px;
+    overflow-y: hidden;
+    line-height: 1.5;
+    background-color: white;
+}
+
+.commentPlaceholder {
+    color: #ccc;
+    font-size: 14px;
+    cursor: text;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    flex-grow: 1;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+        @apply bg-gray-100;
+    }
+}
+
+.newCommentActions {
+    display: flex;
+    gap: 10px;
+}
+
+.sendButton {
+    width: 100px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sendButton:hover {
+    background-color: #0056b3;
+}
+
+.cancelButton {
+    width: 100px;
+    border: none;
+    color: black;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mediaItem, .commentItem {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.mediaMeta, .commentMeta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: gray;
+}
+
+.mediaActions, .commentActions {
+    display: flex;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.icon {
+    cursor: pointer;
+}
+
+.icon:hover {
+    color: #333;
+}
+
+.comment {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}

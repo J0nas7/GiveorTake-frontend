@@ -114,24 +114,27 @@ export type ProjectTeamsContextType = {
 // Task Type
 export type Task = {
     Task_ID: number;
-    Project_ID?: number;
-    Team_ID?: number; // Nullable if not assigned to a team
+    Task_Number: number;
+    Project_ID: number;
+    Team_ID: number; // Nullable if not assigned to a team
     Assigned_User_ID?: number; // Nullable if unassigned
     Task_Title: string;
     Task_Description?: string;
     Task_Status: "todo" | "inProgress" | "review" | "done";
     Task_Due_Date?: string; // YYYY-MM-DD format
-    Task_CreatedAt?: string;
-    Task_UpdatedAt?: string;
+    Task_CreatedAt: string;
+    Task_UpdatedAt: string;
 }
 
 export type TaskFields = 
-    "Task_ID" | "Project_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" | "Task_Description" | 
-    "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
+    "Task_ID" | "Task_Number" | "Project_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" | 
+    "Task_Description" | "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
 
 export type TasksContextType = {
+    taskDetail: Task | undefined
     tasks: Task[]
     newTask: Task | undefined
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     handleChangeNewTask: (field: TaskFields, value: string) => void
     addTask: () => void
     removeTask: (id: number) => void

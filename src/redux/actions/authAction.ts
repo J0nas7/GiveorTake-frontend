@@ -29,9 +29,9 @@ export const useAuthActions = () => {
                 dispatch(setIsLoggedIn({ "data": true }))
                 dispatch(setAuthUser({ "data": data.data }))
             } else {
+                localStorage.removeItem("isLoggedIn")
                 // Optionally handle the "not logged in" scenario
-                dispatch(setIsLoggedIn({ "data": true }))
-                // dispatch(setIsLoggedIn({ "data": false }))
+                dispatch(setIsLoggedIn({ "data": false }))
             }
         } catch (e) {
             console.log("fetchIsLoggedInStatus", e)

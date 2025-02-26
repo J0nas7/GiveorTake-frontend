@@ -38,10 +38,11 @@ export const useAxios = () => {
 
         //console.log("API: "+apiEndPoint, postContent)
         //console.log("axios", theSpace, getCurrentToken("accessToken")!.slice(0, 5))
+        let accessToken2 = accessToken.length ? accessToken : localStorage.getItem("isLoggedIn")
         let axiosUrl = `${env.url.API_URL + paths.API_ROUTE + apiEndPoint}`
         let headers: axiosHeaders = {
             Accept: 'application/json',
-            Authorization: `Bearer ${accessToken}`//+getCurrentToken(tokenName)
+            Authorization: `Bearer ${accessToken2}`//+getCurrentToken(tokenName)
         }
         let config = {
             withCredentials: true,
@@ -60,8 +61,9 @@ export const useAxios = () => {
             // Adjust headers for file upload
             config.headers['Content-Type'] = 'multipart/form-data';
         } else {
+            dataToSend = postContent
             // Otherwise, stringify postContent for non-file data
-            dataToSend = { postContent: JSON.stringify(postContent) };
+            // dataToSend = { postContent: JSON.stringify(postContent) };
         }
 
         try {

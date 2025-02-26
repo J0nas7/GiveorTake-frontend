@@ -50,7 +50,7 @@ export const useAuth = () => {
     // Methods
     const saveLoginSuccess = (loginData: any) => {
         if (typeof window !== "undefined") {
-            const newAccessToken = loginData.authorisation.accessToken
+            const newAccessToken = loginData.accessToken
             const newAuthUser = loginData.user
 
             window.localStorage.setItem("isLoggedIn", newAccessToken)
@@ -59,6 +59,8 @@ export const useAuth = () => {
             // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))
             dispatch(setIsLoggedIn({ "data": true }))
             dispatch(setAuthUser({ "data": newAuthUser }))
+
+            router.push("/")
         }
 
         return true
@@ -68,7 +70,7 @@ export const useAuth = () => {
         if (fromAction != 'login') return false
 
         setStatus('resolved')
-
+        
         if (theResult.success === true) {
             console.log("User logged in:", theResult.data)
             return saveLoginSuccess(theResult.data)
@@ -97,7 +99,7 @@ export const useAuth = () => {
         }
 
         const loginVariables = {
-            "email": emailInput,
+            "User_Email": emailInput,
             "password": passwordInput
         }
         // Send login variables to the API for authentication
@@ -136,12 +138,14 @@ export const useAuth = () => {
             console.log("useAuth loginstatus")
             if (window.localStorage.getItem("isLoggedIn")) {
                 const accessToken = localStorage.getItem("isLoggedIn")
+                console.log("window.local true")
                 dispatch(setAccessToken({ "data": accessToken }))
                 dispatch(setIsLoggedIn({ "data": true }))
                 handleTokenTest()
             } else {
-                dispatch(setIsLoggedIn({ "data": true }))
-                // dispatch(setIsLoggedIn({ "data": false }))
+                console.log("window.local false")
+                dispatch(setAccessToken({ "data": "" }))
+                dispatch(setIsLoggedIn({ "data": false }))
             }
         }
     }, [])

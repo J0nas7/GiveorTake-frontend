@@ -12,7 +12,7 @@ import { TasksProvider, useTasks } from "@/contexts"
 import { Task } from "@/types"
 
 const KanbanBoardContainer = () => {
-    const { tasks, removeTask } = useTasks()
+    const { tasks, setTaskDetail, removeTask } = useTasks()
     const columns = {
         todo: "To Do",
         inProgress: "In Progress",
@@ -32,7 +32,12 @@ const KanbanBoardContainer = () => {
                                 .filter((task: Task) => task.Task_Status === key)
                                 .map((task: Task, index: number) => (
                                     <Block key={index} className={styles.taskCard}>
-                                        <Text>{task.Task_Title}</Text>
+                                        <Text
+                                            onClick={() => setTaskDetail(task)} 
+                                            className="cursor-pointer hover:underline"
+                                        >
+                                            {task.Task_Title}
+                                        </Text>
                                         <button
                                             onClick={() => removeTask(task.Task_ID)}
                                             className={styles.removeButton}
@@ -50,7 +55,5 @@ const KanbanBoardContainer = () => {
 }
 
 export const KanbanBoard = () => (
-    <TasksProvider>
-        <KanbanBoardContainer />
-    </TasksProvider>
+    <KanbanBoardContainer />
 )
