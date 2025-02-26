@@ -15,7 +15,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [tasks, setTasks] = useState<Task[]>([])
     const [taskDetail, setTaskDetail] = useState<Task | undefined>(undefined)
     const [newTask, setNewTask] = useState<Task | undefined>(undefined)
-    
+
     useEffect(() => {
         const fetchOnMount = async () => {
             const data = await fetchTasks() // Fetch tasks on mount
@@ -45,6 +45,16 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } as Task))
     }
 
+    const saveTaskChanges = async (taskChanges: Task) => {
+        const updatedTask = await updateTask(taskChanges)
+        if (updatedTask) {
+            const data = await fetchTasks() // Refresh tasks from API
+            if (data) {
+                setTasks(data)
+            }
+        }
+    }
+
     const removeTask = async (id: number) => {
         const success = await deleteTask(id)
         if (success) {
@@ -54,7 +64,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     return (
-        <TasksContext.Provider value={{ taskDetail, tasks, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask }}>
+        <TasksContext.Provider value={{ taskDetail, tasks, newTask, setTaskDetail, handleChangeNewTask, addTask, saveTaskChanges, removeTask }}>
             {children}
         </TasksContext.Provider>
     )

@@ -35,10 +35,12 @@ export type TeamFields =
     "Team_Description" | "Team_CreatedAt" | "Team_UpdatedAt";
 
 export type TeamsContextType = {
+    teamDetail: Team | undefined
     teams: Team[];
     newTeam: Team | undefined;
     handleChangeNewTeam: (field: TeamFields, value: string) => void;
     addTeam: () => void;
+    saveTeamChanges: (teamChanges: Team) => void
     removeTeam: (id: number) => void;
 };
 
@@ -90,26 +92,26 @@ export type TeamMembersContextType = {
     removeTeamMember: (id: number) => void;
 };
 
-// Project Team Type
-export type ProjectTeam = {
-    Project_Team_ID: number;
-    Project_ID: number;
-    Team_ID: number;
-    Project_Team_CreatedAt?: string;
-    Project_Team_UpdatedAt?: string;
-};
+// // Project Team Type
+// export type ProjectTeam = {
+//     Project_Team_ID: number;
+//     Project_ID: number;
+//     Team_ID: number;
+//     Project_Team_CreatedAt?: string;
+//     Project_Team_UpdatedAt?: string;
+// };
 
-export type ProjectTeamFields = 
-    "Project_Team_ID" | "Project_ID" | "Team_ID" | 
-    "Project_Team_CreatedAt" | "Project_Team_UpdatedAt";
+// export type ProjectTeamFields = 
+//     "Project_Team_ID" | "Project_ID" | "Team_ID" | 
+//     "Project_Team_CreatedAt" | "Project_Team_UpdatedAt";
 
-export type ProjectTeamsContextType = {
-    projectTeams: ProjectTeam[];
-    newProjectTeam: ProjectTeam | undefined;
-    handleChangeNewProjectTeam: (field: ProjectTeamFields, value: string) => void;
-    addProjectTeam: () => void;
-    removeProjectTeam: (id: number) => void;
-}
+// export type ProjectTeamsContextType = {
+//     projectTeams: ProjectTeam[];
+//     newProjectTeam: ProjectTeam | undefined;
+//     handleChangeNewProjectTeam: (field: ProjectTeamFields, value: string) => void;
+//     addProjectTeam: () => void;
+//     removeProjectTeam: (id: number) => void;
+// }
 
 // Task Type
 export type Task = {
@@ -120,7 +122,7 @@ export type Task = {
     Assigned_User_ID?: number; // Nullable if unassigned
     Task_Title: string;
     Task_Description?: string;
-    Task_Status: "todo" | "inProgress" | "review" | "done";
+    Task_Status: 'To Do' | 'In Progress' | 'Waiting for Review' | 'Done'
     Task_Due_Date?: string; // YYYY-MM-DD format
     Task_CreatedAt: string;
     Task_UpdatedAt: string;
@@ -137,6 +139,7 @@ export type TasksContextType = {
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     handleChangeNewTask: (field: TaskFields, value: string) => void
     addTask: () => void
+    saveTaskChanges: (taskChanges: Task) => void
     removeTask: (id: number) => void
 }
 

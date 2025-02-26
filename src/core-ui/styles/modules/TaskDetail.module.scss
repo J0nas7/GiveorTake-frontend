@@ -13,7 +13,8 @@
 }
 
 .taskDetailContainer {
-    width: 80%;
+    width: 100%;
+    min-width: 80%;
     max-width: 1200px;
     background: white;
     display: flex;

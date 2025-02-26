@@ -1,5 +1,6 @@
 export * from './templates/guest-layout'
 export * from './templates/private-layout'
+export * from './templates/type-provider'
 
 export * from './filter-routes'
 

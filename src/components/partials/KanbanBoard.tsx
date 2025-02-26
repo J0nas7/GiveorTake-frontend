@@ -1,7 +1,7 @@
 "use client"
 
 // External
-import React from "react"
+import React, { useEffect } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faTrash } from "@fortawesome/free-solid-svg-icons"
 
@@ -19,7 +19,7 @@ const KanbanBoardContainer = () => {
         review: "Waiting for Review",
         done: "Done"
     }
-
+    
     return (
         <Block className={styles.container}>
             <Heading variant="h1" className={styles.title}>Kanban Board</Heading>
@@ -29,7 +29,7 @@ const KanbanBoardContainer = () => {
                         <Heading variant="h2" className={styles.columnTitle}>{label}</Heading>
                         <Block className={styles.taskList}>
                             {tasks
-                                .filter((task: Task) => task.Task_Status === key)
+                                .filter((task: Task) => task.Task_Status === label)
                                 .map((task: Task, index: number) => (
                                     <Block key={index} className={styles.taskCard}>
                                         <Text
