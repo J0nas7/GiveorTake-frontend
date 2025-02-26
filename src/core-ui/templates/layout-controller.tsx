@@ -5,8 +5,9 @@
 import { useEffect, useState } from "react"
 
 // Internal
-import { GuestLayout, PrivateLayout, OnlyPublicRoutes } from "@/core-ui"
+import { GuestLayout, PrivateLayout, OnlyPublicRoutes, OnlyPrivateRoutes } from "@/core-ui"
 import { selectIsLoggedIn, useTypedSelector } from "@/redux"
+import { TasksProvider } from "@/contexts"
 
 export default function LayoutController(
     { children }: { children: React.ReactNode }
@@ -28,20 +29,24 @@ export default function LayoutController(
     // If not authorized, show the GuestLayout
     return (
         <div className="giveortake-wrapper">
-            {
-                isLoggedIn === true ?
-                    (
-                        <PrivateLayout>
-                            {children}
-                        </PrivateLayout>
-                    ) : (
-                        <OnlyPublicRoutes>
-                            <GuestLayout>
-                                {children}
-                            </GuestLayout>
-                        </OnlyPublicRoutes>
-                    )
-            }
+            <TasksProvider>
+                {
+                    isLoggedIn === true ?
+                        (
+                            <OnlyPrivateRoutes>
+                                <PrivateLayout>
+                                    {children}
+                                </PrivateLayout>
+                            </OnlyPrivateRoutes>
+                        ) : (
+                            <OnlyPublicRoutes>
+                                <GuestLayout>
+                                    {children}
+                                </GuestLayout>
+                            </OnlyPublicRoutes>
+                        )
+                }
+            </TasksProvider>
         </div>
     )
 }

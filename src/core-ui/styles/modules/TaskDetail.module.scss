@@ -4,7 +4,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.7); /* Transparent white background */
+    background: rgba(255, 255, 255, 0.7);
+    /* Transparent white background */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -12,22 +13,27 @@
 }
 
 .taskDetailContainer {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     width: 80%;
     max-width: 1200px;
-    max-height: 80%;
-    overflow-y: scroll;
     background: white;
-    z-index: 1000;
     display: flex;
     flex-direction: column;
     gap: 16px;
     padding: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+
+    &.withModal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+
+        max-height: 80%;
+        overflow-y: scroll;
+    }
 }
 
 .header {
@@ -42,7 +48,29 @@
     cursor: pointer;
     color: black;
     @apply w-full p-3;
-    
+}
+
+.descriptionPlaceholder {
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #aaa;
+    @apply w-full p-3;
+}
+
+.descriptionPlaceholder:hover {
+    border: 1px dashed #ccc;
+}
+
+.descriptionEditor {
+    width: 100%;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.titlePlaceholder, .descriptionPlaceholder {
     &:hover {
         @apply bg-gray-100 cursor-text;
     }
@@ -56,6 +84,16 @@
     @apply w-full p-3;
 }
 
+.descriptionInput {
+    width: 100%;
+    font-size: 1.2rem;
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    outline: none;
+    resize: none;
+}
+
 .ctaButtons {
     display: flex;
     gap: 8px;
@@ -66,16 +104,19 @@
     gap: 16px;
 }
 
-.leftPanel, .rightPanel {
+.leftPanel,
+.rightPanel {
     flex: 1;
     width: 50%;
 }
 
-.descriptionSection {
-    background-color: #f9f9f9;
-}
+// .descriptionSection {
+//     background-color: #f9f9f9;
+// }
 
-.mediaSection, .commentsSection, .detailsSection {
+.mediaSection,
+.commentsSection,
+.detailsSection {
     padding: 16px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -94,7 +135,6 @@
     align-items: center;
     justify-content: center;
 }
-
 
 .commentInputContainer {
     display: flex;
@@ -134,7 +174,7 @@
     }
 }
 
-.newCommentActions {
+.editDescriptionActions, .newCommentActions {
     display: flex;
     gap: 10px;
 }
@@ -168,21 +208,24 @@
     justify-content: center;
 }
 
-.mediaItem, .commentItem {
+.mediaItem,
+.commentItem {
     margin-bottom: 10px;
     padding: 10px;
     background: #f9f9f9;
     border-radius: 6px;
 }
 
-.mediaMeta, .commentMeta {
+.mediaMeta,
+.commentMeta {
     display: flex;
     justify-content: space-between;
     font-size: 12px;
     color: gray;
 }
 
-.mediaActions, .commentActions {
+.mediaActions,
+.commentActions {
     display: flex;
     gap: 8px;
     cursor: pointer;

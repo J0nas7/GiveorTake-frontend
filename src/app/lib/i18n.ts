@@ -8,7 +8,8 @@ i18n
     .use(LanguageDetector) // Detect browser language
     .use(initReactI18next)
     .init({
-        fallbackLng: "en-US",
+        fallbackLng: "en", // Ensure fallback is to 'en-US'
+        lng: "en", // Explicitly set the initial language to 'en-US'
         debug: false,//process.env.NODE_ENV === "development",
         interpolation: {
             escapeValue: false,

@@ -1,7 +1,7 @@
 export * from './templates/guest-layout'
 export * from './templates/private-layout'
 
-export * from './public-routes'
+export * from './filter-routes'
 
 export * from './components/Header'
 export * from "./components/Footer";

@@ -10,12 +10,12 @@ import { faEllipsisV, faPlus, faSortDown, faSortUp } from "@fortawesome/free-sol
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field, Heading } from "@/components"
-import { useTasks } from "@/contexts"
+import { useTasksContext } from "@/contexts"
 import { Task } from "@/types";
 
 const BacklogContainer = () => {
     const { t } = useTranslation(['backlog'])
-    const { tasks, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasks()
+    const { tasks, newTask, setTaskDetail, handleChangeNewTask, addTask } = useTasksContext()
     
     const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
 

@@ -8,11 +8,11 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons"
 // Internal
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
 import { Block, Text, Heading } from "@/components"
-import { TasksProvider, useTasks } from "@/contexts"
+import { TasksProvider, useTasksContext } from "@/contexts"
 import { Task } from "@/types"
 
 const KanbanBoardContainer = () => {
-    const { tasks, setTaskDetail, removeTask } = useTasks()
+    const { tasks, setTaskDetail, removeTask } = useTasksContext()
     const columns = {
         todo: "To Do",
         inProgress: "In Progress",
