@@ -1,17 +1,21 @@
 // External
-import React from 'react'
+import React from 'react';
 
 // Internal
-import { TasksProvider, TeamsProvider } from '@/contexts'
+import { 
+    UsersProvider, TeamsProvider, TasksProvider, 
+    ProjectsProvider, OrganisationsProvider, TeamUserSeatsProvider
+} from "@/contexts"
 
-export const TypeProvider = (
-    { children }: { children: React.ReactNode }
-) => {
-    return (
-        <TasksProvider>
-            <TeamsProvider>
-                {children}
-            </TeamsProvider>
-        </TasksProvider>
-    )
+const providers = [
+    UsersProvider,
+    TeamsProvider,
+    TasksProvider,
+    ProjectsProvider,
+    OrganisationsProvider,
+    TeamUserSeatsProvider
+]
+
+export const TypeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return providers.reduceRight((acc, Provider) => <Provider>{acc}</Provider>, children)
 }

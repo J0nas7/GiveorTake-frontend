@@ -135,15 +135,15 @@ export const useAuth = () => {
     useEffect(() => {
         if (typeof window !== "undefined") {
             // localStorage.removeItem("isLoggedIn")
-            console.log("useAuth loginstatus")
+            // console.log("useAuth loginstatus")
             if (window.localStorage.getItem("isLoggedIn")) {
                 const accessToken = localStorage.getItem("isLoggedIn")
-                console.log("window.local true")
+                // console.log("window.local true")
                 dispatch(setAccessToken({ "data": accessToken }))
                 dispatch(setIsLoggedIn({ "data": true }))
                 handleTokenTest()
             } else {
-                console.log("window.local false")
+                // console.log("window.local false")
                 dispatch(setAccessToken({ "data": "" }))
                 dispatch(setIsLoggedIn({ "data": false }))
             }

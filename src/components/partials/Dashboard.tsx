@@ -20,19 +20,22 @@ const DashboardContainer = () => {
     const { t } = useTranslation(['dashboard']);
     const { tasks } = useTasksContext();
 
+    // Ensure tasks is always an array
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+
     // Grouping tasks by status
     const taskStatuses = useMemo(() => {
-        return tasks.reduce((acc, task) => {
+        return safeTasks.reduce((acc, task) => {
             if (!acc[task.Task_Status]) {
                 acc[task.Task_Status] = [];
             }
             acc[task.Task_Status].push(task);
             return acc;
         }, {} as Record<Task["Task_Status"], Task[]>);
-    }, [tasks]);
+    }, [safeTasks]);
 
     // KPI Calculations
-    const totalTasks = tasks.length;
+    const totalTasks = safeTasks.length;
     const completedTasks = taskStatuses["Done"]?.length || 0;
     const inProgressTasks = taskStatuses["In Progress"]?.length || 0;
     const todoTasks = taskStatuses["To Do"]?.length || 0;
@@ -44,14 +47,19 @@ const DashboardContainer = () => {
     // Overdue Tasks Calculation
     const overdueTasks = useMemo(() => {
         const today = new Date().toISOString().split("T")[0];
-        return tasks.filter(task => task.Task_Due_Date && task.Task_Due_Date < today && task.Task_Status !== "Done").length;
-    }, [tasks]);
+        return safeTasks.filter(task =>
+            task.Task_Due_Date &&
+            typeof task.Task_Due_Date === "string" &&
+            task.Task_Due_Date < today &&
+            task.Task_Status !== "Done"
+        ).length;
+    }, [safeTasks]);
 
     // Chart data for task status overview
     const chartData = useMemo(() => {
         const statusLabels: Task["Task_Status"][] = ["To Do", "In Progress", "Waiting for Review", "Done"];
         const statusCounts = statusLabels.map(status => taskStatuses[status]?.length || 0);
-        
+
         return {
             labels: statusLabels,
             datasets: [

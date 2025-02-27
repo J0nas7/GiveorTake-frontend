@@ -3,25 +3,30 @@ import React, { createContext, useContext, useState, useEffect } from "react"
 
 // Internal
 import { useTypeAPI } from "@/hooks"
+import { selectIsLoggedIn, useTypedSelector } from "@/redux"
 
 // Generic context and provider to handle different resources like teams, tasks, organisations, etc.
 export const useResourceContext = <T extends { [key: string]: any }, IDKey extends keyof T>(
     resource: string,
     idFieldName: IDKey
 ) => {
+    // Redux
+    const isLoggedIn = useTypedSelector(selectIsLoggedIn)
+
     const { loading, error, fetchItems, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName)
 
     const [items, setItems] = useState<T[]>([])
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
-
+    
     useEffect(() => {
         const fetchOnMount = async () => {
             const data = await fetchItems() // Fetch all items on mount
             if (data) setItems(data)
         }
-        fetchOnMount()
-    }, [fetchItems])
+
+        if (isLoggedIn === true) fetchOnMount()
+    }, [isLoggedIn])
 
     const addItem = async () => {
         if (newItem) {
@@ -91,7 +96,7 @@ export const ResourceProvider = <T extends { [key: string]: any }, IDKey extends
 }
 
 // Create a context for any resource
-const ResourceContext = createContext<any>(undefined)
+export const ResourceContext = createContext<any>(undefined)
 
 // Custom hook to use resource context
 export const useResource = () => {

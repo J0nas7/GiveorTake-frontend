@@ -47,6 +47,8 @@ const BacklogContainer = () => {
 
     // Sorting logic based on URL query parameters
     const sortedTasks = useMemo(() => {
+        if (!Array.isArray(tasks)) return []; // Ensure tasks is an array
+
         const sortField = SORT_KEYS[Number(currentSort)] || DEFAULT_SORT_KEY; // Convert number to field name
     
         return [...tasks].sort((a, b) => {

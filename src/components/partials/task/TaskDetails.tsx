@@ -232,7 +232,7 @@ const CtaButtons = ({
             <button className={styles.deleteButton}>Delete</button>
             <button className={styles.shareButton}>Share</button>
             {task === undefined && (
-                <Link href={`/task-detail/${theTask.Task_ID}`}>
+                <Link href={`/task/${theTask.Task_ID}`}>
                     <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
                 </Link>
             )}
@@ -254,16 +254,7 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     const { taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
-    const theTask = task || taskDetail;
-    const [title, setTitle] = useState(theTask?.Task_Title || "");
-    const [description, setDescription] = useState(theTask?.Task_Description || "");
-
-    useEffect(() => {
-        if (theTask) {
-            setTitle(theTask.Task_Title || "");
-            setDescription(theTask.Task_Description || "");
-        }
-    }, [theTask]);
+    const theTask: Task|undefined = task || taskDetail;
 
     // Disable body scrolling when TaskDetailContainer is mounted
     useEffect(() => {
@@ -289,18 +280,26 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     if (!theTask) return null;
 
     return (
-        <div className={styles.content}>
-            <div className={styles.leftPanel}>
-                <TitleArea task={theTask} />
-                <DescriptionArea task={theTask} />
-                <MediaFilesArea task={theTask} />
-                <CommentsArea task={theTask} />
+        <>
+            <Link
+                href={`/project/${theTask.project?.Project_ID}`}
+                className="text-xs"
+            >
+                &laquo; Go to Project Settings
+            </Link>
+            <div className={styles.content}>
+                <div className={styles.leftPanel}>
+                    <TitleArea task={theTask} />
+                    <DescriptionArea task={theTask} />
+                    <MediaFilesArea task={theTask} />
+                    <CommentsArea task={theTask} />
+                </div>
+                <div className={styles.rightPanel}>
+                    <CtaButtons theTask={theTask} task={task} />
+                    <TaskDetailsArea task={theTask} />
+                </div>
             </div>
-            <div className={styles.rightPanel}>
-                <CtaButtons theTask={theTask} task={task} />
-                <TaskDetailsArea task={theTask} />
-            </div>
-        </div>
+        </>
     );
 };
 
@@ -330,21 +329,25 @@ export const TaskDetailWithoutModal = () => {
     const taskDetailRef = useRef<HTMLDivElement>(null);
     const { taskId } = useParams()
 
-    useEffect(() => {
-        setTaskDetail(undefined)
-    }, [])
-
-
     // Fetch tasks using the custom hook
     const { tasks, setTaskDetail } = useTasksContext()
 
-    // Ensure taskId is a string and not an array or undefined
-    // Handle case when taskId is not valid
-    if (typeof taskId !== 'string') return <div>Invalid task ID</div>
+    const [theTask, setTheTask] = useState<Task | undefined>(undefined)
 
-    // Filter the tasks to find the task with the matching taskId
-    const theTask = tasks.find((task) => task.Task_ID === parseInt(taskId))
 
+    useEffect(() => {
+        setTaskDetail(undefined)
+
+        // Ensure taskId is a string and not an array or undefined
+        // Handle case when taskId is not valid
+        if (typeof taskId == 'string') {
+            if (tasks) {
+                // Filter the tasks to find the task with the matching taskId
+                const findTask = tasks.find((t) => t.Task_ID === parseInt(taskId))
+                setTheTask(findTask)
+            }
+        }
+    }, [tasks, taskId])
 
     if (!theTask) return <div>Task not found</div>
 

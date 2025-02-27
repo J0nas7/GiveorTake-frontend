@@ -14,6 +14,7 @@ npm i:
     @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome @fortawesome/free-brands-svg-icons
     react-quill
     react-chartjs-2 chart.js
+    react-merge-providers
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event

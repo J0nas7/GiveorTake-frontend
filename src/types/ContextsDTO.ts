@@ -1,3 +1,33 @@
+// User Type
+export type User = {
+    User_ID: number;
+    User_Status: string;
+    User_Email: string;
+    User_FirstName: string;
+    User_Surname: string;
+    User_ImageSrc?: string;
+    User_CreatedAt?: string;
+    User_UpdatedAt?: string;
+    User_DeletedAt?: string;
+};
+
+export type UserFields =
+    "User_ID" | "User_Status" | "User_Email" | "User_FirstName" | "User_Surname" |
+    "User_ImageSrc" | "User_CreatedAt" | "User_UpdatedAt" | "User_DeletedAt";
+
+export type UsersContextType = {
+    users: User[];
+    userDetail: User | undefined;
+    newUser: User | undefined;
+    setUserDetail: React.Dispatch<React.SetStateAction<User | undefined>>;
+    handleChangeNewUser: (field: UserFields, value: string) => void;
+    addUser: () => void;
+    saveUserChanges: (userChanges: User) => void;
+    removeUser: (id: number) => void;
+    userLoading: boolean;
+    userError: string | null;
+};
+
 // Organisation Type
 export type Organisation = {
     Organisation_ID: number;
@@ -6,17 +36,23 @@ export type Organisation = {
     Organisation_Description?: string;
     Organisation_CreatedAt?: string;
     Organisation_UpdatedAt?: string;
+
+    // Relationships
+    teams?: Team[]
 };
 
-export type OrganisationFields = 
-    "Organisation_ID" | "User_ID" | "Organisation_Name" | 
+export type OrganisationFields =
+    "Organisation_ID" | "User_ID" | "Organisation_Name" |
     "Organisation_Description" | "Organisation_CreatedAt" | "Organisation_UpdatedAt";
 
 export type OrganisationsContextType = {
     organisations: Organisation[];
+    organisationDetail: Organisation | undefined;
     newOrganisation: Organisation | undefined;
+    setOrganisationDetail: React.Dispatch<React.SetStateAction<Organisation | undefined>>;
     handleChangeNewOrganisation: (field: OrganisationFields, value: string) => void;
     addOrganisation: () => void;
+    saveOrganisationChanges: (organisationChanges: Organisation) => void;
     removeOrganisation: (id: number) => void;
 };
 
@@ -28,19 +64,26 @@ export type Team = {
     Team_Description?: string;
     Team_CreatedAt?: string;
     Team_UpdatedAt?: string;
+
+    // Relationships
+    organisation?: Organisation
+    user_seats?: TeamUserSeat[]
+    projects?: Project[]
+    tasks?: Task[]
 };
 
-export type TeamFields = 
-    "Team_ID" | "Organisation_ID" | "Team_Name" | 
+export type TeamFields =
+    "Team_ID" | "Organisation_ID" | "Team_Name" |
     "Team_Description" | "Team_CreatedAt" | "Team_UpdatedAt";
 
 export type TeamsContextType = {
-    teamDetail: Team | undefined
+    teamDetail: Team | undefined;
     teams: Team[];
     newTeam: Team | undefined;
+    setTeamDetail: React.Dispatch<React.SetStateAction<Team | undefined>>;
     handleChangeNewTeam: (field: TeamFields, value: string) => void;
     addTeam: () => void;
-    saveTeamChanges: (teamChanges: Team) => void
+    saveTeamChanges: (teamChanges: Team) => void;
     removeTeam: (id: number) => void;
 };
 
@@ -55,63 +98,60 @@ export type Project = {
     Project_End_Date?: string;
     Project_CreatedAt?: string;
     Project_UpdatedAt?: string;
+
+    // Relationships
+    team?: Team
+    tasks?: Task[]
 };
 
-export type ProjectFields = 
-    "Project_ID" | "Organisation_ID" | "Project_Name" | 
-    "Project_Description" | "Project_Status" | "Project_Start_Date" | 
+export type ProjectFields =
+    "Project_ID" | "Organisation_ID" | "Project_Name" |
+    "Project_Description" | "Project_Status" | "Project_Start_Date" |
     "Project_End_Date" | "Project_CreatedAt" | "Project_UpdatedAt";
 
 export type ProjectsContextType = {
     projects: Project[];
+    projectDetail: Project | undefined
     newProject: Project | undefined;
+    setProjectDetail: React.Dispatch<React.SetStateAction<Project | undefined>>
     handleChangeNewProject: (field: ProjectFields, value: string) => void;
     addProject: () => void;
+    saveProjectChanges: (projectChanges: Project) => void
     removeProject: (id: number) => void;
 };
 
-// Team Member Type
-export type TeamMember = {
-    Team_Member_ID: number;
+// Team User Seat Type
+export type TeamUserSeat = {
+    Seat_ID: number;
     Team_ID: number;
     User_ID: number;
-    Team_Member_Role: 'Lead' | 'Member';
-    Team_Member_CreatedAt?: string;
-    Team_Member_UpdatedAt?: string;
+    Seat_Role: string;
+    Seat_Status: string;
+    Seat_Role_Description?: string;
+    Seat_Permissions?: string[];
+    Seat_CreatedAt?: string;
+    Seat_UpdatedAt?: string;
+    Seat_DeletedAt?: string;
+
+    // Relationships
+    team?: Team
+    user?: User
 };
 
-export type TeamMemberFields = 
-    "Team_Member_ID" | "Team_ID" | "User_ID" | 
-    "Team_Member_Role" | "Team_Member_CreatedAt" | "Team_Member_UpdatedAt";
+export type TeamUserSeatFields =
+    "Seat_ID" | "Team_ID" | "User_ID" | "Seat_Role" | "Seat_Status" |
+    "Seat_Role_Description" | "Seat_Permissions" | "Seat_CreatedAt" | "Seat_UpdatedAt" | "Seat_DeletedAt";
 
-export type TeamMembersContextType = {
-    teamMembers: TeamMember[];
-    newTeamMember: TeamMember | undefined;
-    handleChangeNewTeamMember: (field: TeamMemberFields, value: string) => void;
-    addTeamMember: () => void;
-    removeTeamMember: (id: number) => void;
+export type TeamUserSeatsContextType = {
+    teamUserSeats: TeamUserSeat[];
+    teamUserSeatDetail: TeamUserSeat | undefined
+    newTeamUserSeat: TeamUserSeat | undefined;
+    setTeamUserSeatDetail: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
+    handleChangeNewTeamUserSeat: (field: TeamUserSeatFields, value: string) => void;
+    addTeamUserSeat: () => void;
+    saveTeamUserSeatChanges: (teamUserSeatChanges: TeamUserSeat) => void
+    removeTeamUserSeat: (id: number) => void;
 };
-
-// // Project Team Type
-// export type ProjectTeam = {
-//     Project_Team_ID: number;
-//     Project_ID: number;
-//     Team_ID: number;
-//     Project_Team_CreatedAt?: string;
-//     Project_Team_UpdatedAt?: string;
-// };
-
-// export type ProjectTeamFields = 
-//     "Project_Team_ID" | "Project_ID" | "Team_ID" | 
-//     "Project_Team_CreatedAt" | "Project_Team_UpdatedAt";
-
-// export type ProjectTeamsContextType = {
-//     projectTeams: ProjectTeam[];
-//     newProjectTeam: ProjectTeam | undefined;
-//     handleChangeNewProjectTeam: (field: ProjectTeamFields, value: string) => void;
-//     addProjectTeam: () => void;
-//     removeProjectTeam: (id: number) => void;
-// }
 
 // Task Type
 export type Task = {
@@ -126,10 +166,13 @@ export type Task = {
     Task_Due_Date?: string; // YYYY-MM-DD format
     Task_CreatedAt: string;
     Task_UpdatedAt: string;
+
+    // Relationships
+    project?: Project
 }
 
-export type TaskFields = 
-    "Task_ID" | "Task_Number" | "Project_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" | 
+export type TaskFields =
+    "Task_ID" | "Task_Number" | "Project_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
     "Task_Description" | "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
 
 export type TasksContextType = {
@@ -154,8 +197,8 @@ export type ActivityLog = {
     Log_UpdatedAt?: string;
 };
 
-export type ActivityLogFields = 
-    "Log_ID" | "User_ID" | "Project_ID" | "Log_Action" | 
+export type ActivityLogFields =
+    "Log_ID" | "User_ID" | "Project_ID" | "Log_Action" |
     "Log_Details" | "Log_CreatedAt" | "Log_UpdatedAt";
 
 export type ActivityLogsContextType = {
@@ -176,8 +219,8 @@ export type Notification = {
     Notification_UpdatedAt?: string;
 };
 
-export type NotificationFields = 
-    "Notification_ID" | "User_ID" | "Notification_Message" | 
+export type NotificationFields =
+    "Notification_ID" | "User_ID" | "Notification_Message" |
     "Notification_Read" | "Notification_CreatedAt" | "Notification_UpdatedAt";
 
 export type NotificationsContextType = {

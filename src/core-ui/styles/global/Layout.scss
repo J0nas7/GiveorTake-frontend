@@ -17,4 +17,8 @@
             flex: 1;
         }
     }
+
+    .blue-link {
+        @apply text-blue-400;
+    }
 }

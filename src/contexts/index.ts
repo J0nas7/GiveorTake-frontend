@@ -1,2 +1,3 @@
-export * from './TasksContext'
-export * from './TeamsContext'
+export * from './TypeContext'
+export * from './Contexts'
+// export * from './TasksContext'

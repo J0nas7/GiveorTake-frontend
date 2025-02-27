@@ -1,5 +1,5 @@
-export * from './partials/Backlog'
-export * from './partials/KanbanBoard'
+export * from './partials/project/Backlog'
+export * from './partials/project/KanbanBoard'
 
 export * from './ui/block-text'
 export * from './ui/input-field'

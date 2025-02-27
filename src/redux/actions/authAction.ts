@@ -22,7 +22,7 @@ export const useAuthActions = () => {
     const fetchIsLoggedInStatus = () => async (dispatch: Dispatch) => {
         try {
             const data = await httpGetRequest("auth/me")
-            console.log("fetchIsLoggedInStatus", data)
+            // console.log("fetchIsLoggedInStatus", data)
             if (data && data.message === "Is logged in") {
                 // Update the Redux store with the user's logged-in status and details
                 // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))

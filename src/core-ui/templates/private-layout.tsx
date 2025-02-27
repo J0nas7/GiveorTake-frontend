@@ -5,7 +5,7 @@ import React from "react";
 import { Header, LeftNav, Footer, MainContent } from "../";
 import "../styles/global/Layout.scss"
 import { TasksProvider } from "@/contexts";
-import { TaskDetailWithModal } from "@/components/partials/TaskDetails";
+import { TaskDetailWithModal } from "@/components/partials/task/TaskDetails";
 
 export const PrivateLayout = (
     { children }: { children: React.ReactNode }

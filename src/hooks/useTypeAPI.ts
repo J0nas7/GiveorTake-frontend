@@ -29,9 +29,10 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     // Fetch all items (R in CRUD)
     const fetchItems = async () => {
         try {
-            const data: APIResponse<T[]> = await httpGetRequest(resource);
-
-            if (data) return data.data;
+            // : APIResponse<T[]>
+            const data = await httpGetRequest(resource);
+            
+            if (data) return data
 
             throw new Error(`Failed to fetch ${resource}`);
         } catch (error: any) {
