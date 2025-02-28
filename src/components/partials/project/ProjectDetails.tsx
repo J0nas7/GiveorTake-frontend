@@ -18,18 +18,18 @@ import Link from 'next/link';
 
 const ProjectDetails: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
-    const { projects, saveProjectChanges } = useProjectsContext();
+    const { projectsById, saveProjectChanges } = useProjectsContext();
 
     const [theProject, setTheProject] = useState<Project | undefined>(undefined);
 
     useEffect(() => {
-        if (projects) {
-            const foundProject = projects.find((p) => p.Project_ID === parseInt(projectId));
+        if (projectsById) {
+            const foundProject = projectsById.find((p) => p.Project_ID === parseInt(projectId));
             if (foundProject) {
                 setTheProject(foundProject);
             }
         }
-    }, [projects, projectId]);
+    }, [projectsById, projectId]);
 
     const handleHTMLInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -47,7 +47,7 @@ const ProjectDetails: React.FC = () => {
     }
 
     const handleSaveChanges = () => {
-        if (theProject) saveProjectChanges(theProject)
+        if (theProject) saveProjectChanges(theProject, theProject.Team_ID)
     };
 
     if (!theProject) {

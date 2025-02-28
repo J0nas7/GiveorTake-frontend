@@ -11,7 +11,7 @@ import Link from 'next/link';
 const UserDetails: React.FC = () => {
     // Get user data and the save function from context
     const { saveUserChanges, removeUser } = useUsersContext();
-    const { teamUserSeats } = useTeamUserSeatsContext();
+    const { teamUserSeatsById } = useTeamUserSeatsContext();
     const [user, setUser] = useState<User | null>(null);
     const [imagePreview, setImagePreview] = useState<string | undefined>(user?.User_ImageSrc);
 
@@ -58,20 +58,20 @@ const UserDetails: React.FC = () => {
     // Handle form submission (saving user changes)
     const handleSaveChanges = () => {
         if (user) {
-            saveUserChanges(user);
+            saveUserChanges(user, 0)
         }
     };
 
     // Handle user deletion
     const handleDeleteUser = () => {
         if (user) {
-            removeUser(user.User_ID);
+            removeUser(user.User_ID, 0);
         }
     };
 
     // Get teams the user is a part of
-    const userTeams: TeamUserSeat[] = Array.isArray(teamUserSeats)
-        ? teamUserSeats.filter((seat) => seat.User_ID === user?.User_ID)
+    const userTeams: TeamUserSeat[] = Array.isArray(teamUserSeatsById)
+        ? teamUserSeatsById.filter((seat) => seat.User_ID === user?.User_ID)
         : []
 
     if (!user) return <p>Loading user details...</p>;

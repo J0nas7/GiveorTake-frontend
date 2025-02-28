@@ -3,12 +3,13 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 // Internal
 import { RootState } from '@/redux/store'
-import { User } from '@/types'
+import { TeamUserSeat, User } from '@/types'
 
 export interface AuthState {
     isLoggedIn: boolean | undefined,
     adminLoggedIn: string,
     authUser: User | undefined,
+    authUserSeat: TeamUserSeat | undefined,
     accessToken: string,
     refreshToken: string,
     loginResponse: Object,
@@ -19,6 +20,7 @@ const initialState = {
     isLoggedIn: undefined,
     adminLoggedIn: '',
     authUser: undefined,
+    authUserSeat: undefined,
     accessToken: '',
     refreshToken: '',
     loginResponse: {},
@@ -34,6 +36,9 @@ export const authSlice = createSlice({
         },
         setAuthUser: (state: AuthState, action: PayloadAction<any>) => {
             state.authUser = action.payload.data
+        },
+        setAuthUserSeat: (state: AuthState, action: PayloadAction<any>) => {
+            state.authUserSeat = action.payload.data
         },
         setAccessToken: (state: AuthState, action: PayloadAction<any>) => {
             state.accessToken = action.payload.data
@@ -54,6 +59,7 @@ const { actions } = authSlice
 export const {
     setIsLoggedIn,
     setAuthUser,
+    setAuthUserSeat,
     setAccessToken,
     setRefreshToken,
     setLoginResponse,
@@ -64,6 +70,7 @@ export default authSlice.reducer
 
 export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn
 export const selectAuthUser = (state: RootState) => state.auth.authUser
+export const selectAuthUserSeat = (state: RootState) => state.auth.authUserSeat
 export const selectAccessToken = (state: RootState) => state.auth.accessToken
 export const selectRefreshToken = (state: RootState) => state.auth.refreshToken
 export const selectLoginResponse = (state: RootState) => state.auth.loginResponse

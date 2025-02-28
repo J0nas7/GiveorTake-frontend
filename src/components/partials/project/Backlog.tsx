@@ -1,8 +1,8 @@
 "use client"
 
 // External
-import React, { useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react"
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "next-i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisV, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
@@ -14,17 +14,26 @@ import { useTasksContext } from "@/contexts"
 import { Task } from "@/types";
 
 const BacklogContainer = () => {
+    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
     const { t } = useTranslation(['backlog'])
-    const { tasks, newTask, setTaskDetail, handleChangeNewTask, addTask } = useTasksContext()
-    
+    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask } = useTasksContext()
+
     const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
 
     const setActionMenu = (taskId: number) => {
         setShowActionMenu(showActionMenu === taskId ? null : taskId);
     };
 
-    const router = useRouter();
-    const searchParams = useSearchParams();
+    const handleCreateTask = () => {
+        addTask(parseInt(projectId), newTask)
+    }
+    
+    useEffect(() => {
+        if (projectId) readTasksByProjectId(parseInt(projectId))
+    }, [projectId])
 
     const currentSort = searchParams.get("sort") || "Task_Title";
     const currentOrder = searchParams.get("order") || "asc";
@@ -35,7 +44,7 @@ const BacklogContainer = () => {
         3: "Assigned_User_ID",
         4: "Task_CreatedAt",
     };
-    
+
     // Default sorting field if an invalid key is used
     const DEFAULT_SORT_KEY: keyof Task = "Task_CreatedAt";
 
@@ -47,14 +56,14 @@ const BacklogContainer = () => {
 
     // Sorting logic based on URL query parameters
     const sortedTasks = useMemo(() => {
-        if (!Array.isArray(tasks)) return []; // Ensure tasks is an array
+        if (!Array.isArray(tasksById)) return []; // Ensure tasks is an array
 
         const sortField = SORT_KEYS[Number(currentSort)] || DEFAULT_SORT_KEY; // Convert number to field name
-    
-        return [...tasks].sort((a, b) => {
+
+        return [...tasksById].sort((a, b) => {
             const aValue = a[sortField] ?? "";
             const bValue = b[sortField] ?? "";
-    
+
             if (typeof aValue === "string" && typeof bValue === "string") {
                 return currentOrder === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
             } else if (typeof aValue === "number" && typeof bValue === "number") {
@@ -62,7 +71,7 @@ const BacklogContainer = () => {
             }
             return 0;
         });
-    }, [tasks, currentSort, currentOrder]);
+    }, [tasksById, currentSort, currentOrder]);
 
     return (
         <Block className={styles.taskTableContainer}>
@@ -103,7 +112,7 @@ const BacklogContainer = () => {
                                 />
                                 <button
                                     type="submit"
-                                    onClick={addTask}
+                                    onClick={handleCreateTask}
                                     className={styles.addButton}
                                 >
                                     <FontAwesomeIcon icon={faPlus} /> Add

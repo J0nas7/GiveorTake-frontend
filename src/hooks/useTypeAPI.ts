@@ -16,28 +16,29 @@ type HasIDField<T, IDKey extends string> = T & {
 
 // A generic hook for handling API operations on different resources
 export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof T>(
-    resource: string,
-    idFieldName: IDKey
+    resource: string, 
+    idFieldName: IDKey, 
+    parentResource: string
 ) => {
     // Hooks
     const { httpGetRequest, httpPostWithData, httpPutWithData, httpDeleteRequest } = useAxios();
-
+    
     // State
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch all items (R in CRUD)
-    const fetchItems = async () => {
+    // Fetch items by parent ID (R in CRUD)
+    const fetchItemsByParent = async (parentId: number) => {
         try {
             // : APIResponse<T[]>
-            const data = await httpGetRequest(resource);
+            const data = await httpGetRequest(`${parentResource}/${parentId}/${resource}`);
             
             if (data) return data
 
-            throw new Error(`Failed to fetch ${resource}`);
+            throw new Error(`Failed to fetchItemsByParent ${resource}`);
         } catch (error: any) {
-            setError(error.message || `An error occurred while fetching ${resource}.`);
-            console.log(error.message || `An error occurred while fetching ${resource}.`);
+            setError(error.message || `An error occurred while fetching ${parentResource}.`);
+            console.log(error.message || `An error occurred while fetching ${parentResource}.`);
             return false;
         } finally {
             setLoading(false);
@@ -47,11 +48,12 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     // Fetch a single item (R in CRUD)
     const fetchItem = async (itemId: number) => {
         try {
-            const response: APIResponse<T> = await httpGetRequest(`${resource}/${itemId}`);
+            // : APIResponse<T>
+            const response = await httpGetRequest(`${resource}/${itemId}`);
 
-            if (response.data) return response.data;
+            if (response) return response
 
-            throw new Error(`Failed to fetch ${resource}`);
+            throw new Error(`Failed to fetchItem ${resource}`);
         } catch (error: any) {
             setError(error.message || `An error occurred while fetching the ${resource}.`);
             return false;
@@ -108,7 +110,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     return {
         loading,
         error,
-        fetchItems,
+        fetchItemsByParent,
         fetchItem,
         postItem,
         updateItem,

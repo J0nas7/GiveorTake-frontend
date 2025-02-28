@@ -8,33 +8,33 @@ import { selectIsLoggedIn, useTypedSelector } from "@/redux"
 // Generic context and provider to handle different resources like teams, tasks, organisations, etc.
 export const useResourceContext = <T extends { [key: string]: any }, IDKey extends keyof T>(
     resource: string,
-    idFieldName: IDKey
+    idFieldName: IDKey,
+    parentResource: string
 ) => {
-    // Redux
-    const isLoggedIn = useTypedSelector(selectIsLoggedIn)
-
-    const { loading, error, fetchItems, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName)
-
-    const [items, setItems] = useState<T[]>([])
+    const { loading, error, fetchItemsByParent, fetchItem, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName, parentResource)
+    
+    const [itemsById, setItemsById] = useState<T[]>([])
+    const [itemById, setItemById] = useState<T|undefined>(undefined)
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
     
-    useEffect(() => {
-        const fetchOnMount = async () => {
-            const data = await fetchItems() // Fetch all items on mount
-            if (data) setItems(data)
-        }
+    const readItemsById = async (parentId: number) => {
+        const data = await fetchItemsByParent(parentId) // Fetch all items by parentId
+        if (data) setItemsById(data)
+    }
 
-        if (isLoggedIn === true) fetchOnMount()
-    }, [isLoggedIn])
+    const readItemById = async (itemId: number) => {
+        const data = await fetchItem(itemId) // Fetch item by id
+        if (data) setItemById(data)
+    }
 
-    const addItem = async (object?: T) => {
+    const addItem = async (parentId: number, object?: T) => {
         if (newItem || object) {
             const createdItem = await postItem(object || newItem!)
             if (createdItem) {
-                const data = await fetchItems() // Refresh items from API
+                const data = await fetchItemsByParent(parentId) // Refresh items from API
                 if (data) {
-                    setItems(data)
+                    setItemsById(data)
                     setNewItem(undefined)
                 }
             }
@@ -55,40 +55,44 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
         }
     }
 
-    const saveItemChanges = async (itemChanges: T) => {
+    const saveItemChanges = async (itemChanges: T, parentId: number) => {
         const updatedItem = await updateItem(itemChanges)
         if (updatedItem) {
-            const data = await fetchItems() // Refresh items from API
+            const data = await fetchItemsByParent(parentId) // Refresh items from API
             if (data) {
-                setItems(data)
+                setItemsById(data)
             }
         }
     }
 
-    const removeItem = async (id: number) => {
-        const success = await deleteItem(id)
+    const removeItem = async (itemId: number, parentId: number) => {
+        const success = await deleteItem(itemId)
         if (success) {
-            const data = await fetchItems() // Refresh items after deletion
-            if (data) setItems(data)
+            const data = await fetchItemsByParent(parentId) // Refresh items after deletion
+            if (data) setItemsById(data)
         }
     }
 
     return {
         loading,
         error,
-        items,
+        itemsById,
+        itemById,
         newItem,
         itemDetail,
         setItemDetail,
         handleChangeNewItem,
+        readItemsById,
+        readItemById,
         addItem,
         saveItemChanges,
         removeItem,
     }
 }
 
+//// REST OF FILE IS DEPRECATED
 // Generic Provider for any resource
-export const ResourceProvider = <T extends { [key: string]: any }, IDKey extends keyof T>({
+/*export const ResourceProvider = <T extends { [key: string]: any }, IDKey extends keyof T>({
     resource,
     idFieldName,
     children,
@@ -97,19 +101,19 @@ export const ResourceProvider = <T extends { [key: string]: any }, IDKey extends
     idFieldName: IDKey
     children: React.ReactNode
 }) => {
-    const resourceContext = useResourceContext<T, IDKey>(resource, idFieldName)
+    const resourceContext = useResourceContext<T, IDKey>(resource, idFieldName, "")
 
     return <ResourceContext.Provider value={resourceContext}>{children}</ResourceContext.Provider>
-}
+}*/
 
 // Create a context for any resource
-export const ResourceContext = createContext<any>(undefined)
+//export const ResourceContext = createContext<any>(undefined)
 
 // Custom hook to use resource context
-export const useResource = () => {
+/*export const useResource = () => {
     const context = useContext(ResourceContext)
     if (!context) {
         throw new Error("useResource must be used within a ResourceProvider")
     }
     return context
-}
+}*/

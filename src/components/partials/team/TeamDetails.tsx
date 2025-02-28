@@ -19,19 +19,17 @@ import { selectAuthUser, useTypedSelector } from '@/redux';
 
 const TeamDetails: React.FC = () => {
     const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
-    const { teams, saveTeamChanges } = useTeamsContext();
-
-    const [theTeam, setTheTeam] = useState<Team | undefined>(undefined);
+    const { teamById, readTeamById, saveTeamChanges } = useTeamsContext();
     const authUser = useTypedSelector(selectAuthUser) // Redux
+    
+    const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined)
 
+    useEffect(() => { readTeamById(parseInt(teamId)); }, [teamId]);
     useEffect(() => {
-        if (teams) {
-            const foundTeam = teams.find((t) => t.Team_ID === parseInt(teamId));
-            if (foundTeam) {
-                setTheTeam(foundTeam);
-            }
+        if (teamById) {
+            setRenderTeam(teamById)
         }
-    }, [teams, teamId]);
+    }, [teamById]);
 
     const handleHTMLInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -40,21 +38,21 @@ const TeamDetails: React.FC = () => {
 
     // Handle input changes for text fields
     const handleTeamChange = (field: TeamFields, value: string) => {
-        if (!theTeam) return
+        if (!renderTeam) return
 
-        setTheTeam((prev) => ({
+        setRenderTeam((prev) => ({
             ...prev!,
             [field]: value
         }));
     }
 
     const handleSaveChanges = () => {
-        if (theTeam) {
-            saveTeamChanges(theTeam);
+        if (renderTeam) {
+            saveTeamChanges(renderTeam, renderTeam.Organisation_ID)
         }
     };
 
-    if (!theTeam) {
+    if (!renderTeam) {
         return <div>Loading...</div>;
     }
 
@@ -62,7 +60,7 @@ const TeamDetails: React.FC = () => {
         <Container maxWidth="lg">
             <Box mb={4}>
                 <Link
-                    href={`/organisation/${theTeam.organisation?.Organisation_ID}`}
+                    href={`/organisation/${renderTeam.organisation?.Organisation_ID}`}
                     className="text-xs"
                 >
                     &laquo; Go to Organisation
@@ -71,7 +69,7 @@ const TeamDetails: React.FC = () => {
                     Team Settings
                 </Typography>
                 <Card>
-                    {authUser && theTeam.organisation?.User_ID === authUser.User_ID ? (
+                    {authUser && renderTeam.organisation?.User_ID === authUser.User_ID ? (
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
                                 Edit Team Details
@@ -82,7 +80,7 @@ const TeamDetails: React.FC = () => {
                                         label="Team Name"
                                         variant="outlined"
                                         fullWidth
-                                        value={theTeam.Team_Name}
+                                        value={renderTeam.Team_Name}
                                         onChange={handleHTMLInputChange}
                                         name="Team_Name"
                                     />
@@ -92,7 +90,7 @@ const TeamDetails: React.FC = () => {
                                     <ReactQuill
                                         className="w-full"
                                         theme="snow"
-                                        value={theTeam.Team_Description}
+                                        value={renderTeam.Team_Description}
                                         onChange={(e: string) => handleTeamChange("Team_Description", e)}
                                         modules={{
                                             toolbar: [
@@ -121,12 +119,12 @@ const TeamDetails: React.FC = () => {
                             <Grid container spacing={3}>
                                 <Grid item xs={12} sm={6}>
                                     <strong>Team Name:</strong><br />
-                                    {theTeam.Team_Name}
+                                    {renderTeam.Team_Name}
                                 </Grid>
                                 <Grid item xs={12}>
                                     <strong>Team Description:</strong><br />
                                     <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
-                                        __html: theTeam.Team_Description || "No description available"
+                                        __html: renderTeam.Team_Description || "No description available"
                                     }} />
                                 </Grid>
                             </Grid>
@@ -141,7 +139,7 @@ const TeamDetails: React.FC = () => {
                     Projects Overview
                 </Typography>
                 <Grid container spacing={3}>
-                    {theTeam.projects?.map((project) => (
+                    {renderTeam.projects?.map((project) => (
                         <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
                             <Card>
                                 <CardContent>

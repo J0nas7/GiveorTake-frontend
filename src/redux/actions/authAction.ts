@@ -3,11 +3,11 @@ import { Dispatch } from 'redux'
 
 // Internal
 import { useAxios } from '@/hooks'
-import { setAuthUser, setIsLoggedIn } from '../slices/authSlice'
+import { setAuthUser, setAuthUserSeat, setIsLoggedIn } from '../slices/authSlice'
 
 export const useAuthActions = () => {
     const { httpGetRequest, httpPostWithData } = useAxios()
-    
+
     /**
      * @returns {Function} An asynchronous function to be dispatched, which updates the logged-in status.
      * 
@@ -23,11 +23,19 @@ export const useAuthActions = () => {
         try {
             const data = await httpGetRequest("auth/me")
             // console.log("fetchIsLoggedInStatus", data)
-            if (data && data.message === "Is logged in") {
+            if (
+                data && 
+                data.userData &&
+                data.message === "Is logged in"
+            ) {
                 // Update the Redux store with the user's logged-in status and details
                 // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))
                 dispatch(setIsLoggedIn({ "data": true }))
-                dispatch(setAuthUser({ "data": data.data }))
+                dispatch(setAuthUser({ "data": data.userData }))
+                
+                if (Array.isArray(data.userSeats) && data.userSeats.length) {
+                    dispatch(setAuthUserSeat({ "data": data.userSeats[0] }))
+                }
             } else {
                 localStorage.removeItem("isLoggedIn")
                 // Optionally handle the "not logged in" scenario
@@ -37,7 +45,7 @@ export const useAuthActions = () => {
             console.log("fetchIsLoggedInStatus", e)
         }
     }
-    
+
     return {
         fetchIsLoggedInStatus,
     }

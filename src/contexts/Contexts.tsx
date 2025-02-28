@@ -29,7 +29,7 @@ const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
-        items: users,
+        itemsById: usersById,
         newItem: newUser,
         itemDetail: userDetail,
         setItemDetail: setUserDetail,
@@ -39,11 +39,15 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         removeItem: removeUser,
         loading: userLoading,
         error: userError,
-    } = useResourceContext<User, "User_ID">("users", "User_ID");
+    } = useResourceContext<User, "User_ID">(
+        "users", 
+        "User_ID", 
+        ""
+    );
 
     return (
         <UsersContext.Provider value={{
-            users,
+            usersById,
             userDetail,
             newUser,
             setUserDetail,
@@ -72,9 +76,10 @@ const OrganisationsContext = createContext<OrganisationsContextType | undefined>
 
 export const OrganisationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
-        items: organisations,
+        itemsById: organisationsById,
         newItem: newOrganisation,
         itemDetail: organisationDetail,
+        readItemsById: readOrganisationsByUserId,
         setItemDetail: setOrganisationDetail,
         handleChangeNewItem: handleChangeNewOrganisation,
         addItem: addOrganisation,
@@ -82,11 +87,15 @@ export const OrganisationsProvider: React.FC<{ children: React.ReactNode }> = ({
         removeItem: removeOrganisation,
         loading: organisationLoading,
         error: organisationError,
-    } = useResourceContext<Organisation, "Organisation_ID">("organisations", "Organisation_ID");
+    } = useResourceContext<Organisation, "Organisation_ID">(
+        "organisations", 
+        "Organisation_ID", 
+        ""
+    );
 
     return (
         <OrganisationsContext.Provider value={{
-            organisations,
+            organisationsById,
             organisationDetail,
             newOrganisation,
             setOrganisationDetail,
@@ -115,9 +124,12 @@ const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
 
 export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
-        items: teams,
+        itemsById: teamsById,
+        itemById: teamById,
         newItem: newTeam,
         itemDetail: teamDetail,
+        readItemsById: readTeamsByOrganisationId,
+        readItemById: readTeamById,
         setItemDetail: setTeamDetail,
         handleChangeNewItem: handleChangeNewTeam,
         addItem: addTeam,
@@ -125,13 +137,20 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         removeItem: removeTeam,
         loading: teamLoading,
         error: teamError,
-    } = useResourceContext<Team, "Team_ID">("teams", "Team_ID");
+    } = useResourceContext<Team, "Team_ID">(
+        "teams", 
+        "Team_ID", 
+        "organisations"
+    );
 
     return (
         <TeamsContext.Provider value={{
-            teams,
-            teamDetail,
+            teamsById,
+            teamById,
             newTeam,
+            teamDetail,
+            readTeamsByOrganisationId,
+            readTeamById,
             setTeamDetail,
             handleChangeNewTeam,
             addTeam,
@@ -158,9 +177,10 @@ const TeamUserSeatsContext = createContext<TeamUserSeatsContextType | undefined>
 
 export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
-        items: teamUserSeats,
+        itemsById: teamUserSeatsById,
         newItem: newTeamUserSeat,
         itemDetail: teamUserSeatDetail,
+        readItemsById: readTeamUserSeatsByTeamId,
         setItemDetail: setTeamUserSeatDetail,
         handleChangeNewItem: handleChangeNewTeamUserSeat,
         addItem: addTeamUserSeat,
@@ -168,13 +188,18 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
         removeItem: removeTeamUserSeat,
         loading: teamUserSeatLoading,
         error: teamUserSeatError,
-    } = useResourceContext<TeamUserSeat, "Seat_ID">("team-user-seats", "Seat_ID");
+    } = useResourceContext<TeamUserSeat, "Seat_ID">(
+        "team-user-seats", 
+        "Seat_ID", 
+        "teams"
+    );
 
     return (
         <TeamUserSeatsContext.Provider value={{
-            teamUserSeats,
+            teamUserSeatsById,
             teamUserSeatDetail,
             newTeamUserSeat,
+            readTeamUserSeatsByTeamId,
             setTeamUserSeatDetail,
             handleChangeNewTeamUserSeat,
             addTeamUserSeat,
@@ -201,9 +226,10 @@ const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined
 
 export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
-        items: projects,
+        itemsById: projectsById,
         newItem: newProject,
         itemDetail: projectDetail,
+        readItemsById: readProjectsByTeamId,
         setItemDetail: setProjectDetail,
         handleChangeNewItem: handleChangeNewProject,
         addItem: addProject,
@@ -211,13 +237,18 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         removeItem: removeProject,
         loading: projectLoading,
         error: projectError,
-    } = useResourceContext<Project, "Project_ID">("projects", "Project_ID");
+    } = useResourceContext<Project, "Project_ID">(
+        "projects", 
+        "Project_ID", 
+        "teams"
+    );
 
     return (
         <ProjectsContext.Provider value={{
-            projects,
+            projectsById,
             projectDetail,
             newProject,
+            readProjectsByTeamId,
             setProjectDetail,
             handleChangeNewProject,
             addProject,
@@ -259,9 +290,10 @@ const TasksContext = createContext<TasksContextType | undefined>(undefined)
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Use useResourceContext directly for task-related logic
     const {
-        items: tasks,
+        itemsById: tasksById,
         newItem: newTask,
         itemDetail: taskDetail,
+        readItemsById: readTasksByProjectId,
         setItemDetail: setTaskDetail,
         handleChangeNewItem: handleChangeNewTask,
         addItem: addTask,
@@ -271,15 +303,17 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         error: taskError,
     } = useResourceContext<Task, "Task_ID">(
         "tasks",
-        "Task_ID"
+        "Task_ID",
+        "projects"
     );
 
     return (
         <TasksContext.Provider
             value={{
-                tasks,
+                tasksById,
                 taskDetail,
                 newTask,
+                readTasksByProjectId,
                 setTaskDetail,
                 handleChangeNewTask,
                 addTask,
@@ -306,7 +340,7 @@ export const useTasksContext = () => {
     const context = useResource()
 
     const {
-        items: tasks,
+        itemsById: tasksById,
         newItem: newTask,
         itemDetail: taskDetail,
         setItemDetail: setTaskDetail,
@@ -342,9 +376,10 @@ const TaskCommentsContext = createContext<TaskCommentsContextType | undefined>(u
 export const TaskCommentsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Use useResourceContext directly for task-comment related logic
     const {
-        items: taskComments,
+        itemsById: taskCommentsById,
         newItem: newTaskComment,
         itemDetail: taskCommentDetail,
+        readItemsById: readTaskCommentsByTaskId,
         setItemDetail: setTaskCommentDetail,
         handleChangeNewItem: handleChangeNewTaskComment,
         addItem: addTaskComment,
@@ -354,15 +389,17 @@ export const TaskCommentsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         error: taskCommentError,
     } = useResourceContext<TaskComment, "Comment_ID">(
         "task-comments",
-        "Comment_ID"
+        "Comment_ID",
+        "tasks"
     );
 
     return (
         <TaskCommentsContext.Provider
             value={{
-                taskComments,
+                taskCommentsById,
                 taskCommentDetail,
                 newTaskComment,
+                readTaskCommentsByTaskId,
                 setTaskCommentDetail,
                 handleChangeNewTaskComment,
                 addTaskComment,
@@ -393,9 +430,10 @@ const TaskMediaFilesContext = createContext<TaskMediaFilesContextType | undefine
 export const TaskMediaFilesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Use useResourceContext directly for task-media-file related logic
     const {
-        items: taskMediaFiles,
+        itemsById: taskMediaFilesById,
         newItem: newTaskMediaFile,
         itemDetail: taskMediaFileDetail,
+        readItemsById: readTaskMediaFilesByTaskId,
         setItemDetail: setTaskMediaFileDetail,
         handleChangeNewItem: handleChangeNewTaskMediaFile,
         addItem: addTaskMediaFile,
@@ -405,15 +443,17 @@ export const TaskMediaFilesProvider: React.FC<{ children: React.ReactNode }> = (
         error: taskMediaFileError,
     } = useResourceContext<TaskMediaFile, "Media_ID">(
         "task-media-files",
-        "Media_ID"
+        "Media_ID", 
+        "tasks"
     );
 
     return (
         <TaskMediaFilesContext.Provider
             value={{
-                taskMediaFiles,
+                taskMediaFilesById,
                 taskMediaFileDetail,
                 newTaskMediaFile,
+                readTaskMediaFilesByTaskId,
                 setTaskMediaFileDetail,
                 handleChangeNewTaskMediaFile,
                 addTaskMediaFile,

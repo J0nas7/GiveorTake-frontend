@@ -2,6 +2,7 @@
 
 // External
 import React, { useEffect } from "react"
+import { useParams } from "next/navigation"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faTrash } from "@fortawesome/free-solid-svg-icons"
 
@@ -12,8 +13,13 @@ import { useTasksContext } from "@/contexts"
 import { Task } from "@/types"
 
 const KanbanBoardContainer = () => {
-    const { tasks, setTaskDetail, removeTask } = useTasksContext()
+    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { tasksById, readTasksByProjectId, setTaskDetail, removeTask } = useTasksContext()
     
+    useEffect(() => {
+        if (projectId) readTasksByProjectId(parseInt(projectId))
+    }, [projectId])
+
     const columns = {
         todo: "To Do",
         inProgress: "In Progress",
@@ -29,7 +35,7 @@ const KanbanBoardContainer = () => {
                     <Block key={key} className={styles.column}>
                         <Heading variant="h2" className={styles.columnTitle}>{label}</Heading>
                         <Block className={styles.taskList}>
-                            {(Array.isArray(tasks) ? tasks : [])
+                            {(Array.isArray(tasksById) ? tasksById : [])
                                 .filter((task: Task) => task.Task_Status === label)
                                 .map((task: Task, index: number) => (
                                     <Block key={index} className={styles.taskCard}>
@@ -40,7 +46,7 @@ const KanbanBoardContainer = () => {
                                             {task.Task_Title}
                                         </Text>
                                         <button
-                                            onClick={() => removeTask(task.Task_ID)}
+                                            onClick={() => removeTask(task.Task_ID, task.Project_ID)}
                                             className={styles.removeButton}
                                         >
                                             <FontAwesomeIcon icon={faTrash} />

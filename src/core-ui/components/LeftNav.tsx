@@ -10,29 +10,22 @@ import { Organisation, Project, Team, TeamUserSeat } from "@/types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding } from "@fortawesome/free-solid-svg-icons";
 import { Block } from "@/components";
-import { selectAuthUser, useTypedSelector } from "@/redux";
-
-const navLinks: Record<string, string> = {
-    "/": "Dashboard",
-    "/backlog": "Backlog",
-    "/kanban": "Kanban Board",
-    "/organisation/1": "Settings",
-    "/profile": "Profile"
-};
+import { selectAuthUser, selectAuthUserSeat, useTypedSelector } from "@/redux";
 
 export const LeftNav: React.FC = () => {
-    const { teamUserSeats } = useTeamUserSeatsContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
+    const authUserSeats = useTypedSelector(selectAuthUserSeat) // Redux
 
-    if (!authUser) return null
+    if (!authUser || !authUserSeats) return null
 
-    // Get teams the user is a part of
-    const userTeam: TeamUserSeat|undefined = Array.isArray(teamUserSeats)
-        ? teamUserSeats.filter((seat) => seat.User_ID === authUser.User_ID)[0]
-        : undefined
-
-    if (!userTeam) return null
-
+    const navLinks: Record<string, string> = {
+        [`/project/${authUserSeats.team?.projects?.[0].Project_ID}`]: "Dashboard",
+        [`/backlog/${authUserSeats.team?.projects?.[0].Project_ID}`]: "Backlog",
+        [`/kanban/${authUserSeats.team?.projects?.[0].Project_ID}`]: "Kanban Board",
+        [`/organisation/${authUserSeats.team?.organisation?.Organisation_ID}`]: "Settings",
+        "/profile": "Profile"
+    };
+    
     return (
         <aside className={styles.leftNav}>
             <ul className={styles.navList}>
@@ -41,16 +34,16 @@ export const LeftNav: React.FC = () => {
                         <FontAwesomeIcon icon={faBuilding} />
                         <Block variant="span">
                             <Link 
-                                href={`/organisation/${userTeam.team?.organisation?.Organisation_ID}`} 
+                                href={`/organisation/${authUserSeats.team?.organisation?.Organisation_ID}`} 
                                 className={`inline-block text-xs`}
                             >
-                                <strong>{userTeam.team?.organisation?.Organisation_Name}</strong>
+                                <strong>{authUserSeats.team?.organisation?.Organisation_Name}</strong>
                             </Link>
                             <Link 
-                                href={`/team/${userTeam.team?.Team_ID}`} 
+                                href={`/team/${authUserSeats.team?.Team_ID}`} 
                                 className={`inline-block text-sm`}
                             >
-                                {userTeam.team?.Team_Name}
+                                {authUserSeats.team?.Team_Name}
                             </Link>
                         </Block>
                     </Block>

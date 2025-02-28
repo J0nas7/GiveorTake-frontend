@@ -48,7 +48,10 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
 
     const handleBlur = () => {
         setIsEditing(false);
-        saveTaskChanges({ ...task, Task_Title: title });
+        saveTaskChanges(
+            { ...task, Task_Title: title },
+            task.Project_ID
+        );
     };
 
     return (
@@ -77,7 +80,10 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
 
     const handleSave = () => {
         setIsEditing(false);
-        saveTaskChanges({ ...task, Task_Description: description });
+        saveTaskChanges(
+            { ...task, Task_Description: description },
+            task.Project_ID
+        )
     };
 
     const handleCancel = () => {
@@ -158,7 +164,7 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
     const handleAddComment = async () => {
         if (!authUser) return
-        
+
         if (newComment.trim()) {
             const theNewComment: TaskComment = {
                 Task_ID: task.Task_ID,
@@ -166,8 +172,8 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
                 Comment_Text: newComment.trim()
             }
             console.log("theNewComment", theNewComment)
-            await addTaskComment(theNewComment)
-            
+            await addTaskComment(theNewComment.Task_ID, theNewComment)
+
             setNewComment("");
             setIsEditorVisible(false);
         }
@@ -268,10 +274,10 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
     };
 
     const handleTaskChanges = (field: keyof Task, value: string) => {
-        saveTaskChanges({
-            ...task,
-            [field]: value
-        })
+        saveTaskChanges(
+            { ...task, [field]: value },
+            task.Project_ID
+        )
 
         if (taskDetail) {
             setTaskDetail({
@@ -382,7 +388,7 @@ export const TaskDetailWithoutModal = () => {
     const { taskId } = useParams()
 
     // Fetch tasks using the custom hook
-    const { tasks, setTaskDetail } = useTasksContext()
+    const { tasksById, setTaskDetail } = useTasksContext()
 
     const [theTask, setTheTask] = useState<Task | undefined>(undefined)
 
@@ -393,13 +399,13 @@ export const TaskDetailWithoutModal = () => {
         // Ensure taskId is a string and not an array or undefined
         // Handle case when taskId is not valid
         if (typeof taskId == 'string') {
-            if (tasks) {
+            if (tasksById) {
                 // Filter the tasks to find the task with the matching taskId
-                const findTask = tasks.find((t) => t.Task_ID === parseInt(taskId))
+                const findTask = tasksById.find((t) => t.Task_ID === parseInt(taskId))
                 setTheTask(findTask)
             }
         }
-    }, [tasks, taskId])
+    }, [tasksById, taskId])
 
     if (!theTask) return <div>Task not found</div>
 

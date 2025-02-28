@@ -19,18 +19,18 @@ import { selectAuthUser, useTypedSelector } from '@/redux';
 
 const OrganisationDetails: React.FC = () => {
     const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
-    const { organisations, setOrganisationDetail, saveOrganisationChanges } = useOrganisationsContext()
+    const { organisationsById, setOrganisationDetail, saveOrganisationChanges } = useOrganisationsContext()
 
     const [theOrganisation, setTheOrganisation] = useState<Organisation | undefined>(undefined)
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
     // Filter the tasks to find the task with the matching taskId
     useEffect(() => {
-        if (organisations) {
-            const findOrganisation = organisations.find((organisation) => organisation.Organisation_ID === parseInt(organisationId))
+        if (organisationsById) {
+            const findOrganisation = organisationsById.find((organisation) => organisation.Organisation_ID === parseInt(organisationId))
             setTheOrganisation(findOrganisation)
         }
-    }, [organisations, organisationId])
+    }, [organisationsById, organisationId])
 
     const handleHTMLInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -49,7 +49,7 @@ const OrganisationDetails: React.FC = () => {
 
     const handleSaveChanges = () => {
         if (theOrganisation) {
-            saveOrganisationChanges(theOrganisation);
+            saveOrganisationChanges(theOrganisation, theOrganisation.User_ID)
         }
     };
 
