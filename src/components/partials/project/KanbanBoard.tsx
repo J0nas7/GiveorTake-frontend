@@ -21,10 +21,6 @@ const KanbanBoardContainer = () => {
         done: "Done"
     }
 
-    useEffect(() => {
-        console.log("tasks fetched in kanban", tasks)
-    }, [tasks])
-
     return (
         <Block className={styles.container}>
             <Heading variant="h1" className={styles.title}>Kanban Board</Heading>

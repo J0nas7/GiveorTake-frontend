@@ -17,7 +17,11 @@ import {
     TeamUserSeatsContextType, 
     TeamsContextType, 
     OrganisationsContextType, 
-    UsersContextType
+    UsersContextType,
+    TaskCommentsContextType,
+    TaskComment,
+    TaskMediaFile,
+    TaskMediaFilesContextType
 } from "@/types"
 
 // Context for Users
@@ -235,7 +239,7 @@ export const useProjectsContext = () => {
     return context;
 };
 
-// Tasks Context
+// Tasks Context (DEPRECATED)
 /*export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <ResourceProvider<Task, "Task_ID">
@@ -247,6 +251,7 @@ export const useProjectsContext = () => {
     )
 }*/
 
+// Tasks Context
 // Context API for Tasks
 const TasksContext = createContext<TasksContextType | undefined>(undefined)
 
@@ -328,3 +333,105 @@ export const useTasksContext = () => {
         taskError,
     }
 }*/
+
+// TaskComments Context
+// Context API for TaskComments
+const TaskCommentsContext = createContext<TaskCommentsContextType | undefined>(undefined);
+
+// TaskCommentsProvider using useResourceContext
+export const TaskCommentsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Use useResourceContext directly for task-comment related logic
+    const {
+        items: taskComments,
+        newItem: newTaskComment,
+        itemDetail: taskCommentDetail,
+        setItemDetail: setTaskCommentDetail,
+        handleChangeNewItem: handleChangeNewTaskComment,
+        addItem: addTaskComment,
+        saveItemChanges: saveTaskCommentChanges,
+        removeItem: removeTaskComment,
+        loading: taskCommentLoading,
+        error: taskCommentError,
+    } = useResourceContext<TaskComment, "Comment_ID">(
+        "task-comments",
+        "Comment_ID"
+    );
+
+    return (
+        <TaskCommentsContext.Provider
+            value={{
+                taskComments,
+                taskCommentDetail,
+                newTaskComment,
+                setTaskCommentDetail,
+                handleChangeNewTaskComment,
+                addTaskComment,
+                saveTaskCommentChanges,
+                removeTaskComment,
+                // taskCommentLoading,
+                // taskCommentError,
+            }}
+        >
+            {children}
+        </TaskCommentsContext.Provider>
+    );
+};
+
+export const useTaskCommentsContext = () => {
+    const context = useContext(TaskCommentsContext);
+    if (!context) {
+        throw new Error("useTaskCommentsContext must be used within a TaskCommentsProvider");
+    }
+    return context;
+};
+
+// TaskMediaFiles Context
+// Context API for TaskMediaFiles
+const TaskMediaFilesContext = createContext<TaskMediaFilesContextType | undefined>(undefined);
+
+// TaskMediaFilesProvider using useResourceContext
+export const TaskMediaFilesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Use useResourceContext directly for task-media-file related logic
+    const {
+        items: taskMediaFiles,
+        newItem: newTaskMediaFile,
+        itemDetail: taskMediaFileDetail,
+        setItemDetail: setTaskMediaFileDetail,
+        handleChangeNewItem: handleChangeNewTaskMediaFile,
+        addItem: addTaskMediaFile,
+        saveItemChanges: saveTaskMediaFileChanges,
+        removeItem: removeTaskMediaFile,
+        loading: taskMediaFileLoading,
+        error: taskMediaFileError,
+    } = useResourceContext<TaskMediaFile, "Media_ID">(
+        "task-media-files",
+        "Media_ID"
+    );
+
+    return (
+        <TaskMediaFilesContext.Provider
+            value={{
+                taskMediaFiles,
+                taskMediaFileDetail,
+                newTaskMediaFile,
+                setTaskMediaFileDetail,
+                handleChangeNewTaskMediaFile,
+                addTaskMediaFile,
+                saveTaskMediaFileChanges,
+                removeTaskMediaFile,
+                // taskMediaFileLoading,
+                // taskMediaFileError,
+            }}
+        >
+            {children}
+        </TaskMediaFilesContext.Provider>
+    );
+};
+
+export const useTaskMediaFilesContext = () => {
+    const context = useContext(TaskMediaFilesContext);
+    if (!context) {
+        throw new Error("useTaskMediaFilesContext must be used within a TaskMediaFilesProvider");
+    }
+    return context;
+};

@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket } from "@fortawesome/free-solid-svg-icons";
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 import dynamic from "next/dynamic";
 
@@ -13,9 +13,13 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
-import { useTasksContext } from "@/contexts";
-import { Task } from "@/types";
+import { useTaskCommentsContext, useTasksContext } from "@/contexts";
+import { Task, TaskComment } from "@/types";
 import Link from "next/link";
+import { Text } from "@/components/ui/block-text";
+import { Heading } from "@/components/ui/heading";
+import clsx from "clsx";
+import { selectAuthUser, useTypedSelector } from "@/redux";
 
 interface TaskDetailProps {
     task?: Task
@@ -145,21 +149,29 @@ const MediaFilesArea: React.FC<{ task: Task }> = () => {
     );
 };
 
-const CommentsArea: React.FC<{ task: Task }> = () => {
-    const [comments, setComments] = useState([
-        { text: "User1: Great work!", createdAt: "2025-02-26" },
-        { text: "User2: Needs changes.", createdAt: "2025-02-25" }
-    ]);
+const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
+    const { addTaskComment, handleChangeNewTaskComment } = useTaskCommentsContext();
+    const authUser = useTypedSelector(selectAuthUser)
+
     const [newComment, setNewComment] = useState("");
     const [isEditorVisible, setIsEditorVisible] = useState(false);
 
-    const handleAddComment = () => {
+    const handleAddComment = async () => {
+        if (!authUser) return
+        
         if (newComment.trim()) {
-            setComments([...comments, { text: `You: ${newComment.trim()}`, createdAt: new Date().toISOString().split("T")[0] }]);
+            const theNewComment: TaskComment = {
+                Task_ID: task.Task_ID,
+                User_ID: authUser.User_ID,
+                Comment_Text: newComment.trim()
+            }
+            console.log("theNewComment", theNewComment)
+            await addTaskComment(theNewComment)
+            
             setNewComment("");
             setIsEditorVisible(false);
         }
-    };
+    }
 
     // Handle new comment cancel
     const handleCommentCancel = () => {
@@ -201,14 +213,14 @@ const CommentsArea: React.FC<{ task: Task }> = () => {
                 </div>
             )}
             {/* Comments List */}
-            {comments.map((comment, index) => (
+            {task.comments?.map((comment, index) => (
                 <div key={index} className={styles.commentItem}>
                     <div
                         className={styles.comment}
-                        dangerouslySetInnerHTML={{ __html: comment.text }}
+                        dangerouslySetInnerHTML={{ __html: comment.Comment_Text }}
                     />
                     <div className={styles.commentMeta}>
-                        <span>Created: {new Date().toISOString().split("T")[0]}</span>
+                        <span>Created: {comment.Comment_CreatedAt}</span>
                         <div className={styles.commentActions}>
                             <FontAwesomeIcon icon={faEdit} className={styles.icon} />
                             <FontAwesomeIcon icon={faTrash} className={styles.icon} />
@@ -228,12 +240,18 @@ const CtaButtons = ({
 }) => {
     return (
         <div className={styles.ctaButtons}>
-            <button className={styles.editButton}>Edit</button>
-            <button className={styles.deleteButton}>Delete</button>
-            <button className={styles.shareButton}>Share</button>
+            <button className={styles.ctaButton}>
+                <FontAwesomeIcon icon={faTrashCan} />
+                <Text variant="span">Archive</Text>
+            </button>
+            <button className={styles.ctaButton}>
+                <FontAwesomeIcon icon={faArrowUpFromBracket} />
+                <Text variant="span">Share</Text>
+            </button>
             {task === undefined && (
-                <Link href={`/task/${theTask.Task_ID}`}>
+                <Link href={`/task/${theTask.Task_ID}`} className={styles.ctaButton}>
                     <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                    <Text variant="span">Open in URL</Text>
                 </Link>
             )}
         </div>
@@ -241,11 +259,45 @@ const CtaButtons = ({
 };
 
 const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
+    const { taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
+
+    // Handle status change
+    const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const newStatus = event.target.value as Task["Task_Status"]
+        handleTaskChanges("Task_Status", newStatus)
+    };
+
+    const handleTaskChanges = (field: keyof Task, value: string) => {
+        saveTaskChanges({
+            ...task,
+            [field]: value
+        })
+
+        if (taskDetail) {
+            setTaskDetail({
+                ...taskDetail,
+                [field]: value
+            })
+        }
+    }
+
     return (
         <Card className={styles.detailsSection}>
-            <h2>Task Details</h2>
-            <p><strong>Status:</strong> {task.Task_Status}</p>
+            <Heading variant="h2" className="font-bold">Task Details</Heading>
+            {/* Task Status */}
+            <p>
+                <strong>Status:</strong>
+                {/* Dropdown to change the status */}
+                <select value={task.Task_Status} onChange={handleStatusChange} className="p-2 border rounded">
+                    <option value="To Do">To Do</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Waiting for Review">Waiting for Review</option>
+                    <option value="Done">Done</option>
+                </select>
+            </p>
+            {/* Task Assignee */}
             <p><strong>Assigned To:</strong> {task.Assigned_User_ID || "Unassigned"}</p>
+            <p><strong>Team:</strong> {task.project?.team?.Team_Name}</p>
             <p><strong>Created At:</strong> {task.Task_CreatedAt}</p>
             <p><strong>Due Date:</strong> {task.Task_Due_Date || "N/A"}</p>
         </Card>
@@ -254,7 +306,7 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     const { taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
-    const theTask: Task|undefined = task || taskDetail;
+    const theTask: Task | undefined = task || taskDetail;
 
     // Disable body scrolling when TaskDetailContainer is mounted
     useEffect(() => {
@@ -318,7 +370,7 @@ export const TaskDetailWithModal = () => {
 
     return (
         <div className={styles.taskDetailModalBackground} onClick={handleBackgroundClick}>
-            <div className={styles.taskDetailContainer} ref={taskDetailRef}>
+            <div className={clsx(styles.taskDetailContainer, styles.withModal)} ref={taskDetailRef}>
                 <TaskDetail />
             </div>
         </div>

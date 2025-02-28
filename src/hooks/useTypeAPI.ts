@@ -62,7 +62,9 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     const postItem = async (newItem: Omit<T, IDKey>) => {
         try {
             const response: APIResponse<T> = await httpPostWithData(resource, newItem);
-            if (response.data) return true;
+            
+            console.log(`${resource} postItem`, response)
+            if (response) return true
 
             throw new Error(`Failed to add ${resource}`);
         } catch (error: any) {
@@ -76,8 +78,9 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
         try {
             const response: APIResponse<T> = await httpPutWithData(`${resource}/${updatedItem[idFieldName]}`, updatedItem);
 
-            if (response.data) return true;
+            if (!response.message) return true;
 
+            console.log(`${resource} updateItem failed`, response)
             throw new Error(`Failed to update ${resource}`);
         } catch (error: any) {
             setError(error.message || `An error occurred while updating the ${resource}.`);

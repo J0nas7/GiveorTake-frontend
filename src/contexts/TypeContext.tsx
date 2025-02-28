@@ -28,9 +28,9 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
         if (isLoggedIn === true) fetchOnMount()
     }, [isLoggedIn])
 
-    const addItem = async () => {
-        if (newItem) {
-            const createdItem = await postItem(newItem)
+    const addItem = async (object?: T) => {
+        if (newItem || object) {
+            const createdItem = await postItem(object || newItem!)
             if (createdItem) {
                 const data = await fetchItems() // Refresh items from API
                 if (data) {
@@ -40,12 +40,19 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
             }
         }
     }
-
-    const handleChangeNewItem = (field: keyof T, value: string) => {
-        setNewItem((prevState) => ({
-            ...prevState,
-            [field]: value,
-        } as T))
+    
+    const handleChangeNewItem = async (field: keyof T, value: string, object?: T) => {
+        if (object) {
+            setNewItem((prevState) => ({
+                ...prevState,
+                ...object
+            } as T))
+        } else {
+            setNewItem((prevState) => ({
+                ...prevState,
+                [field]: value,
+            } as T))
+        }
     }
 
     const saveItemChanges = async (itemChanges: T) => {

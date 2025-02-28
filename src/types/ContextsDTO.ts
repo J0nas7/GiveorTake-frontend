@@ -169,6 +169,8 @@ export type Task = {
 
     // Relationships
     project?: Project
+    comments?: TaskComment[]
+    mediaFiles?: TaskMediaFile[]
 }
 
 export type TaskFields =
@@ -184,6 +186,68 @@ export type TasksContextType = {
     addTask: () => void
     saveTaskChanges: (taskChanges: Task) => void
     removeTask: (id: number) => void
+}
+
+// Task Comment Type
+export type TaskComment = {
+    Comment_ID?: number;
+    Task_ID: number;
+    User_ID: number;
+    Comment_Text: string;
+    Comment_CreatedAt?: string; // YYYY-MM-DD format
+    Comment_UpdatedAt?: string; // YYYY-MM-DD format
+    Comment_DeletedAt?: string; // Nullable, YYYY-MM-DD format
+
+    // Relationships
+    task?: Task;
+    user?: User;
+}
+
+export type TaskCommentFields =
+    "Comment_ID" | "Task_ID" | "User_ID" | "Comment_Text" | 
+    "Comment_CreatedAt" | "Comment_UpdatedAt" | "Comment_DeletedAt"
+
+export type TaskCommentsContextType = {
+    taskCommentDetail: TaskComment | undefined
+    taskComments: TaskComment[]
+    newTaskComment: TaskComment | undefined
+    setTaskCommentDetail: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
+    handleChangeNewTaskComment: (field: TaskCommentFields, value: string, object?: TaskComment | undefined) => Promise<void>
+    addTaskComment: (object?: TaskComment | undefined) => Promise<void>;
+    saveTaskCommentChanges: (taskCommentChanges: TaskComment) => void
+    removeTaskComment: (id: number) => void
+}
+
+// Task Media File Type
+export type TaskMediaFile = {
+    Media_ID: number;
+    Task_ID: number;
+    Uploaded_By_User_ID: number;
+    Media_File_Name: string;
+    Media_File_Path: string;
+    Media_File_Type: string; // E.g. 'image/jpeg', 'application/pdf'
+    Media_CreatedAt: string; // YYYY-MM-DD format
+    Media_UpdatedAt: string; // YYYY-MM-DD format
+    Media_DeletedAt?: string; // Nullable, YYYY-MM-DD format
+
+    // Relationships
+    task?: Task;
+    uploadedBy?: User;
+}
+
+export type TaskMediaFileFields =
+    "Media_ID" | "Task_ID" | "Uploaded_By_User_ID" | "Media_File_Name" | "Media_File_Path" |
+    "Media_File_Type" | "Media_CreatedAt" | "Media_UpdatedAt" | "Media_DeletedAt"
+
+export type TaskMediaFilesContextType = {
+    taskMediaFileDetail: TaskMediaFile | undefined
+    taskMediaFiles: TaskMediaFile[]
+    newTaskMediaFile: TaskMediaFile | undefined
+    setTaskMediaFileDetail: React.Dispatch<React.SetStateAction<TaskMediaFile | undefined>>
+    handleChangeNewTaskMediaFile: (field: TaskMediaFileFields, value: string) => void
+    addTaskMediaFile: () => void
+    saveTaskMediaFileChanges: (taskMediaFileChanges: TaskMediaFile) => void
+    removeTaskMediaFile: (id: number) => void
 }
 
 // Activity Log Type
