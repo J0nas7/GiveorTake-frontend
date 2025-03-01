@@ -12,7 +12,7 @@ const UserDetails: React.FC = () => {
     // Get user data and the save function from context
     const { saveUserChanges, removeUser } = useUsersContext();
     const { teamUserSeatsById } = useTeamUserSeatsContext();
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | undefined>(undefined);
     const [imagePreview, setImagePreview] = useState<string | undefined>(user?.User_ImageSrc);
 
     // Redux
@@ -64,7 +64,7 @@ const UserDetails: React.FC = () => {
 
     // Handle user deletion
     const handleDeleteUser = () => {
-        if (user) {
+        if (user && user.User_ID) {
             removeUser(user.User_ID, 0);
         }
     };
@@ -74,6 +74,38 @@ const UserDetails: React.FC = () => {
         ? teamUserSeatsById.filter((seat) => seat.User_ID === user?.User_ID)
         : []
 
+    return (
+        <UserDetailsView
+            user={user}
+            imagePreview={imagePreview}
+            userTeams={userTeams}
+            handleChange={handleChange}
+            handleImageUpload={handleImageUpload}
+            handleSaveChanges={handleSaveChanges}
+            handleDeleteUser={handleDeleteUser}
+        />
+    );
+};
+
+export interface UserDetailsViewProps {
+    user: User | undefined;
+    imagePreview: string | undefined;
+    userTeams: TeamUserSeat[];
+    handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleSaveChanges: () => void;
+    handleDeleteUser: () => void;
+}
+
+export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
+    user,
+    imagePreview,
+    userTeams,
+    handleChange,
+    handleImageUpload,
+    handleSaveChanges,
+    handleDeleteUser,
+}) => {
     if (!user) return <p>Loading user details...</p>;
 
     return (
@@ -163,10 +195,9 @@ const UserDetails: React.FC = () => {
                             <li key={seat.Seat_ID} className={styles.teamItem}>
                                 <p><strong>Team Role:</strong> {seat.Seat_Role}</p>
                                 <p><strong>Status:</strong> {seat.Seat_Status}</p>
-                                {/* The team name is stored in `seat.team?.name` */}
                                 <p>
                                     <strong>Team Name:</strong>{" "}
-                                    <Link 
+                                    <Link
                                         href={`/team/${seat.team?.Team_ID}`}
                                         className="blue-link"
                                     >
@@ -175,7 +206,7 @@ const UserDetails: React.FC = () => {
                                 </p>
                                 <p>
                                     <strong>Organisation Name:</strong>{" "}
-                                    <Link 
+                                    <Link
                                         href={`/organisation/${seat.team?.organisation?.Organisation_ID}`}
                                         className="blue-link"
                                     >

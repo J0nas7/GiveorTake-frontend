@@ -18,10 +18,10 @@ ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearS
 
 const DashboardContainer = () => {
     const { t } = useTranslation(['dashboard']);
-    const { tasks } = useTasksContext();
+    const { tasksById } = useTasksContext();
 
     // Ensure tasks is always an array
-    const safeTasks = Array.isArray(tasks) ? tasks : [];
+    const safeTasks = Array.isArray(tasksById) ? tasksById : [];
 
     // Grouping tasks by status
     const taskStatuses = useMemo(() => {

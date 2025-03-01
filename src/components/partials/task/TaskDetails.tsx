@@ -165,7 +165,7 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     const handleAddComment = async () => {
         if (!authUser) return
 
-        if (newComment.trim()) {
+        if (newComment.trim() && authUser.User_ID) {
             const theNewComment: TaskComment = {
                 Task_ID: task.Task_ID,
                 User_ID: authUser.User_ID,

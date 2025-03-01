@@ -18,7 +18,7 @@ const KanbanBoardContainer = () => {
     const { projectById, readProjectById } = useProjectsContext()
     const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
-    
+
     const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
@@ -42,14 +42,40 @@ const KanbanBoardContainer = () => {
     }
 
     return (
+        <KanbanBoardView
+            project={renderProject}
+            tasks={renderTasks}
+            columns={columns}
+            removeTask={removeTask}
+            setTaskDetail={setTaskDetail}
+        />
+    )
+}
+
+export interface KanbanBoardViewProps {
+    project: Project | undefined
+    tasks: Task[] | undefined
+    columns: { [key: string]: string }
+    removeTask: (taskId: number, projectId: number) => void
+    setTaskDetail: (task: Task) => void
+}
+
+export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
+    project,
+    tasks,
+    columns,
+    removeTask,
+    setTaskDetail
+}) => {
+    return (
         <Block className={styles.container}>
-            <Heading variant="h1" className={styles.title}>{`Kanban: ${projectById?.Project_Name}`}</Heading>
+            <Heading variant="h1" className={styles.title}>{`Kanban: ${project?.Project_Name}`}</Heading>
             <Block className={styles.board}>
                 {Object.entries(columns).map(([key, label]) => (
                     <Block key={key} className={styles.column}>
                         <Heading variant="h2" className={styles.columnTitle}>{label}</Heading>
                         <Block className={styles.taskList}>
-                            {(Array.isArray(tasksById) ? tasksById : [])
+                            {(Array.isArray(tasks) ? tasks : [])
                                 .filter((task: Task) => task.Task_Status === label)
                                 .map((task: Task, index: number) => (
                                     <Block key={index} className={styles.taskCard}>

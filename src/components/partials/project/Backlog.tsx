@@ -3,7 +3,7 @@
 // External
 import React, { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useTranslation } from "next-i18next"
+import { TFunction, useTranslation } from "next-i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEllipsisV, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
 
@@ -11,7 +11,7 @@ import { faEllipsisV, faPlus, faSortDown, faSortUp } from "@fortawesome/free-sol
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field, Heading } from "@/components"
 import { useProjectsContext, useTasksContext } from "@/contexts"
-import { Project, Task } from "@/types";
+import { Project, Task, TaskFields } from "@/types";
 import { selectAuthUser, useTypedSelector } from "@/redux";
 
 const BacklogContainer = () => {
@@ -85,29 +85,65 @@ const BacklogContainer = () => {
             return 0;
         });
     }, [renderTasks, currentSort, currentOrder]);
+    
+    return (
+        <BacklogContainerView
+            renderProject={renderProject}
+            sortedTasks={sortedTasks}
+            newTask={newTask}
+            currentSort={currentSort}
+            currentOrder={currentOrder}
+            showActionMenu={showActionMenu}
+            t={t}
+            handleSort={handleSort}
+            handleCreateTask={() => addTask(parseInt(projectId), newTask)}
+            handleChangeNewTask={handleChangeNewTask}
+            setTaskDetail={setTaskDetail}
+            setActionMenu={setActionMenu}
+        />
+    );
+}
 
+export interface BacklogContainerViewProps {
+    renderProject?: Project | undefined;
+    sortedTasks: Task[];
+    newTask: Task | undefined;
+    currentSort: string;
+    currentOrder: string;
+    showActionMenu: number | null;
+    t: TFunction
+    handleSort: (column: string) => void;
+    handleCreateTask: () => void;
+    handleChangeNewTask: (field: TaskFields, value: string) => Promise<void>
+    setTaskDetail: (task: Task) => void;
+    setActionMenu: (taskId: number) => void;
+}
+
+export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
+    renderProject,
+    sortedTasks,
+    currentSort,
+    currentOrder,
+    newTask,
+    showActionMenu,
+    handleSort,
+    handleCreateTask,
+    handleChangeNewTask,
+    setActionMenu,
+    setTaskDetail,
+}) => {
     return (
         <Block className={styles.taskTableContainer}>
             <Heading variant="h1" className={styles.title}>{`Backlog: ${renderProject?.Project_Name}`}</Heading>
             <table className={styles.taskTable}>
                 <thead>
                     <tr>
-                        <th onClick={() => handleSort("1")}>
-                            Task Title {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                        </th>
-                        <th onClick={() => handleSort("2")}>
-                            Task Number {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                        </th>
-                        <th onClick={() => handleSort("3")}>
-                            Status {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                        </th>
-                        <th onClick={() => handleSort("4")}>
-                            Assignee {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                        </th>
-                        <th onClick={() => handleSort("5")}>
-                            Created At {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                        </th>
-                        <th></th> {/* Actions column */}
+                        <th onClick={() => handleSort("1")}>Task Title {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
+                        <th onClick={() => handleSort("2")}>Task Number {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
+                        <th onClick={() => handleSort("3")}>Status {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
+                        <th onClick={() => handleSort("4")}>Assignee {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
+                        <th onClick={() => handleSort("5")}>Created At {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -116,18 +152,13 @@ const BacklogContainer = () => {
                             <Block className={styles.inputContainer}>
                                 <Field
                                     type="text"
-                                    lbl={t('backlog:list:New task')}
+                                    lbl="New Task"
                                     innerLabel={true}
                                     value={newTask?.Task_Title ?? ''}
                                     onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
-                                    onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => null}
                                     disabled={false}
                                 />
-                                <button
-                                    type="submit"
-                                    onClick={handleCreateTask}
-                                    className={styles.addButton}
-                                >
+                                <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
                                     <FontAwesomeIcon icon={faPlus} /> Add
                                 </button>
                             </Block>
@@ -136,10 +167,7 @@ const BacklogContainer = () => {
                     {sortedTasks.map((task) => (
                         <tr key={task.Task_ID}>
                             <td>{task.Task_Title}</td>
-                            <td
-                                onClick={() => setTaskDetail(task)}
-                                className="cursor-pointer hover:underline"
-                            >
+                            <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
                                 GOT-{task.Task_Number}
                             </td>
                             <td className={styles.status}>{task.Task_Status}</td>
@@ -162,8 +190,8 @@ const BacklogContainer = () => {
                 </tbody>
             </table>
         </Block>
-    )
-}
+    );
+};
 
 export const Backlog = () => (
     <BacklogContainer />
