@@ -1,5 +1,5 @@
 // External
-import React, { useState } from "react";
+import React from "react";
 
 // Internal
 import { useAxios } from "."; // Assuming you have a custom hook for Axios requests
@@ -21,11 +21,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     parentResource: string
 ) => {
     // Hooks
-    const { httpGetRequest, httpPostWithData, httpPutWithData, httpDeleteRequest } = useAxios();
-    
-    // State
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    const { httpGetRequest, httpPostWithData, httpPutWithData, httpDeleteRequest } = useAxios()
 
     // Fetch items by parent ID (R in CRUD)
     const fetchItemsByParent = async (parentId: number) => {
@@ -37,11 +33,8 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
 
             throw new Error(`Failed to fetchItemsByParent ${resource}`);
         } catch (error: any) {
-            setError(error.message || `An error occurred while fetching ${parentResource}.`);
             console.log(error.message || `An error occurred while fetching ${parentResource}.`);
             return false;
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -49,13 +42,14 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     const fetchItem = async (itemId: number) => {
         try {
             // : APIResponse<T>
-            const response = await httpGetRequest(`${resource}/${itemId}`);
-
+            const response = await httpGetRequest(`${resource}/${itemId}`)
+            console.log(response)
+            
             if (response) return response
 
             throw new Error(`Failed to fetchItem ${resource}`);
         } catch (error: any) {
-            setError(error.message || `An error occurred while fetching the ${resource}.`);
+            console.log(error.message || `An error occurred while fetching the ${resource}.`);
             return false;
         }
     };
@@ -70,7 +64,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
 
             throw new Error(`Failed to add ${resource}`);
         } catch (error: any) {
-            setError(error.message || `An error occurred while adding the ${resource}.`);
+            console.log(error.message || `An error occurred while adding the ${resource}.`);
             return false;
         }
     };
@@ -85,7 +79,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
             console.log(`${resource} updateItem failed`, response)
             throw new Error(`Failed to update ${resource}`);
         } catch (error: any) {
-            setError(error.message || `An error occurred while updating the ${resource}.`);
+            console.log(error.message || `An error occurred while updating the ${resource}.`);
             return false;
         }
     };
@@ -102,14 +96,12 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
 
             return true;
         } catch (error: any) {
-            setError(error.message || `An error occurred while deleting the ${resource}.`);
+            console.log(error.message || `An error occurred while deleting the ${resource}.`);
             return false;
         }
     };
 
     return {
-        loading,
-        error,
         fetchItemsByParent,
         fetchItem,
         postItem,

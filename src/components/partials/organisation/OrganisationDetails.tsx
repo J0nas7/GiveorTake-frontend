@@ -19,18 +19,18 @@ import { selectAuthUser, useTypedSelector } from '@/redux';
 
 const OrganisationDetails: React.FC = () => {
     const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
-    const { organisationsById, setOrganisationDetail, saveOrganisationChanges } = useOrganisationsContext()
-
-    const [theOrganisation, setTheOrganisation] = useState<Organisation | undefined>(undefined)
+    const { organisationById, readOrganisationById, saveOrganisationChanges } = useOrganisationsContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
-    // Filter the tasks to find the task with the matching taskId
+    const [renderOrganisation, setRenderOrganisation] = useState<Organisation | undefined>(undefined)
+    
+    useEffect(() => { readOrganisationById(parseInt(organisationId)); }, [organisationId])
     useEffect(() => {
-        if (organisationsById) {
-            const findOrganisation = organisationsById.find((organisation) => organisation.Organisation_ID === parseInt(organisationId))
-            setTheOrganisation(findOrganisation)
+        if (organisationId) {
+            setRenderOrganisation(organisationById)
+            document.title = `Organisation: ${organisationById?.Organisation_Name} - GiveOrTake`
         }
-    }, [organisationsById, organisationId])
+    }, [organisationById])
 
     const handleHTMLInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -39,21 +39,21 @@ const OrganisationDetails: React.FC = () => {
 
     // Handle input changes for text fields
     const handleOrganisationChange = (field: OrganisationFields, value: string) => {
-        if (!theOrganisation) return
+        if (!renderOrganisation) return
 
-        setTheOrganisation((prev) => ({
+        setRenderOrganisation((prev) => ({
             ...prev!,
             [field]: value
         }));
     }
 
     const handleSaveChanges = () => {
-        if (theOrganisation) {
-            saveOrganisationChanges(theOrganisation, theOrganisation.User_ID)
+        if (renderOrganisation) {
+            saveOrganisationChanges(renderOrganisation, renderOrganisation.User_ID)
         }
     };
 
-    if (!theOrganisation) {
+    if (!renderOrganisation) {
         return <div>Loading...</div>; // Add loading state for when data is still fetching
     }
 
@@ -66,7 +66,7 @@ const OrganisationDetails: React.FC = () => {
                 </Typography>
 
                 <Card>
-                    {authUser && theOrganisation.User_ID === authUser.User_ID ? (
+                    {authUser && renderOrganisation.User_ID === authUser.User_ID ? (
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
                                 Edit Organisation Details
@@ -77,7 +77,7 @@ const OrganisationDetails: React.FC = () => {
                                         label="Organisation Name"
                                         variant="outlined"
                                         fullWidth
-                                        value={theOrganisation.Organisation_Name}
+                                        value={renderOrganisation.Organisation_Name}
                                         onChange={handleHTMLInputChange}
                                         name="Organisation_Name"
                                     />
@@ -87,7 +87,7 @@ const OrganisationDetails: React.FC = () => {
                                     <ReactQuill
                                         className="w-full"
                                         theme="snow"
-                                        value={theOrganisation.Organisation_Description}
+                                        value={renderOrganisation.Organisation_Description}
                                         onChange={(e: string) => handleOrganisationChange('Organisation_Description', e)}
                                         modules={{
                                             toolbar: [
@@ -116,12 +116,12 @@ const OrganisationDetails: React.FC = () => {
                             <Grid container spacing={3}>
                                 <Grid item xs={12} sm={6}>
                                     <strong>Organisation Name:</strong><br />
-                                    {theOrganisation.Organisation_Name}
+                                    {renderOrganisation.Organisation_Name}
                                 </Grid>
                                 <Grid item xs={12}>
                                     <strong>Organisation Description:</strong><br />
-                                    <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{ 
-                                        __html: theOrganisation.Organisation_Description || 'No description available' 
+                                    <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
+                                        __html: renderOrganisation.Organisation_Description || 'No description available'
                                     }} />
                                 </Grid>
                             </Grid>
@@ -136,7 +136,7 @@ const OrganisationDetails: React.FC = () => {
                     Teams Overview
                 </Typography>
                 <Grid container spacing={3}>
-                    {theOrganisation.teams?.map((team) => (
+                    {renderOrganisation.teams?.map((team) => (
                         <Grid item xs={12} sm={6} md={4} key={team.Team_ID}>
                             <Card>
                                 <CardContent>
@@ -147,8 +147,8 @@ const OrganisationDetails: React.FC = () => {
                                         <Typography variant="h6">{team.Team_Name}</Typography>
                                     </Link>
                                     <Typography variant="body2" color="textSecondary" paragraph>
-                                        <div dangerouslySetInnerHTML={{ 
-                                            __html: team.Team_Description || 'No description available' 
+                                        <div dangerouslySetInnerHTML={{
+                                            __html: team.Team_Description || 'No description available'
                                         }} />
                                     </Typography>
                                     <Typography variant="body2" color="textSecondary">

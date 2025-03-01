@@ -1,6 +1,6 @@
 // User Type
 export type User = {
-    User_ID: number;
+    User_ID?: number;
     User_Status: string;
     User_Email: string;
     User_FirstName: string;
@@ -24,8 +24,8 @@ export type UsersContextType = {
     addUser: (parentId: number, object?: User) => Promise<void>
     saveUserChanges: (itemChanges: User, parentId: number) => void;
     removeUser: (itemId: number, parentId: number) => void;
-    userLoading: boolean;
-    userError: string | null;
+    // userLoading: boolean;
+    // userError: string | null;
 };
 
 // Organisation Type
@@ -47,9 +47,11 @@ export type OrganisationFields =
 
 export type OrganisationsContextType = {
     organisationsById: Organisation[];
+    organisationById: Organisation | undefined
     organisationDetail: Organisation | undefined;
     newOrganisation: Organisation | undefined;
-    // readOrganisationsByUserId: (parentId: number) => Promise<void>
+    readOrganisationsByUserId: (parentId: number) => Promise<void>
+    readOrganisationById: (itemId: number) => Promise<void>
     setOrganisationDetail: React.Dispatch<React.SetStateAction<Organisation | undefined>>;
     handleChangeNewOrganisation: (field: OrganisationFields, value: string) => Promise<void>
     addOrganisation: (parentId: number, object?: Organisation) => Promise<void>
@@ -114,10 +116,12 @@ export type ProjectFields =
     "Project_End_Date" | "Project_CreatedAt" | "Project_UpdatedAt";
 
 export type ProjectsContextType = {
-    projectsById: Project[];
+    projectsById: Project[]
+    projectById: Project | undefined;
     projectDetail: Project | undefined
     newProject: Project | undefined;
     readProjectsByTeamId: (parentId: number) => Promise<void>
+    readProjectById: (itemId: number) => Promise<void>
     setProjectDetail: React.Dispatch<React.SetStateAction<Project | undefined>>
     handleChangeNewProject: (field: ProjectFields, value: string) => Promise<void>
     addProject: (parentId: number, object?: Project) => Promise<void>
@@ -127,9 +131,9 @@ export type ProjectsContextType = {
 
 // Team User Seat Type
 export type TeamUserSeat = {
-    Seat_ID: number;
+    Seat_ID?: number;
     Team_ID: number;
-    User_ID: number;
+    User_ID?: number;
     Seat_Role: string;
     Seat_Status: string;
     Seat_Role_Description?: string;

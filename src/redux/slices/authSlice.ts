@@ -3,13 +3,14 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 // Internal
 import { RootState } from '@/redux/store'
-import { TeamUserSeat, User } from '@/types'
+import { Organisation, TeamUserSeat, User } from '@/types'
 
 export interface AuthState {
     isLoggedIn: boolean | undefined,
     adminLoggedIn: string,
     authUser: User | undefined,
     authUserSeat: TeamUserSeat | undefined,
+    authUserOrganisation: Organisation | undefined,
     accessToken: string,
     refreshToken: string,
     loginResponse: Object,
@@ -21,6 +22,7 @@ const initialState = {
     adminLoggedIn: '',
     authUser: undefined,
     authUserSeat: undefined,
+    authUserOrganisation: undefined,
     accessToken: '',
     refreshToken: '',
     loginResponse: {},
@@ -39,6 +41,9 @@ export const authSlice = createSlice({
         },
         setAuthUserSeat: (state: AuthState, action: PayloadAction<any>) => {
             state.authUserSeat = action.payload.data
+        },
+        setAuthUserOrganisation: (state: AuthState, action: PayloadAction<any>) => {
+            state.authUserOrganisation = action.payload.data
         },
         setAccessToken: (state: AuthState, action: PayloadAction<any>) => {
             state.accessToken = action.payload.data
@@ -60,6 +65,7 @@ export const {
     setIsLoggedIn,
     setAuthUser,
     setAuthUserSeat,
+    setAuthUserOrganisation,
     setAccessToken,
     setRefreshToken,
     setLoginResponse,
@@ -71,6 +77,7 @@ export default authSlice.reducer
 export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn
 export const selectAuthUser = (state: RootState) => state.auth.authUser
 export const selectAuthUserSeat = (state: RootState) => state.auth.authUserSeat
+export const selectAuthUserOrganisation = (state: RootState) => state.auth.authUserOrganisation
 export const selectAccessToken = (state: RootState) => state.auth.accessToken
 export const selectRefreshToken = (state: RootState) => state.auth.refreshToken
 export const selectLoginResponse = (state: RootState) => state.auth.loginResponse

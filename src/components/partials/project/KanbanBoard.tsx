@@ -1,7 +1,7 @@
 "use client"
 
 // External
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faTrash } from "@fortawesome/free-solid-svg-icons"
@@ -9,16 +9,30 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons"
 // Internal
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
 import { Block, Text, Heading } from "@/components"
-import { useTasksContext } from "@/contexts"
-import { Task } from "@/types"
+import { useProjectsContext, useTasksContext } from "@/contexts"
+import { Project, Task } from "@/types"
+import { selectAuthUser, useTypedSelector } from "@/redux"
 
 const KanbanBoardContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
-    const { tasksById, readTasksByProjectId, setTaskDetail, removeTask } = useTasksContext()
+    const { projectById, readProjectById } = useProjectsContext()
+    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
+    const authUser = useTypedSelector(selectAuthUser) // Redux
     
+    const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
+    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
+
     useEffect(() => {
-        if (projectId) readTasksByProjectId(parseInt(projectId))
+        readTasksByProjectId(parseInt(projectId))
+        readProjectById(parseInt(projectId))
     }, [projectId])
+    useEffect(() => {
+        if (projectId) {
+            setRenderProject(projectById)
+            setRenderTasks(tasksById)
+            document.title = `Kanban: ${projectById?.Project_Name} - GiveOrTake`
+        }
+    }, [projectById])
 
     const columns = {
         todo: "To Do",
@@ -29,7 +43,7 @@ const KanbanBoardContainer = () => {
 
     return (
         <Block className={styles.container}>
-            <Heading variant="h1" className={styles.title}>Kanban Board</Heading>
+            <Heading variant="h1" className={styles.title}>{`Kanban: ${projectById?.Project_Name}`}</Heading>
             <Block className={styles.board}>
                 {Object.entries(columns).map(([key, label]) => (
                     <Block key={key} className={styles.column}>

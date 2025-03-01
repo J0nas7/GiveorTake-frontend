@@ -5,15 +5,15 @@ import axios from 'axios'
 import { env, paths } from '@/env.urls'
 //import { useAuthContext, useCookie } from './'
 import { axiosHeaders, postContent } from '@/types'
-import { selectAccessToken, useTypedSelector } from '@/redux'
+import { useCookies } from './'
 
 export const useAxios = () => {
     // Hooks
-    //const { setTheCookie } = useCookie()
+    const { getTheCookie, deleteTheCookie } = useCookies()
     //const { getCurrentToken, getAuthContext, doLogout } = useAuthContext()
 
-    // Redux
-    const accessToken = useTypedSelector(selectAccessToken)
+    // Redux (This function is not supported in React Server Components. Please only use this export in a Client Component.)
+    // const accessToken = useTypedSelector(selectAccessToken)
 
     // Axios stuff
     axios.defaults.withCredentials = true
@@ -38,11 +38,11 @@ export const useAxios = () => {
 
         //console.log("API: "+apiEndPoint, postContent)
         //console.log("axios", theSpace, getCurrentToken("accessToken")!.slice(0, 5))
-        let accessToken2 = accessToken.length ? accessToken : localStorage.getItem("isLoggedIn")
+        let accessToken = getTheCookie("accessToken")
         let axiosUrl = `${env.url.API_URL + paths.API_ROUTE + apiEndPoint}`
         let headers: axiosHeaders = {
             Accept: 'application/json',
-            Authorization: `Bearer ${accessToken2}`//+getCurrentToken(tokenName)
+            Authorization: `Bearer ${accessToken}`//+getCurrentToken(tokenName)
         }
         let config = {
             withCredentials: true,
@@ -137,7 +137,7 @@ export const useAxios = () => {
                 if (getAuthContext("accessToken")) {
                     alert("Your login session has expired. You will be logged out.")
                 }*/
-            localStorage.removeItem("isLoggedIn")
+            deleteTheCookie("accessToken")
             return false
             // }
             // return send

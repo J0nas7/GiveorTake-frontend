@@ -2,10 +2,11 @@
 import { Dispatch } from 'redux'
 
 // Internal
-import { useAxios } from '@/hooks'
-import { setAuthUser, setAuthUserSeat, setIsLoggedIn } from '../slices/authSlice'
+import { useAxios, useCookies } from '@/hooks'
+import { setAuthUser, setAuthUserOrganisation, setAuthUserSeat, setIsLoggedIn } from '../slices/authSlice'
 
 export const useAuthActions = () => {
+    const { deleteTheCookie } = useCookies()
     const { httpGetRequest, httpPostWithData } = useAxios()
 
     /**
@@ -36,8 +37,10 @@ export const useAuthActions = () => {
                 if (Array.isArray(data.userSeats) && data.userSeats.length) {
                     dispatch(setAuthUserSeat({ "data": data.userSeats[0] }))
                 }
+                
+                dispatch(setAuthUserOrganisation({ "data": data.userOrganisation }))
             } else {
-                localStorage.removeItem("isLoggedIn")
+                deleteTheCookie("accessToken")
                 // Optionally handle the "not logged in" scenario
                 dispatch(setIsLoggedIn({ "data": false }))
             }

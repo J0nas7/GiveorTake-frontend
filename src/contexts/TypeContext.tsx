@@ -11,7 +11,7 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     idFieldName: IDKey,
     parentResource: string
 ) => {
-    const { loading, error, fetchItemsByParent, fetchItem, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName, parentResource)
+    const { fetchItemsByParent, fetchItem, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName, parentResource)
     
     const [itemsById, setItemsById] = useState<T[]>([])
     const [itemById, setItemById] = useState<T|undefined>(undefined)
@@ -74,8 +74,8 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     }
 
     return {
-        loading,
-        error,
+        // loading,
+        // error,
         itemsById,
         itemById,
         newItem,

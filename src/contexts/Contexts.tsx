@@ -37,8 +37,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addItem: addUser,
         saveItemChanges: saveUserChanges,
         removeItem: removeUser,
-        loading: userLoading,
-        error: userError,
+        // loading: userLoading,
+        // error: userError,
     } = useResourceContext<User, "User_ID">(
         "users", 
         "User_ID", 
@@ -55,8 +55,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             addUser,
             saveUserChanges,
             removeUser,
-            userLoading,
-            userError,
+            // userLoading,
+            // userError,
         }}>
             {children}
         </UsersContext.Provider>
@@ -77,27 +77,32 @@ const OrganisationsContext = createContext<OrganisationsContextType | undefined>
 export const OrganisationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
         itemsById: organisationsById,
+        itemById: organisationById,
         newItem: newOrganisation,
         itemDetail: organisationDetail,
         readItemsById: readOrganisationsByUserId,
+        readItemById: readOrganisationById,
         setItemDetail: setOrganisationDetail,
         handleChangeNewItem: handleChangeNewOrganisation,
         addItem: addOrganisation,
         saveItemChanges: saveOrganisationChanges,
         removeItem: removeOrganisation,
-        loading: organisationLoading,
-        error: organisationError,
+        // loading: organisationLoading,
+        // error: organisationError,
     } = useResourceContext<Organisation, "Organisation_ID">(
         "organisations", 
         "Organisation_ID", 
-        ""
+        "users"
     );
 
     return (
         <OrganisationsContext.Provider value={{
             organisationsById,
-            organisationDetail,
+            organisationById,
             newOrganisation,
+            organisationDetail,
+            readOrganisationsByUserId,
+            readOrganisationById,
             setOrganisationDetail,
             handleChangeNewOrganisation,
             addOrganisation,
@@ -135,8 +140,8 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addItem: addTeam,
         saveItemChanges: saveTeamChanges,
         removeItem: removeTeam,
-        loading: teamLoading,
-        error: teamError,
+        // loading: teamLoading,
+        // error: teamError,
     } = useResourceContext<Team, "Team_ID">(
         "teams", 
         "Team_ID", 
@@ -186,8 +191,8 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
         addItem: addTeamUserSeat,
         saveItemChanges: saveTeamUserSeatChanges,
         removeItem: removeTeamUserSeat,
-        loading: teamUserSeatLoading,
-        error: teamUserSeatError,
+        // loading: teamUserSeatLoading,
+        // error: teamUserSeatError,
     } = useResourceContext<TeamUserSeat, "Seat_ID">(
         "team-user-seats", 
         "Seat_ID", 
@@ -227,16 +232,18 @@ const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined
 export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
         itemsById: projectsById,
+        itemById: projectById,
         newItem: newProject,
         itemDetail: projectDetail,
         readItemsById: readProjectsByTeamId,
+        readItemById: readProjectById,
         setItemDetail: setProjectDetail,
         handleChangeNewItem: handleChangeNewProject,
         addItem: addProject,
         saveItemChanges: saveProjectChanges,
         removeItem: removeProject,
-        loading: projectLoading,
-        error: projectError,
+        // loading: projectLoading,
+        // error: projectError,
     } = useResourceContext<Project, "Project_ID">(
         "projects", 
         "Project_ID", 
@@ -246,9 +253,11 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return (
         <ProjectsContext.Provider value={{
             projectsById,
+            projectById,
             projectDetail,
             newProject,
             readProjectsByTeamId,
+            readProjectById,
             setProjectDetail,
             handleChangeNewProject,
             addProject,
@@ -299,8 +308,8 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addItem: addTask,
         saveItemChanges: saveTaskChanges,
         removeItem: removeTask,
-        loading: taskLoading,
-        error: taskError,
+        // loading: taskLoading,
+        // error: taskError,
     } = useResourceContext<Task, "Task_ID">(
         "tasks",
         "Task_ID",
@@ -385,8 +394,8 @@ export const TaskCommentsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         addItem: addTaskComment,
         saveItemChanges: saveTaskCommentChanges,
         removeItem: removeTaskComment,
-        loading: taskCommentLoading,
-        error: taskCommentError,
+        // loading: taskCommentLoading,
+        // error: taskCommentError,
     } = useResourceContext<TaskComment, "Comment_ID">(
         "task-comments",
         "Comment_ID",
@@ -439,8 +448,8 @@ export const TaskMediaFilesProvider: React.FC<{ children: React.ReactNode }> = (
         addItem: addTaskMediaFile,
         saveItemChanges: saveTaskMediaFileChanges,
         removeItem: removeTaskMediaFile,
-        loading: taskMediaFileLoading,
-        error: taskMediaFileError,
+        // loading: taskMediaFileLoading,
+        // error: taskMediaFileError,
     } = useResourceContext<TaskMediaFile, "Media_ID">(
         "task-media-files",
         "Media_ID", 

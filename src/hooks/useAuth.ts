@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 // Internal
-import { useAxios } from './'
+import { useAxios, useCookies } from './'
 import { apiResponseDTO, User } from "@/types"
 import {
     useAppDispatch,
@@ -37,6 +37,7 @@ const errorCodes: Errors = {
 export const useAuth = () => {
     // Hooks
     const { httpPostWithData, httpGetRequest } = useAxios()
+    const { getTheCookie, setTheCookie, deleteTheCookie } = useCookies()
     const router = useRouter()
 
     // Redux
@@ -52,8 +53,8 @@ export const useAuth = () => {
         if (typeof window !== "undefined") {
             const newAccessToken = loginData.accessToken
             const newAuthUser = loginData.user
-
-            window.localStorage.setItem("isLoggedIn", newAccessToken)
+            
+            setTheCookie("accessToken", newAccessToken)
 
             dispatch(setAccessToken({ "data": newAccessToken }))
             // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))
@@ -123,10 +124,10 @@ export const useAuth = () => {
     }
 
     const handleLogoutSubmit = async () => {
-        localStorage.removeItem("isLoggedIn")
-        router.push("/")
+        deleteTheCookie("accessToken")
+        window.location.href = "/sign-in"; // Forces a full page reload
     }
-
+    
     const handleTokenTest = () => {
         dispatch(fetchIsLoggedInStatus())
     }
@@ -134,10 +135,11 @@ export const useAuth = () => {
     // Effects
     useEffect(() => {
         if (typeof window !== "undefined") {
-            // localStorage.removeItem("isLoggedIn")
+            // deleteTheCookie("accessToken")
             // console.log("useAuth loginstatus")
-            if (window.localStorage.getItem("isLoggedIn")) {
-                const accessToken = localStorage.getItem("isLoggedIn")
+            // if (window.localStorag.getItem("isLoggedIn")) {
+            if (getTheCookie("accessToken")) {
+                const accessToken = getTheCookie("accessToken")
                 // console.log("window.local true")
                 dispatch(setAccessToken({ "data": accessToken }))
                 dispatch(setIsLoggedIn({ "data": true }))

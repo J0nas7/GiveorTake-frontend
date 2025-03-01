@@ -12,7 +12,10 @@ import "@/core-ui/styles/global/Layout.scss"
 import "@/core-ui/styles/global/Guest.scss"
 
 export const metadata: Metadata = {
-    title: "GiveOrTake - Project Management & Time Tracking",
+    title: {
+        default: "GiveOrTake - Project Management & Time Tracking",
+        template: "GiveOrTake - %s", // Automatically adds "GiveOrTake | " as a prefix
+    },
     description: "Project Management & Time Tracking",
 }
 

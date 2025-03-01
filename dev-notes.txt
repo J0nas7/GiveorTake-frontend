@@ -15,6 +15,7 @@ npm i:
     react-quill
     react-chartjs-2 chart.js
     react-merge-providers
+    cookies-next@4.0
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event

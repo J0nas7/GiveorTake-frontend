@@ -1,5 +1,5 @@
 export * from './useAuth'
 export * from './useAxios'
+export * from './useCookies'
 
-export * from './useTasksAPI'
 export * from './useTypeAPI'

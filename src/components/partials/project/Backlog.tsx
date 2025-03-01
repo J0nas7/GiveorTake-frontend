@@ -10,19 +10,36 @@ import { faEllipsisV, faPlus, faSortDown, faSortUp } from "@fortawesome/free-sol
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field, Heading } from "@/components"
-import { useTasksContext } from "@/contexts"
-import { Task } from "@/types";
+import { useProjectsContext, useTasksContext } from "@/contexts"
+import { Project, Task } from "@/types";
+import { selectAuthUser, useTypedSelector } from "@/redux";
 
 const BacklogContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { projectById, readProjectById } = useProjectsContext()
+    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask } = useTasksContext()
+    const authUser = useTypedSelector(selectAuthUser) // Redux
+
+    const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
+    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
+
+    useEffect(() => {
+        readTasksByProjectId(parseInt(projectId))
+        readProjectById(parseInt(projectId))
+    }, [projectId])
+    useEffect(() => {
+        if (projectId) {
+            setRenderProject(projectById)
+            setRenderTasks(tasksById)
+            document.title = `Backlog: ${projectById?.Project_Name} - GiveOrTake`
+        }
+    }, [projectById])
+
     const router = useRouter();
     const searchParams = useSearchParams();
-
     const { t } = useTranslation(['backlog'])
-    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask } = useTasksContext()
 
     const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
-
     const setActionMenu = (taskId: number) => {
         setShowActionMenu(showActionMenu === taskId ? null : taskId);
     };
@@ -30,10 +47,6 @@ const BacklogContainer = () => {
     const handleCreateTask = () => {
         addTask(parseInt(projectId), newTask)
     }
-    
-    useEffect(() => {
-        if (projectId) readTasksByProjectId(parseInt(projectId))
-    }, [projectId])
 
     const currentSort = searchParams.get("sort") || "Task_Title";
     const currentOrder = searchParams.get("order") || "asc";
@@ -56,11 +69,11 @@ const BacklogContainer = () => {
 
     // Sorting logic based on URL query parameters
     const sortedTasks = useMemo(() => {
-        if (!Array.isArray(tasksById)) return []; // Ensure tasks is an array
+        if (!Array.isArray(renderTasks)) return []; // Ensure tasks is an array
 
         const sortField = SORT_KEYS[Number(currentSort)] || DEFAULT_SORT_KEY; // Convert number to field name
 
-        return [...tasksById].sort((a, b) => {
+        return [...renderTasks].sort((a, b) => {
             const aValue = a[sortField] ?? "";
             const bValue = b[sortField] ?? "";
 
@@ -71,11 +84,11 @@ const BacklogContainer = () => {
             }
             return 0;
         });
-    }, [tasksById, currentSort, currentOrder]);
+    }, [renderTasks, currentSort, currentOrder]);
 
     return (
         <Block className={styles.taskTableContainer}>
-            <Heading variant="h1" className={styles.title}>Project Backlog</Heading>
+            <Heading variant="h1" className={styles.title}>{`Backlog: ${renderProject?.Project_Name}`}</Heading>
             <table className={styles.taskTable}>
                 <thead>
                     <tr>
