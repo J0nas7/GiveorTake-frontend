@@ -1,3 +1,14 @@
+Implement dependency injection into UserDetails, by abstracting the TSX out of it, into a UserDetailsView.
+
+
+Create testing of UserDetailsView, including UserDetailsViewProps variables being undefined/null.
+
+
+Add a second describe() => {}, testing 5 new edge cases.
+
+
+
+
 Network hosting:
 npm run dev -- -H 192.168.68.67
 
