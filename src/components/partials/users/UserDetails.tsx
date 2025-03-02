@@ -1,36 +1,45 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useTeamUserSeatsContext, useUsersContext } from '@/contexts';
-import { selectAuthUser, useTypedSelector } from '@/redux';
-import { TeamUserSeat, User } from '@/types';
+import { useUsersContext } from '@/contexts';
+import { selectAuthUser, selectAuthUserOrganisation, selectAuthUserSeat, useTypedSelector } from '@/redux';
+import { Organisation, TeamUserSeat, User } from '@/types';
 import { Heading } from '@/components/ui/heading';
 import styles from "@/core-ui/styles/modules/User.settings.module.scss";
 import Link from 'next/link';
 
 const UserDetails: React.FC = () => {
     // Get user data and the save function from context
-    const { saveUserChanges, removeUser } = useUsersContext();
-    const { teamUserSeatsById } = useTeamUserSeatsContext();
-    const [user, setUser] = useState<User | undefined>(undefined);
-    const [imagePreview, setImagePreview] = useState<string | undefined>(user?.User_ImageSrc);
+    const { saveUserChanges, removeUser } = useUsersContext()
+    const authUserSeats = useTypedSelector(selectAuthUserSeat); // Redux
+    const authUserOrganisation = useTypedSelector(selectAuthUserOrganisation); // Redux
+    const authUser = useTypedSelector(selectAuthUser); // Redux
 
-    // Redux
-    const authUser = useTypedSelector(selectAuthUser);
+    const [renderUser, setRenderUser] = useState<User | undefined>(undefined)
+    const [renderOrganisation, setRenderOrganisation] = useState<Organisation | undefined>(undefined)
+    const [imagePreview, setImagePreview] = useState<string | undefined>(renderUser?.User_ImageSrc);
+
+    useEffect(() => {
+        if (authUserSeats && authUserSeats.team?.projects?.[0]?.Project_ID) {
+            setRenderOrganisation(authUserSeats.team?.organisation)
+        } else if (authUserOrganisation && authUserOrganisation.teams?.[0].projects?.[0].Project_ID) {
+            setRenderOrganisation(authUserOrganisation)
+        }
+    }, [authUserSeats, authUserOrganisation])
 
     // Set initial user data when the component mounts
     useEffect(() => {
         if (authUser) {
-            setUser(authUser);
+            setRenderUser(authUser);
             setImagePreview(authUser.User_ImageSrc);
         }
     }, [authUser]);
 
     // Handle input change
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (user) {
+        if (renderUser) {
             const { name, value } = e.target;
-            setUser((prevState) => ({
+            setRenderUser((prevState) => ({
                 ...prevState!,
                 [name]: value,
             }));
@@ -44,8 +53,8 @@ const UserDetails: React.FC = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreview(reader.result as string);
-                if (user) {
-                    setUser((prevState) => ({
+                if (renderUser) {
+                    setRenderUser((prevState) => ({
                         ...prevState!,
                         User_ImageSrc: reader.result as string,
                     }));
@@ -57,28 +66,23 @@ const UserDetails: React.FC = () => {
 
     // Handle form submission (saving user changes)
     const handleSaveChanges = () => {
-        if (user) {
-            saveUserChanges(user, 0)
+        if (renderUser) {
+            saveUserChanges(renderUser, 0)
         }
     };
 
     // Handle user deletion
     const handleDeleteUser = () => {
-        if (user && user.User_ID) {
-            removeUser(user.User_ID, 0);
+        if (renderUser && renderUser.User_ID) {
+            removeUser(renderUser.User_ID, 0);
         }
-    };
-
-    // Get teams the user is a part of
-    const userTeams: TeamUserSeat[] = Array.isArray(teamUserSeatsById)
-        ? teamUserSeatsById.filter((seat) => seat.User_ID === user?.User_ID)
-        : []
+    }
 
     return (
         <UserDetailsView
-            user={user}
+            user={renderUser}
             imagePreview={imagePreview}
-            userTeams={userTeams}
+            renderOrganisation={renderOrganisation}
             handleChange={handleChange}
             handleImageUpload={handleImageUpload}
             handleSaveChanges={handleSaveChanges}
@@ -90,7 +94,7 @@ const UserDetails: React.FC = () => {
 export interface UserDetailsViewProps {
     user: User | undefined;
     imagePreview: string | undefined;
-    userTeams: TeamUserSeat[];
+    renderOrganisation: Organisation | undefined
     handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleSaveChanges: () => void;
@@ -100,7 +104,7 @@ export interface UserDetailsViewProps {
 export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
     user,
     imagePreview,
-    userTeams,
+    renderOrganisation,
     handleChange,
     handleImageUpload,
     handleSaveChanges,
@@ -188,36 +192,23 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
 
             {/* Display the teams the user is a part of */}
             <div className={styles.userTeamsContainer}>
-                <Heading variant="h3" className={styles.teamsHeading}>Teams/Organisations this user is a part of</Heading>
-                {userTeams.length > 0 ? (
+                <Heading variant="h3" className={styles.teamsHeading}>Organisation this user is a part of</Heading>
+                {renderOrganisation ? (
                     <ul className={styles.teamsList}>
-                        {userTeams.map((seat) => (
-                            <li key={seat.Seat_ID} className={styles.teamItem}>
-                                <p><strong>Team Role:</strong> {seat.Seat_Role}</p>
-                                <p><strong>Status:</strong> {seat.Seat_Status}</p>
-                                <p>
-                                    <strong>Team Name:</strong>{" "}
-                                    <Link
-                                        href={`/team/${seat.team?.Team_ID}`}
-                                        className="blue-link"
-                                    >
-                                        {seat.team?.Team_Name}
-                                    </Link>
-                                </p>
-                                <p>
-                                    <strong>Organisation Name:</strong>{" "}
-                                    <Link
-                                        href={`/organisation/${seat.team?.organisation?.Organisation_ID}`}
-                                        className="blue-link"
-                                    >
-                                        {seat.team?.organisation?.Organisation_Name}
-                                    </Link>
-                                </p>
-                            </li>
-                        ))}
+                        <li className={styles.teamItem}>
+                            <p>
+                                <strong>Organisation Name:</strong>{" "}
+                                <Link
+                                    href={`/organisation/${renderOrganisation.Organisation_ID}`}
+                                    className="blue-link"
+                                >
+                                    {renderOrganisation.Organisation_Name}
+                                </Link>
+                            </p>
+                        </li>
                     </ul>
                 ) : (
-                    <p>This user is not part of any teams.</p>
+                    <p>This user is not part of any organisation.</p>
                 )}
             </div>
         </div>

@@ -23,13 +23,22 @@ const KanbanBoardContainer = () => {
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     useEffect(() => {
+        console.log("tasksByID changed")
+        if (tasksById.length == 0 && renderTasks) {
+            setRenderTasks(undefined)
+        }
+        if (tasksById.length && !renderTasks) {
+            console.log("renderTasks", renderTasks)
+            setRenderTasks(tasksById)
+        }
+    }, [tasksById])
+    useEffect(() => {
         readTasksByProjectId(parseInt(projectId))
         readProjectById(parseInt(projectId))
     }, [projectId])
     useEffect(() => {
         if (projectId) {
             setRenderProject(projectById)
-            setRenderTasks(tasksById)
             document.title = `Kanban: ${projectById?.Project_Name} - GiveOrTake`
         }
     }, [projectById])

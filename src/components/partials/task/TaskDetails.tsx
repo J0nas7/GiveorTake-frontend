@@ -14,7 +14,7 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { useTaskCommentsContext, useTasksContext } from "@/contexts";
-import { Task, TaskComment } from "@/types";
+import { Task, TaskComment, User } from "@/types";
 import Link from "next/link";
 import { Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
@@ -35,10 +35,12 @@ const Card: React.FC<CardProps> = ({ children, className = "" }) => {
 };
 
 const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { saveTaskChanges } = useTasksContext();
+    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { readTasksByProjectId, saveTaskChanges } = useTasksContext();
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState(task.Task_Title || "");
-    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isEditing) {
@@ -46,14 +48,46 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
         }
     }, [isEditing]);
 
-    const handleBlur = () => {
+    const handleBlur = async () => {
         setIsEditing(false);
-        saveTaskChanges(
+        
+        await saveTaskChanges(
             { ...task, Task_Title: title },
             task.Project_ID
         );
+
+        /// Task changed
+        if (projectId) {
+            readTasksByProjectId(parseInt(projectId), true)
+        }
     };
 
+    return (
+        <TitleAreaView
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+            title={title}
+            setTitle={setTitle}
+            inputRef={inputRef}
+            task={task}
+            handleBlur={handleBlur}
+        />
+    );
+};
+
+interface TitleAreaViewProps {
+    isEditing: boolean
+    setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
+    title: string
+    setTitle: React.Dispatch<React.SetStateAction<string>>
+    inputRef: React.RefObject<HTMLInputElement | null>
+    task: Task;
+    handleBlur: () => Promise<void>
+}
+
+export const TitleAreaView: React.FC<TitleAreaViewProps> = ({
+    isEditing, setIsEditing, title, setTitle, inputRef, task, handleBlur
+}) => {
     return (
         <div className={styles.titleArea}>
             {!isEditing ? (
@@ -91,6 +125,35 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
     };
 
     return (
+        <DescriptionAreaView
+            task={task}
+            saveTaskChanges={saveTaskChanges}
+        />
+    );
+};
+
+interface DescriptionAreaViewProps {
+    task: Task;
+    saveTaskChanges: (task: Task, projectId: number) => void;
+}
+
+export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> = ({ task, saveTaskChanges }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [description, setDescription] = useState(task.Task_Description || "");
+
+    const handleSave = () => {
+        setIsEditing(false);
+        saveTaskChanges(
+            { ...task, Task_Description: description },
+            task.Project_ID
+        );
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+    };
+
+    return (
         <Card className={styles.descriptionSection}>
             <h2>Task Description</h2>
             {!isEditing ? (
@@ -107,16 +170,6 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
                         value={description}
                         onChange={setDescription}
                         onBlur={handleSave}
-                        modules={{
-                            toolbar: [
-                                [{ header: "1" }, { header: "2" }, { font: [] }],
-                                [{ list: "ordered" }, { list: "bullet" }],
-                                ["bold", "italic", "underline", "strike"],
-                                [{ align: [] }],
-                                ["link"],
-                                ["blockquote"],
-                            ],
-                        }}
                     />
                     <div className={styles.editDescriptionActions}>
                         <button className={styles.sendButton} onClick={handleSave}>
@@ -132,17 +185,28 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
     );
 };
 
-const MediaFilesArea: React.FC<{ task: Task }> = () => {
+const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
+    return (
+        <MediaFilesAreaView
+            task={task}
+        />
+    );
+};
+
+interface MediaFilesAreaViewProps {
+    task: Task;
+}
+
+export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task }) => {
     return (
         <Card className={styles.mediaSection}>
             <h2>Media Files</h2>
             <div className={styles.mediaPlaceholders}>
-                {/* Dummy media items (replace with actual media files if available) */}
                 {[1, 2, 3].map((index) => (
                     <div key={index} className={styles.mediaItem}>
                         <div className={styles.mediaPlaceholder}>Image {index}</div>
                         <div className={styles.mediaMeta}>
-                            <span>Created: {new Date().toISOString().split('T')[0]}</span> {/* Replace with actual creation date if available */}
+                            <span>Created: {new Date().toISOString().split('T')[0]}</span>
                             <div className={styles.mediaActions}>
                                 <FontAwesomeIcon icon={faEdit} className={styles.icon} />
                                 <FontAwesomeIcon icon={faTrash} className={styles.icon} />
@@ -186,6 +250,36 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     };
 
     return (
+        <CommentsAreaView
+            newComment={newComment}
+            setNewComment={setNewComment}
+            isEditorVisible={isEditorVisible}
+            setIsEditorVisible={setIsEditorVisible}
+            task={task}
+            authUser={authUser}
+            addTaskComment={addTaskComment}
+            handleCommentCancel={handleCommentCancel}
+            handleAddComment={handleAddComment}
+        />
+    );
+};
+
+interface CommentsAreaViewProps {
+    newComment: string
+    setNewComment: React.Dispatch<React.SetStateAction<string>>
+    isEditorVisible: boolean
+    setIsEditorVisible: React.Dispatch<React.SetStateAction<boolean>>
+    task: Task;
+    authUser: User | undefined
+    addTaskComment: (taskId: number, comment: TaskComment) => Promise<void>
+    handleCommentCancel: () => void
+    handleAddComment: () => Promise<void>
+}
+
+export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
+    newComment, setNewComment, isEditorVisible, setIsEditorVisible, task, authUser, addTaskComment, handleCommentCancel, handleAddComment
+}) => {
+    return (
         <Card className={styles.commentsSection}>
             <h2>Comments</h2>
             {!isEditorVisible ? (
@@ -200,13 +294,6 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
                         placeholder="Write a comment..."
                         className={styles.commentInput}
                         theme="snow"
-                        modules={{
-                            toolbar: [
-                                [{ list: "ordered" }, { list: "bullet" }],
-                                ["bold", "italic", "underline", "strike"],
-                                ["link"]
-                            ],
-                        }}
                     />
                     <div className={styles.newCommentActions}>
                         <button className={styles.sendButton} onClick={handleAddComment}>
@@ -218,7 +305,6 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
                     </div>
                 </div>
             )}
-            {/* Comments List */}
             {task.comments?.map((comment, index) => (
                 <div key={index} className={styles.commentItem}>
                     <div
@@ -245,6 +331,22 @@ const CtaButtons = ({
     task: Task | undefined
 }) => {
     return (
+        <CtaButtonsView
+            theTask={theTask}
+            task={task}
+        />
+    );
+};
+
+interface CtaButtonsViewProps {
+    theTask: Task,
+    task: Task | undefined
+}
+
+export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
+    theTask, task
+}) => {
+    return (
         <div className={styles.ctaButtons}>
             <button className={styles.ctaButton}>
                 <FontAwesomeIcon icon={faTrashCan} />
@@ -261,11 +363,12 @@ const CtaButtons = ({
                 </Link>
             )}
         </div>
-    );
-};
+    )
+}
 
 const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
+    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { readTasksByProjectId, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
 
     // Handle status change
     const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -273,11 +376,16 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
         handleTaskChanges("Task_Status", newStatus)
     };
 
-    const handleTaskChanges = (field: keyof Task, value: string) => {
-        saveTaskChanges(
+    const handleTaskChanges = async (field: keyof Task, value: string) => {
+        await saveTaskChanges(
             { ...task, [field]: value },
             task.Project_ID
         )
+
+        /// Task changed
+        if (projectId) {
+            readTasksByProjectId(parseInt(projectId), true)
+        }
 
         if (taskDetail) {
             setTaskDetail({
@@ -287,6 +395,35 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
         }
     }
 
+    return (
+        <TaskDetailsView
+            task={task}
+            taskDetail={taskDetail}
+            setTaskDetail={setTaskDetail}
+            saveTaskChanges={saveTaskChanges}
+            handleStatusChange={handleStatusChange}
+            handleTaskChanges={handleTaskChanges}
+        />
+    );
+};
+
+interface TaskDetailsViewProps {
+    task: Task
+    taskDetail: Task | undefined
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
+    saveTaskChanges: (taskChanges: Task, parentId: number) => void
+    handleStatusChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+    handleTaskChanges: (field: keyof Task, value: string) => void
+}
+
+export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
+    task,
+    taskDetail,
+    setTaskDetail,
+    saveTaskChanges,
+    handleStatusChange,
+    handleTaskChanges
+}) => {
     return (
         <Card className={styles.detailsSection}>
             <Heading variant="h2" className="font-bold">Task Details</Heading>
@@ -307,8 +444,8 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
             <p><strong>Created At:</strong> {task.Task_CreatedAt}</p>
             <p><strong>Due Date:</strong> {task.Task_Due_Date || "N/A"}</p>
         </Card>
-    );
-};
+    )
+}
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     const { taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
@@ -384,34 +521,25 @@ export const TaskDetailWithModal = () => {
 }
 
 export const TaskDetailWithoutModal = () => {
+    const { taskId } = useParams<{ taskId: string }>(); // Get taskId from URL
+    const { taskById, readTaskById, setTaskDetail } = useTasksContext()
     const taskDetailRef = useRef<HTMLDivElement>(null);
-    const { taskId } = useParams()
 
-    // Fetch tasks using the custom hook
-    const { tasksById, setTaskDetail } = useTasksContext()
+    const [renderTask, setRenderTask] = useState<Task | undefined>(undefined)
 
-    const [theTask, setTheTask] = useState<Task | undefined>(undefined)
-
-
+    useEffect(() => { readTaskById(parseInt(taskId)); }, [taskId])
     useEffect(() => {
-        setTaskDetail(undefined)
-
-        // Ensure taskId is a string and not an array or undefined
-        // Handle case when taskId is not valid
-        if (typeof taskId == 'string') {
-            if (tasksById) {
-                // Filter the tasks to find the task with the matching taskId
-                const findTask = tasksById.find((t) => t.Task_ID === parseInt(taskId))
-                setTheTask(findTask)
-            }
+        if (taskId) {
+            setRenderTask(taskById)
+            document.title = `Task: ${taskById?.Task_Title} - GiveOrTake`
         }
-    }, [tasksById, taskId])
+    }, [taskById])
 
-    if (!theTask) return <div>Task not found</div>
+    if (!renderTask) return <div>Task not found</div>
 
     return (
         <div className={styles.taskDetailContainer} ref={taskDetailRef}>
-            <TaskDetail task={theTask} />
+            <TaskDetail task={renderTask} />
         </div>
     )
 }

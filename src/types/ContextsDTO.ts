@@ -15,19 +15,6 @@ export type UserFields =
     "User_ID" | "User_Status" | "User_Email" | "User_FirstName" | "User_Surname" |
     "User_ImageSrc" | "User_CreatedAt" | "User_UpdatedAt" | "User_DeletedAt";
 
-export type UsersContextType = {
-    usersById: User[];
-    userDetail: User | undefined;
-    newUser: User | undefined;
-    setUserDetail: React.Dispatch<React.SetStateAction<User | undefined>>;
-    handleChangeNewUser: (field: UserFields, value: string) => Promise<void>
-    addUser: (parentId: number, object?: User) => Promise<void>
-    saveUserChanges: (itemChanges: User, parentId: number) => void;
-    removeUser: (itemId: number, parentId: number) => void;
-    // userLoading: boolean;
-    // userError: string | null;
-};
-
 // Organisation Type
 export type Organisation = {
     Organisation_ID: number;
@@ -44,20 +31,6 @@ export type Organisation = {
 export type OrganisationFields =
     "Organisation_ID" | "User_ID" | "Organisation_Name" |
     "Organisation_Description" | "Organisation_CreatedAt" | "Organisation_UpdatedAt";
-
-export type OrganisationsContextType = {
-    organisationsById: Organisation[];
-    organisationById: Organisation | undefined
-    organisationDetail: Organisation | undefined;
-    newOrganisation: Organisation | undefined;
-    readOrganisationsByUserId: (parentId: number) => Promise<void>
-    readOrganisationById: (itemId: number) => Promise<void>
-    setOrganisationDetail: React.Dispatch<React.SetStateAction<Organisation | undefined>>;
-    handleChangeNewOrganisation: (field: OrganisationFields, value: string) => Promise<void>
-    addOrganisation: (parentId: number, object?: Organisation) => Promise<void>
-    saveOrganisationChanges: (organisationChanges: Organisation, parentId: number) => void;
-    removeOrganisation: (itemId: number, parentId: number) => void;
-};
 
 // Team Type
 export type Team = {
@@ -78,20 +51,6 @@ export type Team = {
 export type TeamFields =
     "Team_ID" | "Organisation_ID" | "Team_Name" |
     "Team_Description" | "Team_CreatedAt" | "Team_UpdatedAt";
-
-export type TeamsContextType = {
-    teamsById: Team[];
-    teamById: Team | undefined;
-    teamDetail: Team | undefined;
-    newTeam: Team | undefined;
-    readTeamsByOrganisationId: (parentId: number) => Promise<void>
-    readTeamById: (itemId: number) => Promise<void>
-    setTeamDetail: React.Dispatch<React.SetStateAction<Team | undefined>>;
-    handleChangeNewTeam: (field: TeamFields, value: string) => Promise<void>
-    addTeam: (parentId: number, object?: Team) => Promise<void>
-    saveTeamChanges: (teamChanges: Team, parentId: number) => void;
-    removeTeam: (itemId: number, parentId: number) => void;
-};
 
 // Project Type
 export type Project = {
@@ -115,20 +74,6 @@ export type ProjectFields =
     "Project_Description" | "Project_Status" | "Project_Start_Date" |
     "Project_End_Date" | "Project_CreatedAt" | "Project_UpdatedAt";
 
-export type ProjectsContextType = {
-    projectsById: Project[]
-    projectById: Project | undefined;
-    projectDetail: Project | undefined
-    newProject: Project | undefined;
-    readProjectsByTeamId: (parentId: number) => Promise<void>
-    readProjectById: (itemId: number) => Promise<void>
-    setProjectDetail: React.Dispatch<React.SetStateAction<Project | undefined>>
-    handleChangeNewProject: (field: ProjectFields, value: string) => Promise<void>
-    addProject: (parentId: number, object?: Project) => Promise<void>
-    saveProjectChanges: (projectChanges: Project, parentId: number) => void
-    removeProject: (itemId: number, parentId: number) => void;
-};
-
 // Team User Seat Type
 export type TeamUserSeat = {
     Seat_ID?: number;
@@ -150,18 +95,6 @@ export type TeamUserSeat = {
 export type TeamUserSeatFields =
     "Seat_ID" | "Team_ID" | "User_ID" | "Seat_Role" | "Seat_Status" |
     "Seat_Role_Description" | "Seat_Permissions" | "Seat_CreatedAt" | "Seat_UpdatedAt" | "Seat_DeletedAt";
-
-export type TeamUserSeatsContextType = {
-    teamUserSeatsById: TeamUserSeat[];
-    teamUserSeatDetail: TeamUserSeat | undefined
-    newTeamUserSeat: TeamUserSeat | undefined;
-    readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
-    setTeamUserSeatDetail: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
-    handleChangeNewTeamUserSeat: (field: TeamUserSeatFields, value: string) => Promise<void>
-    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
-    saveTeamUserSeatChanges: (teamUserSeatChanges: TeamUserSeat, parentId: number) => void
-    removeTeamUserSeat: (itemId: number, parentId: number) => void;
-};
 
 // Task Type
 export type Task = {
@@ -187,18 +120,6 @@ export type TaskFields =
     "Task_ID" | "Task_Number" | "Project_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
     "Task_Description" | "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
 
-export type TasksContextType = {
-    tasksById: Task[]
-    taskDetail: Task | undefined
-    newTask: Task | undefined
-    readTasksByProjectId: (parentId: number) => Promise<void>
-    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
-    handleChangeNewTask: (field: TaskFields, value: string) => Promise<void>
-    addTask: (parentId: number, object?: Task) => Promise<void>
-    saveTaskChanges: (taskChanges: Task, parentId: number) => void
-    removeTask: (itemId: number, parentId: number) => void
-}
-
 // Task Comment Type
 export type TaskComment = {
     Comment_ID?: number;
@@ -217,18 +138,6 @@ export type TaskComment = {
 export type TaskCommentFields =
     "Comment_ID" | "Task_ID" | "User_ID" | "Comment_Text" |
     "Comment_CreatedAt" | "Comment_UpdatedAt" | "Comment_DeletedAt"
-
-export type TaskCommentsContextType = {
-    taskCommentsById: TaskComment[]
-    taskCommentDetail: TaskComment | undefined
-    newTaskComment: TaskComment | undefined
-    readTaskCommentsByTaskId: (parentId: number) => Promise<void>
-    setTaskCommentDetail: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
-    handleChangeNewTaskComment: (field: TaskCommentFields, value: string, object?: TaskComment | undefined) => Promise<void>
-    addTaskComment: (parentId: number, object?: TaskComment | undefined) => Promise<void>
-    saveTaskCommentChanges: (taskCommentChanges: TaskComment, parentId: number) => void
-    removeTaskComment: (itemId: number, parentId: number) => void;
-}
 
 // Task Media File Type
 export type TaskMediaFile = {
@@ -250,18 +159,6 @@ export type TaskMediaFile = {
 export type TaskMediaFileFields =
     "Media_ID" | "Task_ID" | "Uploaded_By_User_ID" | "Media_File_Name" | "Media_File_Path" |
     "Media_File_Type" | "Media_CreatedAt" | "Media_UpdatedAt" | "Media_DeletedAt"
-
-export type TaskMediaFilesContextType = {
-    taskMediaFilesById: TaskMediaFile[]
-    taskMediaFileDetail: TaskMediaFile | undefined
-    newTaskMediaFile: TaskMediaFile | undefined
-    readTaskMediaFilesByTaskId: (parentId: number) => Promise<void>
-    setTaskMediaFileDetail: React.Dispatch<React.SetStateAction<TaskMediaFile | undefined>>
-    handleChangeNewTaskMediaFile: (field: TaskMediaFileFields, value: string) => Promise<void>
-    addTaskMediaFile: (parentId: number, object?: TaskMediaFile | undefined) => Promise<void>
-    saveTaskMediaFileChanges: (taskMediaFileChanges: TaskMediaFile, parentId: number) => void
-    removeTaskMediaFile: (itemId: number, parentId: number) => void
-}
 
 // Activity Log Type
 export type ActivityLog = {

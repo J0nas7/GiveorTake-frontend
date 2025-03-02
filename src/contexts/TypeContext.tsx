@@ -18,7 +18,9 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
     
-    const readItemsById = async (parentId: number) => {
+    const readItemsById = async (parentId: number, refresh?: boolean) => {
+        if (refresh) setItemsById([])
+
         const data = await fetchItemsByParent(parentId) // Fetch all items by parentId
         if (data) setItemsById(data)
     }

@@ -12,19 +12,32 @@ import {
     Project, 
     TeamUserSeat, 
     Task, 
-    TasksContextType, 
-    ProjectsContextType, 
-    TeamUserSeatsContextType, 
-    TeamsContextType, 
-    OrganisationsContextType, 
-    UsersContextType,
-    TaskCommentsContextType,
     TaskComment,
     TaskMediaFile,
-    TaskMediaFilesContextType
+    ProjectFields,
+    TeamFields,
+    TeamUserSeatFields,
+    TaskFields,
+    TaskCommentFields,
+    TaskMediaFileFields,
+    UserFields,
+    OrganisationFields
 } from "@/types"
 
 // Context for Users
+export type UsersContextType = {
+    usersById: User[];
+    userDetail: User | undefined;
+    newUser: User | undefined;
+    setUserDetail: React.Dispatch<React.SetStateAction<User | undefined>>;
+    handleChangeNewUser: (field: UserFields, value: string) => Promise<void>
+    addUser: (parentId: number, object?: User) => Promise<void>
+    saveUserChanges: (itemChanges: User, parentId: number) => Promise<void>
+    removeUser: (itemId: number, parentId: number) => void;
+    // userLoading: boolean;
+    // userError: string | null;
+};
+
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -72,6 +85,20 @@ export const useUsersContext = () => {
 };
 
 // Context for Organisations
+export type OrganisationsContextType = {
+    organisationsById: Organisation[];
+    organisationById: Organisation | undefined
+    organisationDetail: Organisation | undefined;
+    newOrganisation: Organisation | undefined;
+    readOrganisationsByUserId: (parentId: number) => Promise<void>
+    readOrganisationById: (itemId: number) => Promise<void>
+    setOrganisationDetail: React.Dispatch<React.SetStateAction<Organisation | undefined>>;
+    handleChangeNewOrganisation: (field: OrganisationFields, value: string) => Promise<void>
+    addOrganisation: (parentId: number, object?: Organisation) => Promise<void>
+    saveOrganisationChanges: (organisationChanges: Organisation, parentId: number) => Promise<void>
+    removeOrganisation: (itemId: number, parentId: number) => void;
+};
+
 const OrganisationsContext = createContext<OrganisationsContextType | undefined>(undefined);
 
 export const OrganisationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -125,6 +152,20 @@ export const useOrganisationsContext = () => {
 };
 
 // Context for Teams
+export type TeamsContextType = {
+    teamsById: Team[];
+    teamById: Team | undefined;
+    teamDetail: Team | undefined;
+    newTeam: Team | undefined;
+    readTeamsByOrganisationId: (parentId: number) => Promise<void>
+    readTeamById: (itemId: number) => Promise<void>
+    setTeamDetail: React.Dispatch<React.SetStateAction<Team | undefined>>;
+    handleChangeNewTeam: (field: TeamFields, value: string) => Promise<void>
+    addTeam: (parentId: number, object?: Team) => Promise<void>
+    saveTeamChanges: (teamChanges: Team, parentId: number) => Promise<void>
+    removeTeam: (itemId: number, parentId: number) => void;
+};
+
 const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
 
 export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -178,6 +219,18 @@ export const useTeamsContext = () => {
 };
 
 // Context for Team User Seats
+export type TeamUserSeatsContextType = {
+    teamUserSeatsById: TeamUserSeat[];
+    teamUserSeatDetail: TeamUserSeat | undefined
+    newTeamUserSeat: TeamUserSeat | undefined;
+    readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
+    setTeamUserSeatDetail: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
+    handleChangeNewTeamUserSeat: (field: TeamUserSeatFields, value: string) => Promise<void>
+    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
+    saveTeamUserSeatChanges: (teamUserSeatChanges: TeamUserSeat, parentId: number) => Promise<void>
+    removeTeamUserSeat: (itemId: number, parentId: number) => void;
+};
+
 const TeamUserSeatsContext = createContext<TeamUserSeatsContextType | undefined>(undefined);
 
 export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -227,6 +280,20 @@ export const useTeamUserSeatsContext = () => {
 };
 
 // Context for Projects
+export type ProjectsContextType = {
+    projectsById: Project[]
+    projectById: Project | undefined;
+    projectDetail: Project | undefined
+    newProject: Project | undefined;
+    readProjectsByTeamId: (parentId: number) => Promise<void>
+    readProjectById: (itemId: number) => Promise<void>
+    setProjectDetail: React.Dispatch<React.SetStateAction<Project | undefined>>
+    handleChangeNewProject: (field: ProjectFields, value: string) => Promise<void>
+    addProject: (parentId: number, object?: Project) => Promise<void>
+    saveProjectChanges: (projectChanges: Project, parentId: number) => Promise<void>
+    removeProject: (itemId: number, parentId: number) => void;
+};
+
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
 export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -293,6 +360,20 @@ export const useProjectsContext = () => {
 
 // Tasks Context
 // Context API for Tasks
+export type TasksContextType = {
+    tasksById: Task[]
+    taskById: Task | undefined
+    taskDetail: Task | undefined
+    newTask: Task | undefined
+    readTasksByProjectId: (parentId: number, refresh?: boolean) => Promise<void>
+    readTaskById: (itemId: number) => Promise<void>
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
+    handleChangeNewTask: (field: TaskFields, value: string) => Promise<void>
+    addTask: (parentId: number, object?: Task) => Promise<void>
+    saveTaskChanges: (taskChanges: Task, parentId: number) => Promise<void>
+    removeTask: (itemId: number, parentId: number) => void
+}
+
 const TasksContext = createContext<TasksContextType | undefined>(undefined)
 
 // TasksProvider using useResourceContext
@@ -300,9 +381,11 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Use useResourceContext directly for task-related logic
     const {
         itemsById: tasksById,
+        itemById: taskById,
         newItem: newTask,
         itemDetail: taskDetail,
         readItemsById: readTasksByProjectId,
+        readItemById: readTaskById,
         setItemDetail: setTaskDetail,
         handleChangeNewItem: handleChangeNewTask,
         addItem: addTask,
@@ -320,9 +403,11 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         <TasksContext.Provider
             value={{
                 tasksById,
+                taskById,
                 taskDetail,
                 newTask,
                 readTasksByProjectId,
+                readTaskById,
                 setTaskDetail,
                 handleChangeNewTask,
                 addTask,
@@ -379,6 +464,18 @@ export const useTasksContext = () => {
 
 // TaskComments Context
 // Context API for TaskComments
+export type TaskCommentsContextType = {
+    taskCommentsById: TaskComment[]
+    taskCommentDetail: TaskComment | undefined
+    newTaskComment: TaskComment | undefined
+    readTaskCommentsByTaskId: (parentId: number) => Promise<void>
+    setTaskCommentDetail: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
+    handleChangeNewTaskComment: (field: TaskCommentFields, value: string, object?: TaskComment | undefined) => Promise<void>
+    addTaskComment: (parentId: number, object?: TaskComment | undefined) => Promise<void>
+    saveTaskCommentChanges: (taskCommentChanges: TaskComment, parentId: number) => Promise<void>
+    removeTaskComment: (itemId: number, parentId: number) => void;
+}
+
 const TaskCommentsContext = createContext<TaskCommentsContextType | undefined>(undefined);
 
 // TaskCommentsProvider using useResourceContext
@@ -433,6 +530,18 @@ export const useTaskCommentsContext = () => {
 
 // TaskMediaFiles Context
 // Context API for TaskMediaFiles
+export type TaskMediaFilesContextType = {
+    taskMediaFilesById: TaskMediaFile[]
+    taskMediaFileDetail: TaskMediaFile | undefined
+    newTaskMediaFile: TaskMediaFile | undefined
+    readTaskMediaFilesByTaskId: (parentId: number) => Promise<void>
+    setTaskMediaFileDetail: React.Dispatch<React.SetStateAction<TaskMediaFile | undefined>>
+    handleChangeNewTaskMediaFile: (field: TaskMediaFileFields, value: string) => Promise<void>
+    addTaskMediaFile: (parentId: number, object?: TaskMediaFile | undefined) => Promise<void>
+    saveTaskMediaFileChanges: (taskMediaFileChanges: TaskMediaFile, parentId: number) => Promise<void>
+    removeTaskMediaFile: (itemId: number, parentId: number) => void
+}
+
 const TaskMediaFilesContext = createContext<TaskMediaFilesContextType | undefined>(undefined);
 
 // TaskMediaFilesProvider using useResourceContext
