@@ -12,14 +12,15 @@
 }
 
 .navLink {
+    display: block;
     color: #374151; // Tailwind's text-gray-800
     text-decoration: none;
     padding: 0.5rem;
     border-radius: 0.25rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 
     &:hover {
-        background-color: #dbeafe; // Tailwind's bg-blue-100
-        color: #2563eb; // Tailwind's text-blue-600
+        @apply bg-blue-100 text-blue-600;
+        transform: scale(1.1);
     }
 }

@@ -1,15 +1,5 @@
-.dashboardContainer {
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
 .kpiSection {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: space-between;
+    @apply flex flex-wrap gap-4 justify-between mb-4;
 }
 
 .kpiCard {
@@ -20,6 +10,7 @@
     text-align: center;
     width: 22%;
     min-width: 160px;
+    transition: transform 0.2s ease;
 }
 
 .kpiCard:hover {
@@ -32,6 +23,7 @@
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     text-align: center;
+    @apply mb-4;
 }
 
 .chartSection {

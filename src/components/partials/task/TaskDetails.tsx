@@ -16,7 +16,7 @@ import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { useTaskCommentsContext, useTasksContext } from "@/contexts";
 import { Task, TaskComment, User } from "@/types";
 import Link from "next/link";
-import { Text } from "@/components/ui/block-text";
+import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
 import clsx from "clsx";
 import { selectAuthUser, useTypedSelector } from "@/redux";
@@ -31,7 +31,7 @@ interface CardProps {
 }
 
 const Card: React.FC<CardProps> = ({ children, className = "" }) => {
-    return <div className={`bg-white rounded-lg p-4 mb-4 ${className}`}>{children}</div>;
+    return <Block className={`bg-white rounded-lg p-4 mb-4 ${className}`}>{children}</Block>;
 };
 
 const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
@@ -50,7 +50,7 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
 
     const handleBlur = async () => {
         setIsEditing(false);
-        
+
         await saveTaskChanges(
             { ...task, Task_Title: title },
             task.Project_ID
@@ -89,11 +89,11 @@ export const TitleAreaView: React.FC<TitleAreaViewProps> = ({
     isEditing, setIsEditing, title, setTitle, inputRef, task, handleBlur
 }) => {
     return (
-        <div className={styles.titleArea}>
+        <Block className={styles.titleArea}>
             {!isEditing ? (
-                <div className={styles.titlePlaceholder} onClick={() => setIsEditing(true)}>
+                <Block className={styles.titlePlaceholder} onClick={() => setIsEditing(true)}>
                     {title || "Click to add title..."}
-                </div>
+                </Block>
             ) : (
                 <input
                     className={styles.titleInput}
@@ -103,7 +103,7 @@ export const TitleAreaView: React.FC<TitleAreaViewProps> = ({
                     onBlur={handleBlur}
                 />
             )}
-        </div>
+        </Block>
     );
 };
 
@@ -163,7 +163,7 @@ export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> = ({ task, 
                     dangerouslySetInnerHTML={{ __html: description || "Click to add description..." }}
                 />
             ) : (
-                <div className={styles.descriptionEditor}>
+                <Block className={styles.descriptionEditor}>
                     <ReactQuill
                         className={styles.descriptionInput}
                         theme="snow"
@@ -171,15 +171,15 @@ export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> = ({ task, 
                         onChange={setDescription}
                         onBlur={handleSave}
                     />
-                    <div className={styles.editDescriptionActions}>
+                    <Block className={styles.editDescriptionActions}>
                         <button className={styles.sendButton} onClick={handleSave}>
                             <FontAwesomeIcon icon={faPaperPlane} />
                         </button>
                         <button className={styles.cancelButton} onClick={handleCancel}>
                             Cancel
                         </button>
-                    </div>
-                </div>
+                    </Block>
+                </Block>
             )}
         </Card>
     );
@@ -201,20 +201,20 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task }) 
     return (
         <Card className={styles.mediaSection}>
             <h2>Media Files</h2>
-            <div className={styles.mediaPlaceholders}>
+            <Block className={styles.mediaPlaceholders}>
                 {[1, 2, 3].map((index) => (
-                    <div key={index} className={styles.mediaItem}>
-                        <div className={styles.mediaPlaceholder}>Image {index}</div>
-                        <div className={styles.mediaMeta}>
+                    <Block key={index} className={styles.mediaItem}>
+                        <Block className={styles.mediaPlaceholder}>Image {index}</Block>
+                        <Block className={styles.mediaMeta}>
                             <span>Created: {new Date().toISOString().split('T')[0]}</span>
-                            <div className={styles.mediaActions}>
+                            <Block className={styles.mediaActions}>
                                 <FontAwesomeIcon icon={faEdit} className={styles.icon} />
                                 <FontAwesomeIcon icon={faTrash} className={styles.icon} />
-                            </div>
-                        </div>
-                    </div>
+                            </Block>
+                        </Block>
+                    </Block>
                 ))}
-            </div>
+            </Block>
         </Card>
     );
 };
@@ -283,11 +283,11 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
         <Card className={styles.commentsSection}>
             <h2>Comments</h2>
             {!isEditorVisible ? (
-                <div className={styles.commentPlaceholder} onClick={() => setIsEditorVisible(true)}>
+                <Block className={styles.commentPlaceholder} onClick={() => setIsEditorVisible(true)}>
                     Add a new comment...
-                </div>
+                </Block>
             ) : (
-                <div className={styles.commentEditor}>
+                <Block className={styles.commentEditor}>
                     <ReactQuill
                         value={newComment}
                         onChange={setNewComment}
@@ -295,30 +295,30 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                         className={styles.commentInput}
                         theme="snow"
                     />
-                    <div className={styles.newCommentActions}>
+                    <Block className={styles.newCommentActions}>
                         <button className={styles.sendButton} onClick={handleAddComment}>
                             <FontAwesomeIcon icon={faPaperPlane} />
                         </button>
                         <button className={styles.cancelButton} onClick={handleCommentCancel}>
                             Cancel
                         </button>
-                    </div>
-                </div>
+                    </Block>
+                </Block>
             )}
             {task.comments?.map((comment, index) => (
-                <div key={index} className={styles.commentItem}>
+                <Block key={index} className={styles.commentItem}>
                     <div
                         className={styles.comment}
                         dangerouslySetInnerHTML={{ __html: comment.Comment_Text }}
                     />
-                    <div className={styles.commentMeta}>
+                    <Block className={styles.commentMeta}>
                         <span>Created: {comment.Comment_CreatedAt}</span>
-                        <div className={styles.commentActions}>
+                        <Block className={styles.commentActions}>
                             <FontAwesomeIcon icon={faEdit} className={styles.icon} />
                             <FontAwesomeIcon icon={faTrash} className={styles.icon} />
-                        </div>
-                    </div>
-                </div>
+                        </Block>
+                    </Block>
+                </Block>
             ))}
         </Card>
     );
@@ -347,22 +347,31 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
     theTask, task
 }) => {
     return (
-        <div className={styles.ctaButtons}>
-            <button className={styles.ctaButton}>
+        <Block className={styles.ctaButtons}>
+            <button className={clsx(
+                "blue-link",
+                styles.ctaButton
+            )}>
                 <FontAwesomeIcon icon={faTrashCan} />
                 <Text variant="span">Archive</Text>
             </button>
-            <button className={styles.ctaButton}>
+            <button className={clsx(
+                "blue-link",
+                styles.ctaButton
+            )}>
                 <FontAwesomeIcon icon={faArrowUpFromBracket} />
                 <Text variant="span">Share</Text>
             </button>
             {task === undefined && (
-                <Link href={`/task/${theTask.Task_ID}`} className={styles.ctaButton}>
+                <Link href={`/task/${theTask.Task_ID}`} className={clsx(
+                    "blue-link",
+                    styles.ctaButton
+                )}>
                     <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
                     <Text variant="span">Open in URL</Text>
                 </Link>
             )}
-        </div>
+        </Block>
     )
 }
 
@@ -476,24 +485,26 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
 
     return (
         <>
-            <Link
-                href={`/project/${theTask.project?.Project_ID}`}
-                className="text-xs"
-            >
-                &laquo; Go to Project Settings
-            </Link>
-            <div className={styles.content}>
-                <div className={styles.leftPanel}>
+            <Block>
+                <Link
+                    href={`/project/${theTask.project?.Project_ID}`}
+                    className="page-back-navigation"
+                >
+                    &laquo; Go to Project
+                </Link>
+            </Block>
+            <Block className={styles.content}>
+                <Block className={styles.leftPanel}>
                     <TitleArea task={theTask} />
                     <DescriptionArea task={theTask} />
                     <MediaFilesArea task={theTask} />
                     <CommentsArea task={theTask} />
-                </div>
-                <div className={styles.rightPanel}>
+                </Block>
+                <Block className={styles.rightPanel}>
                     <CtaButtons theTask={theTask} task={task} />
                     <TaskDetailsArea task={theTask} />
-                </div>
-            </div>
+                </Block>
+            </Block>
         </>
     );
 };
@@ -512,11 +523,11 @@ export const TaskDetailWithModal = () => {
     if (!taskDetail) return null
 
     return (
-        <div className={styles.taskDetailModalBackground} onClick={handleBackgroundClick}>
-            <div className={clsx(styles.taskDetailContainer, styles.withModal)} ref={taskDetailRef}>
+        <Block className={styles.taskDetailModalBackground} onClick={handleBackgroundClick}>
+            <Block className={clsx(styles.taskDetailContainer, styles.withModal)} ref={taskDetailRef}>
                 <TaskDetail />
-            </div>
-        </div>
+            </Block>
+        </Block>
     )
 }
 
@@ -527,7 +538,10 @@ export const TaskDetailWithoutModal = () => {
 
     const [renderTask, setRenderTask] = useState<Task | undefined>(undefined)
 
-    useEffect(() => { readTaskById(parseInt(taskId)); }, [taskId])
+    useEffect(() => {
+        readTaskById(parseInt(taskId))
+        setTaskDetail(undefined)
+    }, [taskId])
     useEffect(() => {
         if (taskId) {
             setRenderTask(taskById)
@@ -535,11 +549,19 @@ export const TaskDetailWithoutModal = () => {
         }
     }, [taskById])
 
-    if (!renderTask) return <div>Task not found</div>
+    if (!renderTask) return <Block>Task not found</Block>
 
     return (
-        <div className={styles.taskDetailContainer} ref={taskDetailRef}>
-            <TaskDetail task={renderTask} />
-        </div>
+        <Block className="page-content">
+            {/* <Link
+                href={`/project/${renderTask.project?.Project_ID}`}
+                className="page-back-navigation"
+            >
+                &laquo; Go to Project
+            </Link> */}
+            <Block className={styles.taskDetailContainer} ref={taskDetailRef}>
+                <TaskDetail task={renderTask} />
+            </Block>
+        </Block>
     )
 }

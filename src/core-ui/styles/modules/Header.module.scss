@@ -12,6 +12,15 @@
     padding: 1rem;
 }
 
+.logo-wrapper {
+    @apply gap-3 items-center !flex;
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+}
+
 .logo {
     font-size: 1.25rem;
     font-weight: bold;

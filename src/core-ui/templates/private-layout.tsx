@@ -2,8 +2,7 @@
 import React from "react";
 
 // Internal
-import { Header, LeftNav, Footer, MainContent } from "../";
-import "../styles/global/Layout.scss"
+import { Header, LeftNav, Footer } from "../";
 import { TasksProvider } from "@/contexts";
 import { TaskDetailWithModal } from "@/components/partials/task/TaskDetails";
 
@@ -17,9 +16,9 @@ export const PrivateLayout = (
             <div className="content-wrapper">
                 <LeftNav />
                 <Footer />
-                <MainContent>
+                <main className="main-content">
                     {children}
-                </MainContent>
+                </main>
             </div>
         </div>
     );

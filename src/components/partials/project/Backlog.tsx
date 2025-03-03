@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { TFunction, useTranslation } from "next-i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisV, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
+import { faEllipsisV, faList, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
@@ -13,6 +13,8 @@ import { Block, Text, Field, Heading } from "@/components"
 import { useProjectsContext, useTasksContext } from "@/contexts"
 import { Project, Task, TaskFields } from "@/types";
 import { selectAuthUser, useTypedSelector } from "@/redux";
+import Link from "next/link";
+import { FlexibleBox } from "@/components/ui/flexible-box";
 
 const BacklogContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
@@ -22,7 +24,17 @@ const BacklogContainer = () => {
 
     const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
-
+    
+    useEffect(() => {
+        console.log("tasksByID changed")
+        if (tasksById.length == 0 && renderTasks) {
+            setRenderTasks(undefined)
+        }
+        if (tasksById.length && !renderTasks) {
+            console.log("renderTasks", renderTasks)
+            setRenderTasks(tasksById)
+        }
+    }, [tasksById])
     useEffect(() => {
         readTasksByProjectId(parseInt(projectId))
         readProjectById(parseInt(projectId))
@@ -30,7 +42,6 @@ const BacklogContainer = () => {
     useEffect(() => {
         if (projectId) {
             setRenderProject(projectById)
-            setRenderTasks(tasksById)
             document.title = `Backlog: ${projectById?.Project_Name} - GiveOrTake`
         }
     }, [projectById])
@@ -85,7 +96,7 @@ const BacklogContainer = () => {
             return 0;
         });
     }, [renderTasks, currentSort, currentOrder]);
-    
+
     return (
         <BacklogContainerView
             renderProject={renderProject}
@@ -133,62 +144,90 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     setTaskDetail,
 }) => {
     return (
-        <Block className={styles.taskTableContainer}>
-            <Heading variant="h1" className={styles.title}>{`Backlog: ${renderProject?.Project_Name}`}</Heading>
-            <table className={styles.taskTable}>
-                <thead>
-                    <tr>
-                        <th onClick={() => handleSort("1")}>Task Title {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
-                        <th onClick={() => handleSort("2")}>Task Number {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
-                        <th onClick={() => handleSort("3")}>Status {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
-                        <th onClick={() => handleSort("4")}>Assignee {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
-                        <th onClick={() => handleSort("5")}>Created At {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colSpan={5}>
-                            <Block className={styles.inputContainer}>
-                                <Field
-                                    type="text"
-                                    lbl="New Task"
-                                    innerLabel={true}
-                                    value={newTask?.Task_Title ?? ''}
-                                    onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
-                                    disabled={false}
-                                />
-                                <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
-                                    <FontAwesomeIcon icon={faPlus} /> Add
-                                </button>
-                            </Block>
-                        </td>
-                    </tr>
-                    {sortedTasks.map((task) => (
-                        <tr key={task.Task_ID}>
-                            <td>{task.Task_Title}</td>
-                            <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                GOT-{task.Task_Number}
-                            </td>
-                            <td className={styles.status}>{task.Task_Status}</td>
-                            <td>{task.Assigned_User_ID ? `User ${task.Assigned_User_ID}` : "Unassigned"}</td>
-                            <td>{task.Task_CreatedAt || "N/A"}</td>
-                            <td className={styles.actions}>
-                                <button onClick={() => setActionMenu(task.Task_ID)} className={styles.actionButton}>
-                                    <FontAwesomeIcon icon={faEllipsisV} />
-                                </button>
-                                {showActionMenu === task.Task_ID && (
-                                    <div className={styles.actionMenu}>
-                                        <button>Edit</button>
-                                        <button>Archive</button>
-                                        <button>Details</button>
-                                    </div>
-                                )}
+        <Block className="page-content">
+            <Link
+                href={`/project/${renderProject?.Project_ID}`}
+                className="page-back-navigation"
+            >
+                &laquo; Go to Project
+            </Link>
+            {/* <Heading variant="h1">{`Backlog: ${renderProject?.Project_Name}`}</Heading> */}
+            <FlexibleBox
+                    title={`Backlog: ${renderProject?.Project_Name}`}
+                    icon={faList}
+                    className="no-box w-auto inline-block"
+                    numberOfColumns={2}
+            >
+                <table className={styles.taskTable}>
+                    <thead>
+                        <tr>
+                            <th onClick={() => handleSort("1")}>
+                                <Text variant="span">Task Title</Text>
+                                {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("2")}>
+                                <Text variant="span">Task Number</Text>
+                                {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("3")}>
+                                <Text variant="span">Status</Text>
+                                {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("4")}>
+                                <Text variant="span">Assignee</Text>
+                                {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("5")}>
+                                <Text variant="span">Created At</Text>
+                                {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colSpan={5}>
+                                <Block className={styles.inputContainer}>
+                                    <Field
+                                        type="text"
+                                        lbl="New Task"
+                                        innerLabel={true}
+                                        value={newTask?.Task_Title ?? ''}
+                                        onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
+                                        disabled={false}
+                                    />
+                                    <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
+                                        <FontAwesomeIcon icon={faPlus} /> Add
+                                    </button>
+                                </Block>
                             </td>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                        {sortedTasks.map((task) => (
+                            <tr key={task.Task_ID}>
+                                <td>{task.Task_Title}</td>
+                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                    GOT-{task.Task_Number}
+                                </td>
+                                <td className={styles.status}>{task.Task_Status}</td>
+                                <td>{task.Assigned_User_ID ? `User ${task.Assigned_User_ID}` : "Unassigned"}</td>
+                                <td>{task.Task_CreatedAt || "N/A"}</td>
+                                <td className={styles.actions}>
+                                    <button onClick={() => setActionMenu(task.Task_ID)} className={styles.actionButton}>
+                                        <FontAwesomeIcon icon={faEllipsisV} />
+                                    </button>
+                                    {showActionMenu === task.Task_ID && (
+                                        <div className={styles.actionMenu}>
+                                            <button>Edit</button>
+                                            <button>Archive</button>
+                                            <button>Details</button>
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </FlexibleBox>
         </Block>
     );
 };

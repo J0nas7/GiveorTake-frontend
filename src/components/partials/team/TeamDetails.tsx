@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from "next/navigation";
-import { TextField, Button, Card, CardContent, Typography, Grid, Container, Box } from '@mui/material';
+import { TextField, Card, CardContent, Typography, Grid, Box } from '@mui/material';
 
 // Dynamically import ReactQuill with SSR disabled
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
@@ -14,8 +14,11 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 // Internal
 import { useTeamsContext } from '@/contexts/';
 import { Team, TeamFields, User } from '@/types';
-import { Block, Text } from '@/components';
+import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, useTypedSelector } from '@/redux';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { FlexibleBox } from '@/components/ui/flexible-box';
 
 const TeamDetails: React.FC = () => {
     const pathname = usePathname(); // Get the current pathname
@@ -89,80 +92,94 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
 }) => {
 
     return (
-        <>
+        <Block className="page-content">
             <Box mb={4}>
-                <Link href={`/organisation/${team.organisation?.Organisation_ID}`} className="text-xs">
+                <Link
+                    href={`/organisation/${team.organisation?.Organisation_ID}`}
+                    className="page-back-navigation"
+                >
                     &laquo; Go to Organisation
                 </Link>
-                <Typography variant="h4" gutterBottom>
-                    Team Settings
-                </Typography>
-                <Card>
-                    {authUser && team.organisation?.User_ID === authUser.User_ID ? (
-                        <CardContent>
-                            <Link href={`${pathname}/seats`} className="blue-link mb-3">
-                                Handle Seats
-                            </Link>
-                            <Typography variant="h6" gutterBottom>
-                                Edit Team Details
-                            </Typography>
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        label="Team Name"
-                                        variant="outlined"
-                                        fullWidth
-                                        value={team.Team_Name}
-                                        onChange={handleHTMLInputChange}
-                                        name="Team_Name"
-                                    />
+                <FlexibleBox
+                    title="Team Settings"
+                    icon={faUsers}
+                    className="no-box w-auto inline-block"
+                    numberOfColumns={2}
+                    titleAction={
+                        <Link
+                            href={`${pathname}/seats`}
+                            className="blue-link !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faUsers} />
+                            <Text variant="span">Handle Seats</Text>
+                        </Link>
+                    }
+                >
+                    <Card>
+                        {authUser && team.organisation?.User_ID === authUser.User_ID ? (
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    Edit Team Details
+                                </Typography>
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            label="Team Name"
+                                            variant="outlined"
+                                            fullWidth
+                                            value={team.Team_Name}
+                                            onChange={handleHTMLInputChange}
+                                            name="Team_Name"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Typography>Team Description</Typography>
+                                        <ReactQuill
+                                            className="w-full"
+                                            theme="snow"
+                                            value={team.Team_Description}
+                                            onChange={(e: string) => handleTeamChange("Team_Description", e)}
+                                            modules={{
+                                                toolbar: [
+                                                    [{ header: "1" }, { header: "2" }, { font: [] }],
+                                                    [{ list: "ordered" }, { list: "bullet" }],
+                                                    ["bold", "italic", "underline", "strike"],
+                                                    [{ align: [] }],
+                                                    ["link"],
+                                                    ["blockquote"],
+                                                ],
+                                            }}
+                                        />
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <Typography>Team Description</Typography>
-                                    <ReactQuill
-                                        className="w-full"
-                                        theme="snow"
-                                        value={team.Team_Description}
-                                        onChange={(e: string) => handleTeamChange("Team_Description", e)}
-                                        modules={{
-                                            toolbar: [
-                                                [{ header: "1" }, { header: "2" }, { font: [] }],
-                                                [{ list: "ordered" }, { list: "bullet" }],
-                                                ["bold", "italic", "underline", "strike"],
-                                                [{ align: [] }],
-                                                ["link"],
-                                                ["blockquote"],
-                                            ],
-                                        }}
-                                    />
+                                <Box mt={2}>
+                                    <button onClick={handleSaveChanges} className="button-blue">
+                                        Save Changes
+                                    </button>
+                                </Box>
+                            </CardContent>
+                        ) : (
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    Team Details
+                                </Typography>
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12} sm={6}>
+                                        <strong>Team Name:</strong><br />
+                                        {team.Team_Name}
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <strong>Team Description:</strong><br />
+                                        <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
+                                            __html: team.Team_Description || "No description available"
+                                        }} />
+                                    </Grid>
                                 </Grid>
-                            </Grid>
-                            <Box mt={2}>
-                                <Button variant="contained" color="primary" onClick={handleSaveChanges}>
-                                    Save Changes
-                                </Button>
-                            </Box>
-                        </CardContent>
-                    ) : (
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Team Details
-                            </Typography>
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} sm={6}>
-                                    <strong>Team Name:</strong><br />
-                                    {team.Team_Name}
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <strong>Team Description:</strong><br />
-                                    <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
-                                        __html: team.Team_Description || "No description available"
-                                    }} />
-                                </Grid>
-                            </Grid>
-                        </CardContent>
-                    )}
-                </Card>
+                            </CardContent>
+                        )}
+                    </Card>
+                </FlexibleBox>
+                {/* <Heading variant="h1">Team Settings</Heading> */}
             </Box>
 
             {/* Projects Overview Section */}
@@ -175,10 +192,8 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                         <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
                             <Card>
                                 <CardContent>
-                                    <Link href={`/project/${project.Project_ID}`} passHref className="blue-link">
-                                        <Typography variant="h6" component="a" sx={{ textDecoration: 'none', color: 'inherit' }}>
-                                            {project.Project_Name}
-                                        </Typography>
+                                    <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
+                                        {project.Project_Name}
                                     </Link>
                                     <Typography variant="body2" color="textSecondary" paragraph>
                                         <div dangerouslySetInnerHTML={{
@@ -200,7 +215,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                     ))}
                 </Grid>
             </Box>
-        </>
+        </Block>
     );
 };
 

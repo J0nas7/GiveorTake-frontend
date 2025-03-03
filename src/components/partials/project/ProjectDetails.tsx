@@ -3,7 +3,7 @@
 // External
 import React, { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
-import { TextField, Button, Card, CardContent, Typography, Grid, Container, Box } from '@mui/material';
+import { TextField, Card, CardContent, Typography, Grid, Box } from '@mui/material';
 
 // Dynamically import ReactQuill with SSR disabled
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
@@ -13,9 +13,11 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 // Internal
 import { useProjectsContext } from '@/contexts/';
 import { Project, ProjectFields, User } from '@/types';
-import { Text } from '@/components';
+import { Block, Heading, Text } from '@/components';
 import Link from 'next/link';
 import { selectAuthUser, useTypedSelector } from '@/redux';
+import { FlexibleBox } from '@/components/ui/flexible-box';
+import { faLightbulb } from '@fortawesome/free-solid-svg-icons';
 
 const ProjectDetails: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
@@ -57,131 +59,139 @@ const ProjectDetails: React.FC = () => {
 
     return (
         <ProjectDetailsView
-            project={renderProject}
+            renderProject={renderProject}
             authUser={authUser}
-            onProjectChange={handleProjectChange}
-            onSaveChanges={handleSaveChanges}
+            handleProjectChange={handleProjectChange}
+            handleSaveChanges={handleSaveChanges}
         />
     );
 };
 
 export interface ProjectDetailsViewProps {
-    project: Project | undefined;
+    renderProject: Project | undefined;
     authUser: User | undefined;
-    onProjectChange: (field: ProjectFields, value: string) => void;
-    onSaveChanges: () => void;
+    handleProjectChange: (field: ProjectFields, value: string) => void;
+    handleSaveChanges: () => void;
 }
 
 export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
-    project,
+    renderProject,
     authUser,
-    onProjectChange,
-    onSaveChanges
+    handleProjectChange,
+    handleSaveChanges
 }) => {
     return (
-        <Box mb={4}>
-            <Link href={`/team/${project?.team?.Team_ID}`} className="text-xs">
+        <Block className="page-content">
+            <Link 
+                href={`/team/${renderProject?.team?.Team_ID}`} 
+                className="page-back-navigation"
+            >
                 &laquo; Go to Team
             </Link>
-            <Typography variant="h4" gutterBottom>
-                Project Info
-            </Typography>
-            <Card>
-                {authUser && project?.team?.organisation?.User_ID === authUser.User_ID ? (
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                            Edit Project Details
-                        </Typography>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label="Project Name"
-                                    variant="outlined"
-                                    fullWidth
-                                    value={project?.Project_Name}
-                                    onChange={(e) => onProjectChange("Project_Name", e.target.value)}
-                                    name="Project_Name"
-                                />
+            {/* <Heading variant="h1">Project Info</Heading> */}
+            <FlexibleBox
+                title={`Project Info`}
+                icon={faLightbulb}
+                className="no-box w-auto inline-block"
+                numberOfColumns={2}
+            >
+                <Card>
+                    {authUser && renderProject?.team?.organisation?.User_ID === authUser.User_ID ? (
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                                Edit Project Details
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="Project Name"
+                                        variant="outlined"
+                                        fullWidth
+                                        value={renderProject?.Project_Name}
+                                        onChange={(e) => handleProjectChange("Project_Name", e.target.value)}
+                                        name="Project_Name"
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Text>Project Description</Text>
+                                    <ReactQuill
+                                        className="w-full"
+                                        theme="snow"
+                                        value={renderProject?.Project_Description}
+                                        onChange={(e: string) => handleProjectChange("Project_Description", e)}
+                                        modules={{
+                                            toolbar: [
+                                                [{ header: "1" }, { header: "2" }, { font: [] }],
+                                                [{ list: "ordered" }, { list: "bullet" }],
+                                                ["bold", "italic", "underline", "strike"],
+                                                [{ align: [] }],
+                                                ["link"],
+                                                ["blockquote"],
+                                            ],
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="Start Date"
+                                        variant="outlined"
+                                        fullWidth
+                                        type="date"
+                                        value={renderProject?.Project_Start_Date || ''}
+                                        onChange={(e) => handleProjectChange("Project_Start_Date", e.target.value)}
+                                        name="Project_Start_Date"
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="End Date"
+                                        variant="outlined"
+                                        fullWidth
+                                        type="date"
+                                        value={renderProject?.Project_End_Date || ''}
+                                        onChange={(e) => handleProjectChange("Project_End_Date", e.target.value)}
+                                        name="Project_End_Date"
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12}>
-                                <Text>Project Description</Text>
-                                <ReactQuill
-                                    className="w-full"
-                                    theme="snow"
-                                    value={project?.Project_Description}
-                                    onChange={(e: string) => onProjectChange("Project_Description", e)}
-                                    modules={{
-                                        toolbar: [
-                                            [{ header: "1" }, { header: "2" }, { font: [] }],
-                                            [{ list: "ordered" }, { list: "bullet" }],
-                                            ["bold", "italic", "underline", "strike"],
-                                            [{ align: [] }],
-                                            ["link"],
-                                            ["blockquote"],
-                                        ],
-                                    }}
-                                />
+                            <Box mt={2}>
+                                <button onClick={handleSaveChanges} className="button-blue">
+                                    Save Changes
+                                </button>
+                            </Box>
+                        </CardContent>
+                    ) : (
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                                Project Details
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} sm={6}>
+                                    <strong>Project Name:</strong><br />
+                                    {renderProject?.Project_Name}
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <strong>Project Description:</strong><br />
+                                    <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
+                                        __html: renderProject?.Project_Description || 'No description available'
+                                    }} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <strong>Start Date:</strong><br />
+                                    {renderProject?.Project_Start_Date}
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <strong>End Date</strong><br />
+                                    {renderProject?.Project_End_Date}
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label="Start Date"
-                                    variant="outlined"
-                                    fullWidth
-                                    type="date"
-                                    value={project?.Project_Start_Date || ''}
-                                    onChange={(e) => onProjectChange("Project_Start_Date", e.target.value)}
-                                    name="Project_Start_Date"
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label="End Date"
-                                    variant="outlined"
-                                    fullWidth
-                                    type="date"
-                                    value={project?.Project_End_Date || ''}
-                                    onChange={(e) => onProjectChange("Project_End_Date", e.target.value)}
-                                    name="Project_End_Date"
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            </Grid>
-                        </Grid>
-                        <Box mt={2}>
-                            <Button variant="contained" color="primary" onClick={onSaveChanges}>
-                                Save Changes
-                            </Button>
-                        </Box>
-                    </CardContent>
-                ) : (
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                            Project Details
-                        </Typography>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
-                                <strong>Project Name:</strong><br />
-                                {project?.Project_Name}
-                            </Grid>
-                            <Grid item xs={12}>
-                                <strong>Project Description:</strong><br />
-                                <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
-                                    __html: project?.Project_Description || 'No description available'
-                                }} />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <strong>Start Date:</strong><br />
-                                {project?.Project_Start_Date}
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <strong>End Date</strong><br />
-                                {project?.Project_End_Date}
-                            </Grid>
-                        </Grid>
-                    </CardContent>
-                )}
-            </Card>
-        </Box>
+                        </CardContent>
+                    )}
+                </Card>
+            </FlexibleBox>
+        </Block>
     );
 };
 

@@ -34,7 +34,7 @@ export const LeftNav: React.FC = () => {
     };
 
     const navLinks: Record<string, string> = {
-        [`/dashboard/`]: "Dashboard",
+        [`/project/dashboard/`]: "Dashboard",
         [`/backlog/`]: "Backlog",
         [`/kanban/`]: "Kanban Board",
     }
@@ -94,24 +94,27 @@ export const LeftNav: React.FC = () => {
                                 key={project.Project_ID}
                                 className="ml-4 pl-2"
                             >
-                                <li>
-                                    <div
-                                        className="flex items-center cursor-pointer"
+                                <li className="ml-[-1.5rem]">
+                                    <Block
+                                        className="flex gap-2 items-center cursor-pointer"
                                         onClick={() => handleToggle(project.Project_ID.toString())}
                                     >
                                         <FontAwesomeIcon
                                             icon={visibleProject === project.Project_ID.toString() ? faChevronDown : faChevronRight}
-                                            className="mr-2"
+                                            className="button-link !px-0"
                                         />
                                         <Link
                                             href={`/project/${project.Project_ID}`}
-                                            className={`inline-block text-sm`}
+                                            className={clsx(
+                                                "button-link",
+                                                `inline-block text-sm`
+                                            )}
                                         >
                                             <Block variant="span" className="flex items-center gap-2">
                                                 {project.Project_Name}
                                             </Block>
                                         </Link>
-                                    </div>
+                                    </Block>
                                 </li>
 
                                 {/* Rendering Navigation Links */}
@@ -119,7 +122,7 @@ export const LeftNav: React.FC = () => {
                                     <ul>
                                         {Object.entries(navLinks).map(([url, title]) => (
                                             <li key={url}>
-                                                <Link href={url + project.Project_ID} className={clsx(styles.navLink)}>
+                                                <Link href={url + project.Project_ID} className={clsx("button-link")}>
                                                     {title}
                                                 </Link>
                                             </li>
@@ -138,7 +141,7 @@ export const LeftNav: React.FC = () => {
                             <Link
                                 href="/profile"
                                 className={clsx(
-                                    styles.navLink,
+                                    "button-link",
                                     `inline-block text-sm`
                                 )}
                             >
@@ -153,7 +156,7 @@ export const LeftNav: React.FC = () => {
                         <Block
                             variant="span"
                             className={clsx(
-                                styles.navLink,
+                                "button-link",
                                 `inline-block text-sm cursor-pointer`
                             )}
                             onClick={handleLogoutSubmit}

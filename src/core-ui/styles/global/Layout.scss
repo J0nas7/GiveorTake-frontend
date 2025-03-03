@@ -2,11 +2,36 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    
+    .page-back-navigation {
+        @apply text-xs text-gray-800 no-underline;
+        @apply inline-block p-2 rounded;
+        transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+
+        &:hover {
+            @apply bg-blue-100 text-blue-600;
+            transform: scale(1.1);
+        }
+    }
 
     .content-wrapper {
         display: flex;
         flex: 1;
         overflow: hidden;
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #f9fafb; // Tailwind's bg-gray-50
+            padding: 1.5rem;
+            width: calc(100% - 192px);
+            @apply mt-16 ml-48 mb-24;
+
+            .page-content {
+                @apply mx-auto overflow-x-auto;
+                @apply p-6 bg-gray-100 rounded-lg shadow-lg;
+            }
+        }
 
         .left-nav {
             flex: 0 0 250px;
@@ -16,9 +41,5 @@
         .main-content {
             flex: 1;
         }
-    }
-
-    .blue-link {
-        @apply text-blue-400;
     }
 }

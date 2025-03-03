@@ -1,25 +1,15 @@
 .taskDetailModalBackground {
-    position: fixed;
-    top: 0;
-    left: 0;
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     z-index: 1000;
+    @apply fixed top-0 left-0 justify-center items-center !flex;
 }
 
 .taskDetailContainer {
-    width: 100%;
+    @apply w-full bg-white flex-col gap-4 p-4 !flex;
     min-width: 80%;
     max-width: 1200px;
-    background: white;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
 
     &.withModal {
         position: fixed;
@@ -34,12 +24,6 @@
         height: 750px;
         max-height: 80%;
     }
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .titlePlaceholder {
@@ -62,9 +46,8 @@
 }
 
 .descriptionEditor {
-    width: 100%;
+    @apply w-full !flex;
     min-height: 150px;
-    display: flex;
     flex-direction: column;
     gap: 10px;
     margin-bottom: 15px;
@@ -95,25 +78,15 @@
 }
 
 .ctaButtons {
-    display: flex;
-    gap: 8px;
-    @apply ml-4;
+    @apply ml-4 gap-2 !flex;
 
     .ctaButton {
-        transition: background-color 0.2s ease, color 0.2s ease;
-        @apply flex gap-2 items-center p-2 rounded-md;
-        @apply text-gray-800 text-sm no-underline;
-        
-        &:hover {
-            background-color: #dbeafe; // Tailwind's bg-blue-100
-            color: #2563eb; // Tailwind's text-blue-600
-        }
+        @apply flex gap-2 items-center;
     }
 }
 
 .content {
-    display: flex;
-    gap: 16px;
+    @apply gap-4 !flex;
 }
 
 .leftPanel,
@@ -142,24 +115,15 @@
 }
 
 .mediaPlaceholders {
-    display: flex;
-    gap: 8px;
+    @apply gap-2 !flex;
 }
 
 .mediaPlaceholder {
-    width: 80px;
-    height: 80px;
-    background: #ddd;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    @apply items-center justify-center bg-gray-300 w-20 h-20 !flex;
 }
 
 .commentInputContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 15px;
+    @apply flex-col gap-3 mb-4 !flex;
 }
 
 .commentInput {
@@ -177,16 +141,10 @@
 }
 
 .commentPlaceholder {
+    @apply flex-grow items-center cursor-text p-2 rounded-lg min-h-10 !flex;
     color: #ccc;
     font-size: 14px;
-    cursor: text;
-    padding: 8px;
     border: 1px solid #ccc;
-    border-radius: 8px;
-    flex-grow: 1;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
 
     &:hover {
         @apply bg-gray-100;
@@ -194,21 +152,13 @@
 }
 
 .editDescriptionActions, .newCommentActions {
-    display: flex;
-    gap: 10px;
+    @apply gap-3 !flex;
 }
 
 .sendButton {
-    width: 100px;
+    @apply w-full text-white py-3 px-2 rounded-lg cursor-pointer items-center justify-center !flex;
     background-color: #007bff;
     border: none;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .sendButton:hover {
@@ -216,15 +166,8 @@
 }
 
 .cancelButton {
-    width: 100px;
+    @apply items-center justify-center cursor-pointer rounded-lg px-2 py-3 text-black w-full !flex;
     border: none;
-    color: black;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .mediaItem,
@@ -237,17 +180,12 @@
 
 .mediaMeta,
 .commentMeta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: gray;
+    @apply justify-between text-gray-400 text-xs !flex;
 }
 
 .mediaActions,
 .commentActions {
-    display: flex;
-    gap: 8px;
-    cursor: pointer;
+    @apply cursor-pointer gap-2 !flex;
 }
 
 .icon {

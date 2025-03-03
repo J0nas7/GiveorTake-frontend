@@ -20,6 +20,14 @@
         "inactive": "Inactive",
         "pending": "Pending",
         "saveChanges": "Save Changes",
-        "pleaseFillInAllFields": "Please fill in all required fields!"
+        "pleaseFillInAllFields": "Please fill in all required fields!",
+        "searchAndInviteUser": "Search and Invite User",
+        "searchUser": "Search User",
+        "userNotFound": "User not found. Please try again.",
+        "invalidEmail": "Please enter a valid email address.",
+        "userFound": "User found",
+        "sendInvite": "Send Invite",
+        "createSeatError": "Failed to send invitation",
+        "inviteSent": "Invitation sent to"
     }
 }

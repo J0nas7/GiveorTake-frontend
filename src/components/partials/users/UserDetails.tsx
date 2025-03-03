@@ -7,6 +7,9 @@ import { Organisation, TeamUserSeat, User } from '@/types';
 import { Heading } from '@/components/ui/heading';
 import styles from "@/core-ui/styles/modules/User.settings.module.scss";
 import Link from 'next/link';
+import { Block } from '@/components/ui/block-text';
+import { FlexibleBox } from '@/components/ui/flexible-box';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
 
 const UserDetails: React.FC = () => {
     // Get user data and the save function from context
@@ -110,86 +113,98 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
     handleSaveChanges,
     handleDeleteUser,
 }) => {
-    if (!user) return <p>Loading user details...</p>;
+    if (!user) return <p>Loading user details...</p>
 
     return (
-        <div className={styles.userDetailsContainer}>
-            <div className={styles.userDetailsForm}>
-                <Heading variant="h2" className={styles.heading}>Edit User Details</Heading>
-
-                <div className={styles.formGroup}>
-                    <label htmlFor="firstName" className={styles.label}>First Name</label>
-                    <input
-                        type="text"
-                        id="firstName"
-                        name="User_FirstName"
-                        value={user.User_FirstName}
-                        onChange={handleChange}
-                        className={styles.input}
-                    />
-                </div>
-
-                <div className={styles.formGroup}>
-                    <label htmlFor="surname" className={styles.label}>Surname</label>
-                    <input
-                        type="text"
-                        id="surname"
-                        name="User_Surname"
-                        value={user.User_Surname}
-                        onChange={handleChange}
-                        className={styles.input}
-                    />
-                </div>
-
-                <div className={styles.formGroup}>
-                    <label htmlFor="email" className={styles.label}>Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="User_Email"
-                        value={user.User_Email}
-                        onChange={handleChange}
-                        className={styles.input}
-                    />
-                </div>
-
-                <div className={styles.formGroup}>
-                    <label className={styles.label}>Profile Image</label>
-                    <div className={styles.profileImageContainer}>
-                        {imagePreview ? (
-                            <img
-                                src={imagePreview}
-                                alt="User Profile"
-                                className={styles.userProfileImage}
-                            />
-                        ) : (
-                            <div className={styles.noImage}>No image</div>
-                        )}
+        <Block className="page-content">
+            <Link
+                href={`/`}
+                className="page-back-navigation"
+            >
+                &laquo; Go to Start Page
+            </Link>
+            {/* <Heading variant="h1">Edit User Details</Heading> */}
+            <FlexibleBox
+                title={`Edit User Details`}
+                icon={faUser}
+                className="no-box w-auto inline-block"
+                numberOfColumns={2}
+            >
+                <div className={styles.userDetailsForm}>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="firstName" className={styles.label}>First Name</label>
                         <input
-                            type="file"
-                            onChange={handleImageUpload}
-                            className={styles.imageUploadInput}
-                            accept="image/*"
+                            type="text"
+                            id="firstName"
+                            name="User_FirstName"
+                            value={user.User_FirstName}
+                            onChange={handleChange}
+                            className={styles.input}
                         />
                     </div>
+
+                    <div className={styles.formGroup}>
+                        <label htmlFor="surname" className={styles.label}>Surname</label>
+                        <input
+                            type="text"
+                            id="surname"
+                            name="User_Surname"
+                            value={user.User_Surname}
+                            onChange={handleChange}
+                            className={styles.input}
+                        />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label htmlFor="email" className={styles.label}>Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="User_Email"
+                            value={user.User_Email}
+                            onChange={handleChange}
+                            className={styles.input}
+                        />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label className={styles.label}>Profile Image</label>
+                        <div className={styles.profileImageContainer}>
+                            {imagePreview ? (
+                                <img
+                                    src={imagePreview}
+                                    alt="User Profile"
+                                    className={styles.userProfileImage}
+                                />
+                            ) : (
+                                <div className={styles.noImage}>No image</div>
+                            )}
+                            <input
+                                type="file"
+                                onChange={handleImageUpload}
+                                className={styles.imageUploadInput}
+                                accept="image/*"
+                            />
+                        </div>
+                    </div>
+
+                    {user.User_DeletedAt ? (
+                        <div className={styles.deletedMessage}>
+                            <p>This user has been deleted.</p>
+                        </div>
+                    ) : (
+                        <div className={styles.formActions}>
+                            <button className={styles.saveButton} onClick={handleSaveChanges}>
+                                Save Changes
+                            </button>
+                            <button className={styles.deleteButton} onClick={handleDeleteUser}>
+                                Delete User
+                            </button>
+                        </div>
+                    )}
                 </div>
-
-                {user.User_DeletedAt ? (
-                    <div className={styles.deletedMessage}>
-                        <p>This user has been deleted.</p>
-                    </div>
-                ) : (
-                    <div className={styles.formActions}>
-                        <button className={styles.saveButton} onClick={handleSaveChanges}>
-                            Save Changes
-                        </button>
-                        <button className={styles.deleteButton} onClick={handleDeleteUser}>
-                            Delete User
-                        </button>
-                    </div>
-                )}
-            </div>
-
+            </FlexibleBox>
+            
             {/* Display the teams the user is a part of */}
             <div className={styles.userTeamsContainer}>
                 <Heading variant="h3" className={styles.teamsHeading}>Organisation this user is a part of</Heading>
@@ -200,7 +215,7 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
                                 <strong>Organisation Name:</strong>{" "}
                                 <Link
                                     href={`/organisation/${renderOrganisation.Organisation_ID}`}
-                                    className="blue-link"
+                                    className="blue-link-light"
                                 >
                                     {renderOrganisation.Organisation_Name}
                                 </Link>
@@ -211,7 +226,7 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
                     <p>This user is not part of any organisation.</p>
                 )}
             </div>
-        </div>
+        </Block>
     );
 };
 

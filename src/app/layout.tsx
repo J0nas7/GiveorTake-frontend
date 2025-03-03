@@ -8,8 +8,10 @@ import Providers from "./providers"
 // Global CSS
 import "@/core-ui/styles/global/Tailwind.scss"
 import "@/core-ui/styles/global/Global.scss"
+import "@/core-ui/styles/global/Button.scss"
 import "@/core-ui/styles/global/Layout.scss"
 import "@/core-ui/styles/global/Guest.scss"
+import "@/core-ui/styles/global/Flexible-Box.scss"
 
 export const metadata: Metadata = {
     title: {

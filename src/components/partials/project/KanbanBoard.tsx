@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
@@ -12,6 +12,8 @@ import { Block, Text, Heading } from "@/components"
 import { useProjectsContext, useTasksContext } from "@/contexts"
 import { Project, Task } from "@/types"
 import { selectAuthUser, useTypedSelector } from "@/redux"
+import Link from "next/link"
+import { FlexibleBox } from "@/components/ui/flexible-box"
 
 const KanbanBoardContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
@@ -77,35 +79,48 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
     setTaskDetail
 }) => {
     return (
-        <Block className={styles.container}>
-            <Heading variant="h1" className={styles.title}>{`Kanban: ${project?.Project_Name}`}</Heading>
-            <Block className={styles.board}>
-                {Object.entries(columns).map(([key, label]) => (
-                    <Block key={key} className={styles.column}>
-                        <Heading variant="h2" className={styles.columnTitle}>{label}</Heading>
-                        <Block className={styles.taskList}>
-                            {(Array.isArray(tasks) ? tasks : [])
-                                .filter((task: Task) => task.Task_Status === label)
-                                .map((task: Task, index: number) => (
-                                    <Block key={index} className={styles.taskCard}>
-                                        <Text
-                                            onClick={() => setTaskDetail(task)}
-                                            className="cursor-pointer hover:underline"
-                                        >
-                                            {task.Task_Title}
-                                        </Text>
-                                        <button
-                                            onClick={() => removeTask(task.Task_ID, task.Project_ID)}
-                                            className={styles.removeButton}
-                                        >
-                                            <FontAwesomeIcon icon={faTrash} />
-                                        </button>
-                                    </Block>
-                                ))}
+        <Block className="page-content">
+            <Link
+                href={`/project/${project?.Project_ID}`}
+                className="page-back-navigation"
+            >
+                &laquo; Go to Project
+            </Link>
+            {/* <Heading variant="h1">{`Kanban: ${project?.Project_Name}`}</Heading> */}
+            <FlexibleBox
+                title={`Kanban: ${project?.Project_Name}`}
+                icon={faWindowRestore}
+                className="no-box w-auto inline-block"
+                numberOfColumns={2}
+            >
+                <Block className={styles.board}>
+                    {Object.entries(columns).map(([key, label]) => (
+                        <Block key={key} className={styles.column}>
+                            <Heading variant="h2" className={styles.columnTitle}>{label}</Heading>
+                            <Block className={styles.taskList}>
+                                {(Array.isArray(tasks) ? tasks : [])
+                                    .filter((task: Task) => task.Task_Status === label)
+                                    .map((task: Task, index: number) => (
+                                        <Block key={index} className={styles.taskCard}>
+                                            <Text
+                                                onClick={() => setTaskDetail(task)}
+                                                className={styles.taskTitle}
+                                            >
+                                                {task.Task_Title}
+                                            </Text>
+                                            <button
+                                                onClick={() => removeTask(task.Task_ID, task.Project_ID)}
+                                                className={styles.removeButton}
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        </Block>
+                                    ))}
+                            </Block>
                         </Block>
-                    </Block>
-                ))}
-            </Block>
+                    ))}
+                </Block>
+            </FlexibleBox>
         </Block>
     )
 }

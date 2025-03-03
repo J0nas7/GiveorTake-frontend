@@ -3,20 +3,32 @@
 // External
 import React, { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
-import { TextField, Button, Card, CardContent, Typography, Grid, Container, Box, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { TextField, Card, CardContent, Typography, Grid, Box, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
 // Internal
 import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
 import { Team, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
-import { Block } from '@/components';
+import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, useTypedSelector } from '@/redux';
+import { useAxios } from '@/hooks';
+import { TFunction } from 'next-i18next';
+import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChair, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { FlexibleBox } from '@/components/ui/flexible-box';
 
 const TeamUserSeatsManager: React.FC = () => {
     const { t } = useTranslation(['team'])
 
     const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
-    const { teamUserSeatsById, readTeamUserSeatsByTeamId, saveTeamUserSeatChanges, removeTeamUserSeat } = useTeamUserSeatsContext();
+    const {
+        teamUserSeatsById,
+        readTeamUserSeatsByTeamId,
+        addTeamUserSeat,
+        saveTeamUserSeatChanges,
+        removeTeamUserSeat
+    } = useTeamUserSeatsContext();
     const { teamById, readTeamById } = useTeamsContext();
     const { addUser } = useUsersContext(); // Assuming you have a `UsersContext` for adding new users
     const authUser = useTypedSelector(selectAuthUser); // Redux
@@ -24,6 +36,7 @@ const TeamUserSeatsManager: React.FC = () => {
     const [renderUserSeats, setRenderUserSeats] = useState<TeamUserSeat[]>([]);
     const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined);
     const [selectedSeat, setSelectedSeat] = useState<TeamUserSeat | undefined>(undefined);
+    const [displayInviteForm, setDisplayInviteForm] = useState<boolean>(false);
 
     // New User Form State
     const [newUserDetails, setNewUserDetails] = useState({
@@ -66,7 +79,8 @@ const TeamUserSeatsManager: React.FC = () => {
     };
 
     const handleSelectSeat = (seat: TeamUserSeat) => {
-        setSelectedSeat(seat);
+        setSelectedSeat(seat)
+        setDisplayInviteForm(false)
     };
 
     const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,14 +117,19 @@ const TeamUserSeatsManager: React.FC = () => {
         };
         await saveTeamUserSeatChanges(newSeat, parseInt(teamId));
     };
-    
+
     return (
         <TeamUserSeatsView
             renderUserSeats={renderUserSeats}
             renderTeam={renderTeam}
             authUser={authUser}
             selectedSeat={selectedSeat}
+            displayInviteForm={displayInviteForm}
             newUserDetails={newUserDetails}
+            teamId={teamId}
+            t={t}
+            addTeamUserSeat={addTeamUserSeat}
+            readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
             handleSelectSeat={handleSelectSeat}
             handleRemoveSeat={handleRemoveSeat}
             handleSaveChanges={handleSaveChanges}
@@ -118,6 +137,8 @@ const TeamUserSeatsManager: React.FC = () => {
             handleUserInputChange={handleUserInputChange}
             handleCreateNewUser={handleCreateNewUser}
             setNewUserDetails={setNewUserDetails}
+            setSelectedSeat={setSelectedSeat}
+            setDisplayInviteForm={setDisplayInviteForm}
         />
     );
 };
@@ -127,6 +148,7 @@ export interface TeamUserSeatsViewProps {
     renderTeam: Team | undefined;
     authUser: User | undefined;
     selectedSeat: TeamUserSeat | undefined;
+    displayInviteForm: boolean | undefined
     newUserDetails: {
         email: string;
         firstName: string;
@@ -134,6 +156,10 @@ export interface TeamUserSeatsViewProps {
         role: string;
         status: string;
     };
+    teamId: string
+    t: TFunction
+    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
+    readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     handleSelectSeat: (seat: TeamUserSeat) => void;
     handleRemoveSeat: (seatId: number) => void;
     handleSaveChanges: () => void;
@@ -147,6 +173,8 @@ export interface TeamUserSeatsViewProps {
         role: string;
         status: string;
     }>) => void
+    setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
@@ -154,149 +182,99 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
     renderTeam,
     authUser,
     selectedSeat,
+    displayInviteForm,
     newUserDetails,
+    teamId,
+    t,
+    addTeamUserSeat,
+    readTeamUserSeatsByTeamId,
     handleSelectSeat,
     handleRemoveSeat,
     handleSaveChanges,
     handleSeatChange,
     handleUserInputChange,
     handleCreateNewUser,
-    setNewUserDetails
+    setNewUserDetails,
+    setSelectedSeat,
+    setDisplayInviteForm
 }) => {
-    const { t } = useTranslation(['team']);
-
     return (
-        <Container maxWidth="lg">
+        <Block className="page-content">
             <Box mb={6}>
-                <Typography variant="h4" className="font-bold mb-4">
-                    {t('team:seatsManager:manageTeamUserSeats')}
-                </Typography>
-
-                <Card className="shadow-lg rounded-lg mb-4">
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                            {t('team:seatsManager:teamUserSeats')}
-                        </Typography>
-
-                        {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
-                            <Block>{t('team:seatsManager:length0_iamowner')}</Block>
-                        ) : (
-                            <Grid container spacing={3}>
-                                {Array.isArray(renderUserSeats) && renderUserSeats.map((seat) => (
-                                    <Grid item xs={12} sm={6} md={4} key={seat.Seat_ID}>
-                                        <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all">
-                                            <CardContent className="p-4">
-                                                <Block variant="span" className="flex flex-col gap-3">
-                                                    <Typography variant="h6" className="font-semibold text-lg">
-                                                        {seat.user?.User_FirstName} {seat.user?.User_Surname}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="textSecondary">
-                                                        {t('team:seatsManager:role')}: {seat.Seat_Role}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="textSecondary">
-                                                        {t('team:seatsManager:status')}: {seat.Seat_Status}
-                                                    </Typography>
-
-                                                    <div className="flex justify-between mt-4">
-                                                        <Button
-                                                            variant="outlined"
-                                                            onClick={() => handleSelectSeat(seat)}
-                                                            className="w-[48%]"
-                                                        >
-                                                            {t('team:seatsManager:edit')}
-                                                        </Button>
-                                                        <Button
-                                                            variant="outlined"
-                                                            onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
-                                                            className="w-[48%]"
-                                                        >
-                                                            {t('team:seatsManager:remove')}
-                                                        </Button>
-                                                    </div>
-                                                </Block>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <Card className="shadow-lg rounded-lg mt-6">
-                    <CardContent className="p-4">
-                        <Typography variant="h6" gutterBottom>
-                            {t('team:seatsManager:createNewUserAndAssignSeat')}
-                        </Typography>
-
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label={t('team:seatsManager:firstName')}
-                                    variant="outlined"
-                                    fullWidth
-                                    name="firstName"
-                                    value={newUserDetails.firstName}
-                                    onChange={handleUserInputChange}
-                                    className="bg-white"
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label={t('team:seatsManager:lastName')}
-                                    variant="outlined"
-                                    fullWidth
-                                    name="lastName"
-                                    value={newUserDetails.lastName}
-                                    onChange={handleUserInputChange}
-                                    className="bg-white"
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label={t('team:seatsManager:email')}
-                                    variant="outlined"
-                                    fullWidth
-                                    name="email"
-                                    value={newUserDetails.email}
-                                    onChange={handleUserInputChange}
-                                    className="bg-white"
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel>{t('team:seatsManager:role')}</InputLabel>
-                                    <Select
-                                        value={newUserDetails.role}
-                                        onChange={(e) =>
-                                            setNewUserDetails((prev) => ({
-                                                ...prev,
-                                                role: e.target.value,
-                                            }))
-                                        }
-                                        className="bg-white"
-                                    >
-                                        <MenuItem value="user">{t('team:seatsManager:user')}</MenuItem>
-                                        <MenuItem value="admin">{t('team:seatsManager:admin')}</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                        </Grid>
-
-                        <Box mt={4} className="flex justify-end">
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleCreateNewUser}
-                                className="px-6 py-2"
+                <Link
+                    href={`/team/${renderTeam?.Team_ID}`}
+                    className="page-back-navigation"
+                >
+                    &laquo; Go to Team
+                </Link>
+                {/* <Heading variant="h1">{t('team:seatsManager:manageTeamUserSeats')}</Heading> */}
+                <FlexibleBox
+                    title={t('team:seatsManager:manageTeamUserSeats')}
+                    icon={faChair}
+                    className="no-box w-auto inline-block"
+                    numberOfColumns={2}
+                >
+                    <Card className="shadow-lg rounded-lg mb-4">
+                        <CardContent>
+                            <button
+                                className="blue-link mb-3 !inline-flex gap-2 items-center"
+                                onClick={() => {
+                                    setDisplayInviteForm(true)
+                                    setSelectedSeat(undefined)
+                                }}
                             >
-                                {t('team:seatsManager:createAndAssignSeat')}
-                            </Button>
-                        </Box>
-                    </CardContent>
-                </Card>
+                                <FontAwesomeIcon icon={faPlus} />
+                                <Text variant="span">New Invite</Text>
+                            </button>
+                            <Typography variant="h6" gutterBottom>
+                                {t('team:seatsManager:teamUserSeats')}: {renderTeam?.Team_Name}
+                            </Typography>
 
-                {selectedSeat && (
+                            {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
+                                <Block>{t('team:seatsManager:length0_iamowner')}</Block>
+                            ) : (
+                                <Grid container spacing={3}>
+                                    {Array.isArray(renderUserSeats) && renderUserSeats.map((seat) => (
+                                        <Grid item xs={12} sm={6} md={4} key={seat.Seat_ID}>
+                                            <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all">
+                                                <CardContent className="p-4">
+                                                    <Block variant="span" className="flex flex-col gap-3">
+                                                        <Typography variant="h6" className="font-semibold text-lg">
+                                                            {seat.user?.User_FirstName} {seat.user?.User_Surname}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="textSecondary">
+                                                            {t('team:seatsManager:role')}: {seat.Seat_Role}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="textSecondary">
+                                                            {t('team:seatsManager:status')}: {seat.Seat_Status}
+                                                        </Typography>
+
+                                                        <div className="flex justify-between mt-4">
+                                                            <button
+                                                                onClick={() => handleSelectSeat(seat)}
+                                                                className="blue-link w-[48%]"
+                                                            >
+                                                                {t('team:seatsManager:edit')}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
+                                                                className="blue-link w-[48%]"
+                                                            >
+                                                                {t('team:seatsManager:remove')}
+                                                            </button>
+                                                        </div>
+                                                    </Block>
+                                                </CardContent>
+                                            </Card>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            )}
+                        </CardContent>
+                    </Card>
+                </FlexibleBox>
+                
+                {selectedSeat ? (
                     <Card className="shadow-lg rounded-lg mt-4">
                         <CardContent className="p-4">
                             <Typography variant="h6" gutterBottom className="font-semibold">
@@ -322,30 +300,198 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                             onChange={(e) => handleSeatChange('Seat_Status', e.target.value)}
                                             className="bg-white"
                                         >
-                                            <MenuItem value="active">{t('team:seatsManager:active')}</MenuItem>
-                                            <MenuItem value="inactive">{t('team:seatsManager:inactive')}</MenuItem>
-                                            <MenuItem value="pending">{t('team:seatsManager:pending')}</MenuItem>
+                                            <MenuItem value="Active">{t('team:seatsManager:active')}</MenuItem>
+                                            <MenuItem value="Inactive">{t('team:seatsManager:inactive')}</MenuItem>
+                                            <MenuItem value="Pending">{t('team:seatsManager:pending')}</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>
                             </Grid>
 
-                            <Box mt={4} className="flex justify-end">
-                                <Button
-                                    variant="contained"
-                                    color="primary"
+                            <Box mt={4} className="flex gap-4 justify-end">
+                                <button
+                                    className="blue-link-light"
+                                    onClick={() => {
+                                        setSelectedSeat(undefined)
+                                        setDisplayInviteForm(false)
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="button-blue px-6 py-2"
                                     onClick={handleSaveChanges}
-                                    className="px-6 py-2"
                                 >
                                     {t('team:seatsManager:saveChanges')}
-                                </Button>
+                                </button>
                             </Box>
                         </CardContent>
                     </Card>
+                ) : displayInviteForm ? (
+                    <Card className="shadow-lg rounded-lg mt-6">
+                        <InviteUserForm
+                            teamId={teamId}
+                            t={t}
+                            addTeamUserSeat={addTeamUserSeat}
+                            readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
+                            setSelectedSeat={setSelectedSeat}
+                            setDisplayInviteForm={setDisplayInviteForm}
+                        />
+                    </Card>
+                ) : (
+                    <></>
                 )}
             </Box>
-        </Container>
+        </Block>
     );
 };
+
+export interface InviteUserFormProps {
+    teamId: string
+    t: TFunction
+    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
+    readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
+    setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+const InviteUserForm: React.FC<InviteUserFormProps> = ({
+    teamId,
+    t,
+    addTeamUserSeat,
+    readTeamUserSeatsByTeamId,
+    setSelectedSeat,
+    setDisplayInviteForm
+}) => {
+    // Hooks
+    const { httpPostWithData } = useAxios();
+
+    // Internal variables
+    const [email, setEmail] = useState("");
+    const [user, setUser] = useState<User | undefined>(undefined);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSearchUser = async () => {
+        // Email validation
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        if (!emailRegex.test(email)) {
+            setError(t("team:seatsManager:invalidEmail"));
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setUser(undefined);
+
+        try {
+            const data = await httpPostWithData("users/userByEmail", { email });
+            console.log(data)
+
+            if (data.message) {
+                throw new Error(t("team:seatsManager:userNotFound"));
+                return;
+            }
+
+            setUser(data);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.log(error || "An error occurred while searching for the user.");
+                setError(error.message)
+            } else {
+                console.log("An unknown error occurred.");
+                setError("An unknown error occurred.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendInvite = async () => {
+        if (!user) {
+            setError(t("team:seatsManager:userNotFound"));
+            return;
+        }
+
+        // Construct the new seat object
+        const newSeat: TeamUserSeat = {
+            Team_ID: parseInt(teamId),
+            User_ID: user.User_ID, // Use the found user's ID
+            Seat_Role: "Member", // Default role
+            Seat_Status: "Pending", // Default status
+        };
+
+        try {
+            // Send a request to create the new seat for the user
+            await addTeamUserSeat(newSeat.Team_ID, newSeat);
+
+            // Refresh seats list
+            await readTeamUserSeatsByTeamId(parseInt(teamId))
+
+            // Show success message
+            alert(`${t("team:seatsManager:inviteSent")} ${email}`);
+        } catch (err) {
+            console.error("Failed to create seat:", err);
+            setError(t("team:seatsManager:createSeatError"));
+        }
+    };
+
+    return (
+        <CardContent className="p-4">
+            <Typography variant="h6" gutterBottom>
+                {t("team:seatsManager:searchAndInviteUser")}
+            </Typography>
+
+            <Grid container spacing={3}>
+                <Grid item xs={12}>
+                    <TextField
+                        label={t("team:seatsManager:email")}
+                        variant="outlined"
+                        fullWidth
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="bg-white"
+                    />
+                </Grid>
+            </Grid>
+
+            <Box mt={4} className="flex gap-4 justify-end">
+                <button
+                    className="blue-link-light"
+                    onClick={() => {
+                        setDisplayInviteForm(false)
+                        setSelectedSeat(undefined)
+                    }}
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={handleSearchUser}
+                    disabled={loading}
+                    className="button-blue px-6 py-2"
+                >
+                    {t("team:seatsManager:searchUser")}
+                </button>
+            </Box>
+
+            {error && <Typography color="error" mt={2}>{error}</Typography>}
+            {user && (
+                <Box mt={4}>
+                    <Typography>{t("team:seatsManager:userFound")}</Typography>
+                    <Block variant="span">
+                        Name: {user.User_FirstName + " " + user.User_Surname}
+                    </Block>
+                    <button
+                        onClick={handleSendInvite}
+                        className="button-blue mt-2 px-6 py-2"
+                    >
+                        {t("team:seatsManager:sendInvite")}
+                    </button>
+                </Box>
+            )}
+        </CardContent>
+    );
+}
 
 export default TeamUserSeatsManager;

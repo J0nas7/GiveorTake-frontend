@@ -44,3 +44,55 @@
     background-color: #E0E7F2;
     @apply shadow-md;
 }
+
+.blue-link-light {
+    @apply text-blue-400 inline-block;
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+}
+
+.blue-link {
+    text-decoration: none;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    @apply text-blue-400 shadow-lg inline-block;
+
+    &:hover {
+        @apply bg-blue-100 text-blue-600;
+        transform: scale(1.1);
+    }
+}
+
+.button-link {
+    display: block;
+    text-decoration: none;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+   @apply text-gray-800;
+   
+    &:hover {
+        @apply bg-blue-100 text-blue-600;
+        transform: scale(1.1);
+    }
+}
+
+.button-blue {
+    display: block;
+    color: #374151; // Tailwind's text-gray-800
+    text-decoration: none;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    @apply bg-blue-100 text-blue-600;
+    @apply shadow-lg;
+
+    &:hover {
+        transform: scale(1.1);
+        @apply bg-blue-300;
+    }
+}
