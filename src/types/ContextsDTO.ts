@@ -9,6 +9,9 @@ export type User = {
     User_CreatedAt?: string;
     User_UpdatedAt?: string;
     User_DeletedAt?: string;
+
+    // Relationships
+    timeTracks?: TaskTimeTrack[]
 };
 
 export type UserFields =
@@ -113,12 +116,40 @@ export type Task = {
     // Relationships
     project?: Project
     comments?: TaskComment[]
-    mediaFiles?: TaskMediaFile[]
+    time_tracks?: TaskTimeTrack[]
+    media_files?: TaskMediaFile[]
 }
 
 export type TaskFields =
     "Task_ID" | "Task_Number" | "Project_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
     "Task_Description" | "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
+
+// Task Time Track Type
+export type TaskTimeTrack = {
+    Time_Tracking_ID?: number;
+    Task_ID: number;
+    User_ID: number;
+    Comment_ID?: number | null;
+    Time_Tracking_Start_Time: string; // ISO 8601 format (e.g., "YYYY-MM-DDTHH:mm:ssZ")
+    Time_Tracking_End_Time?: string | null; // Nullable, if tracking is still active
+    Time_Tracking_Duration?: number | null; // In minutes
+    Time_Tracking_Notes?: string | null;
+    Time_Tracking_CreatedAt?: string; // ISO 8601 format
+    Time_Tracking_UpdatedAt?: string; // ISO 8601 format
+    Time_Tracking_DeletedAt?: string | null; // Nullable
+
+    // Relationships
+    task?: Task;
+    user?: User;
+    comment?: TaskComment;
+}
+
+export type TaskTimeTrackFields =
+    "Time_Tracking_ID" | "Task_ID" | "User_ID" | "Comment_ID" |
+    "Time_Tracking_Start_Time" | "Time_Tracking_End_Time" | 
+    "Time_Tracking_Duration" | "Time_Tracking_Notes" |
+    "Time_Tracking_CreatedAt" | "Time_Tracking_UpdatedAt" | "Time_Tracking_DeletedAt";
+
 
 // Task Comment Type
 export type TaskComment = {
@@ -133,6 +164,7 @@ export type TaskComment = {
     // Relationships
     task?: Task;
     user?: User;
+    timeTracks?: TaskTimeTrack[]
 }
 
 export type TaskCommentFields =

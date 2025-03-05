@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 // Internal
 import { RootState } from '@/redux/store'
-import { Organisation, TeamUserSeat, User } from '@/types'
+import { Organisation, TaskTimeTrack, TeamUserSeat, User } from '@/types'
 
 export interface AuthState {
     isLoggedIn: boolean | undefined,
@@ -11,6 +11,7 @@ export interface AuthState {
     authUser: User | undefined,
     authUserSeat: TeamUserSeat | undefined,
     authUserOrganisation: Organisation | undefined,
+    authUserTaskTimeTrack: TaskTimeTrack | undefined,
     accessToken: string,
     refreshToken: string,
     loginResponse: Object,
@@ -23,6 +24,7 @@ const initialState = {
     authUser: undefined,
     authUserSeat: undefined,
     authUserOrganisation: undefined,
+    authUserTaskTimeTrack: undefined,
     accessToken: '',
     refreshToken: '',
     loginResponse: {},
@@ -45,6 +47,9 @@ export const authSlice = createSlice({
         setAuthUserOrganisation: (state: AuthState, action: PayloadAction<any>) => {
             state.authUserOrganisation = action.payload.data
         },
+        setAuthUserTaskTimeTrack: (state: AuthState, action: PayloadAction<any>) => {
+            state.authUserTaskTimeTrack = action.payload.data
+        },
         setAccessToken: (state: AuthState, action: PayloadAction<any>) => {
             state.accessToken = action.payload.data
         },
@@ -66,6 +71,7 @@ export const {
     setAuthUser,
     setAuthUserSeat,
     setAuthUserOrganisation,
+    setAuthUserTaskTimeTrack,
     setAccessToken,
     setRefreshToken,
     setLoginResponse,
@@ -78,6 +84,7 @@ export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn
 export const selectAuthUser = (state: RootState) => state.auth.authUser
 export const selectAuthUserSeat = (state: RootState) => state.auth.authUserSeat
 export const selectAuthUserOrganisation = (state: RootState) => state.auth.authUserOrganisation
+export const selectAuthUserTaskTimeTrack = (state: RootState) => state.auth.authUserTaskTimeTrack
 export const selectAccessToken = (state: RootState) => state.auth.accessToken
 export const selectRefreshToken = (state: RootState) => state.auth.refreshToken
 export const selectLoginResponse = (state: RootState) => state.auth.loginResponse

@@ -5,13 +5,14 @@ import React from 'react';
 import { 
     UsersProvider, TeamsProvider, ProjectsProvider, 
     OrganisationsProvider, TeamUserSeatsProvider,
-    TasksProvider, TaskCommentsProvider, TaskMediaFilesProvider
+    TasksProvider, TaskTimeTracksProvider, TaskCommentsProvider, TaskMediaFilesProvider
 } from "@/contexts"
 
 const providers = [
     UsersProvider,
     TeamsProvider,
     TasksProvider,
+    TaskTimeTracksProvider,
     TaskCommentsProvider,
     TaskMediaFilesProvider,
     ProjectsProvider,

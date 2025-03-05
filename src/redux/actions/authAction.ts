@@ -3,7 +3,7 @@ import { Dispatch } from 'redux'
 
 // Internal
 import { useAxios, useCookies } from '@/hooks'
-import { setAuthUser, setAuthUserOrganisation, setAuthUserSeat, setIsLoggedIn } from '../slices/authSlice'
+import { setAuthUser, setAuthUserOrganisation, setAuthUserSeat, setAuthUserTaskTimeTrack, setIsLoggedIn } from '../slices/authSlice'
 
 export const useAuthActions = () => {
     const { deleteTheCookie } = useCookies()
@@ -39,6 +39,7 @@ export const useAuthActions = () => {
                 }
                 
                 dispatch(setAuthUserOrganisation({ "data": data.userOrganisation }))
+                dispatch(setAuthUserTaskTimeTrack({ "data": data.userActiveTimeTrack }))
             } else {
                 deleteTheCookie("accessToken")
                 // Optionally handle the "not logged in" scenario

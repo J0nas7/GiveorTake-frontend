@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop } from "@fortawesome/free-solid-svg-icons";
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 import dynamic from "next/dynamic";
 
@@ -13,13 +13,14 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
-import { useTaskCommentsContext, useTasksContext } from "@/contexts";
-import { Task, TaskComment, User } from "@/types";
+import { useTaskCommentsContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
+import { Task, TaskComment, TaskTimeTrack, User } from "@/types";
 import Link from "next/link";
 import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
 import clsx from "clsx";
-import { selectAuthUser, useTypedSelector } from "@/redux";
+import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useTypedSelector } from "@/redux";
+import { TimeSpentDisplay } from "./TaskTimeTrackPlayer";
 
 interface TaskDetailProps {
     task?: Task
@@ -375,9 +376,18 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
     )
 }
 
-const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
+interface TaskDetailsAreaProps {
+    task: Task,
+    setTheTask: React.Dispatch<React.SetStateAction<Task | undefined>>
+}
+
+const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) => {
+    const authUser = useTypedSelector(selectAuthUser)
+    const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
     const { readTasksByProjectId, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
+    const { addTaskTimeTrack, saveTaskTimeTrackChanges } = useTaskTimeTrackContext()
+    const dispatch = useAppDispatch()
 
     // Handle status change
     const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -386,6 +396,7 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
     };
 
     const handleTaskChanges = async (field: keyof Task, value: string) => {
+        // Update the task change (this will update it in the database)
         await saveTaskChanges(
             { ...task, [field]: value },
             task.Project_ID
@@ -404,6 +415,85 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
         }
     }
 
+    const handleTaskTimeTrack = async (action: "Play" | "Stop") => {
+        if (!authUser) return
+        
+        if (authUser.User_ID) {
+            // Prepare the task time track object
+            const theNewTimeTrack: TaskTimeTrack = {
+                Task_ID: task.Task_ID,
+                User_ID: authUser.User_ID,
+                Time_Tracking_Start_Time: "", // We'll set this conditionally
+                Time_Tracking_End_Time: null,
+                Time_Tracking_Duration: null,
+                Time_Tracking_Notes: "",
+            };
+
+            // const activeTimeTrack: TaskTimeTrack | undefined = task.time_tracks?.find(track => !track.Time_Tracking_End_Time && track.User_ID === authUser.User_ID)
+
+            if (action === "Play") { // Start time tracking
+                console.log("Play")
+                theNewTimeTrack.Time_Tracking_Start_Time = new Date().toISOString(); // Get the current timestamp in ISO format
+
+                // Add the new time track (this will insert it into the database)
+                await addTaskTimeTrack(theNewTimeTrack.Task_ID, theNewTimeTrack)
+            } else if (action === "Stop" && taskTimeTrack) { // Stop time tracking
+                console.log("Stop")
+                // Calculate the duration
+                const currentTime = new Date();
+                const startTime = new Date(taskTimeTrack.Time_Tracking_Start_Time);
+                const duration = Math.floor((currentTime.getTime() - startTime.getTime()) / 1000); // Duration in seconds
+
+                // Update the time track to stop it and calculate the duration
+                taskTimeTrack.Time_Tracking_End_Time = currentTime.toISOString();
+                taskTimeTrack.Time_Tracking_Duration = duration;
+                
+                // Update the time tracking record in the database
+                await saveTaskTimeTrackChanges(taskTimeTrack, task.Task_ID)
+            }
+
+            /// Task changed
+            if (projectId) {
+                await readTasksByProjectId(parseInt(projectId), true)
+            }
+
+            let existingTimeTracks = task.time_tracks || [];
+            // Add the new time track if it's Play action, or update if it's Stop action
+            if (action === "Play") {
+                console.log("Push")
+                existingTimeTracks.push({
+                    ...theNewTimeTrack,
+                    Time_Tracking_ID: existingTimeTracks.length + 1
+                });
+
+                dispatch(setAuthUserTaskTimeTrack(theNewTimeTrack))
+            } else if (action === "Stop" && taskTimeTrack) {
+                console.log("FindIndex")
+                const index = existingTimeTracks.findIndex(
+                    (track) => track.Time_Tracking_ID === taskTimeTrack.Time_Tracking_ID
+                );
+                if (index !== -1) {
+                    existingTimeTracks[index] = taskTimeTrack;
+                }
+                dispatch(setAuthUserTaskTimeTrack(undefined))
+            }
+
+            if (taskDetail) {
+                console.log("setTaskDetail", existingTimeTracks)
+                setTaskDetail({
+                    ...taskDetail,
+                    time_tracks: existingTimeTracks, // Update the time_tracks with the latest entry
+                });
+            } else {
+                console.log("setTheTask", existingTimeTracks)
+                setTheTask({
+                    ...task,
+                    time_tracks: existingTimeTracks, // Update the time_tracks with the latest entry
+                })
+            }
+        }
+    }
+
     return (
         <TaskDetailsView
             task={task}
@@ -412,6 +502,7 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
             saveTaskChanges={saveTaskChanges}
             handleStatusChange={handleStatusChange}
             handleTaskChanges={handleTaskChanges}
+            handleTaskTimeTrack={handleTaskTimeTrack}
         />
     );
 };
@@ -423,6 +514,42 @@ interface TaskDetailsViewProps {
     saveTaskChanges: (taskChanges: Task, parentId: number) => void
     handleStatusChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleTaskChanges: (field: keyof Task, value: string) => void
+    handleTaskTimeTrack: (action: "Play" | "Stop") => Promise<void>
+}
+
+interface TimeSpentDisplayViewProps {
+    task: Task
+    handleTaskTimeTrack: (action: "Play" | "Stop") => Promise<void>
+}
+
+const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({
+    task,
+    handleTaskTimeTrack
+}) => {
+    const authUser = useTypedSelector(selectAuthUser)
+    const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
+
+    return (
+        <>
+            {(taskTimeTrack && taskTimeTrack.Task_ID === task.Task_ID) ? (
+                <Block variant="span" className="flex gap-2 items-center">
+                    <button className={clsx("timetrack-button", "timetrack-stopbutton")} onClick={() => handleTaskTimeTrack("Stop")}>
+                        <FontAwesomeIcon icon={faStop} />
+                    </button>
+                    <Block variant="span">
+                        {/* Calculate and display time spent since start */}
+                        {taskTimeTrack.Time_Tracking_Start_Time ? (
+                            <TimeSpentDisplay startTime={taskTimeTrack.Time_Tracking_Start_Time} />
+                        ) : null}
+                    </Block>
+                </Block>
+            ) : (
+                <button className={clsx("timetrack-button", "timetrack-playbutton")} onClick={() => handleTaskTimeTrack("Play")}>
+                    <FontAwesomeIcon icon={faPlay} />
+                </button>
+            )}
+        </>
+    )
 }
 
 export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
@@ -431,7 +558,8 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     setTaskDetail,
     saveTaskChanges,
     handleStatusChange,
-    handleTaskChanges
+    handleTaskChanges,
+    handleTaskTimeTrack
 }) => {
     return (
         <Card className={styles.detailsSection}>
@@ -452,13 +580,18 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
             <p><strong>Team:</strong> {task.project?.team?.Team_Name}</p>
             <p><strong>Created At:</strong> {task.Task_CreatedAt}</p>
             <p><strong>Due Date:</strong> {task.Task_Due_Date || "N/A"}</p>
+            <p className="timetrack-metric">
+                <strong>Time Tracking:</strong>
+                <TimeSpentDisplayView task={task} handleTaskTimeTrack={handleTaskTimeTrack} />
+            </p>
         </Card>
     )
 }
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
     const { taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
-    const theTask: Task | undefined = task || taskDetail;
+
+    const [theTask, setTheTask] = useState<Task | undefined>(task || taskDetail)
 
     // Disable body scrolling when TaskDetailContainer is mounted
     useEffect(() => {
@@ -502,7 +635,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
                 </Block>
                 <Block className={styles.rightPanel}>
                     <CtaButtons theTask={theTask} task={task} />
-                    <TaskDetailsArea task={theTask} />
+                    <TaskDetailsArea task={theTask} setTheTask={setTheTask} />
                 </Block>
             </Block>
         </>

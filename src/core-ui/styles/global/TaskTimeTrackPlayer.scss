@@ -1,0 +1,18 @@
+.timetrackplayer-container {
+    @apply fixed z-50 bg-white shadow-lg rounded-lg w-full max-w-96 p-4;
+    @apply top-auto bottom-20 left-1/2 transform -translate-x-1/2;
+}
+
+.timetrack-metric {
+    @apply flex items-center gap-3;
+
+    .timetrack-button {
+        @apply w-8 h-8 text-white rounded-full;
+    }
+    .timetrack-playbutton {
+        @apply bg-green-400;
+    }
+    .timetrack-stopbutton {
+        @apply bg-red-400;
+    }
+}

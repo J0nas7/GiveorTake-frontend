@@ -6,12 +6,12 @@ import React, { createContext, useContext } from "react"
 // Internal
 import { useResourceContext } from "@/contexts"
 import {
-    User, 
-    Organisation, 
-    Team, 
-    Project, 
-    TeamUserSeat, 
-    Task, 
+    User,
+    Organisation,
+    Team,
+    Project,
+    TeamUserSeat,
+    Task,
     TaskComment,
     TaskMediaFile,
     ProjectFields,
@@ -21,7 +21,9 @@ import {
     TaskCommentFields,
     TaskMediaFileFields,
     UserFields,
-    OrganisationFields
+    OrganisationFields,
+    TaskTimeTrack,
+    TaskTimeTrackFields
 } from "@/types"
 
 // Context for Users
@@ -53,8 +55,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // loading: userLoading,
         // error: userError,
     } = useResourceContext<User, "User_ID">(
-        "users", 
-        "User_ID", 
+        "users",
+        "User_ID",
         ""
     );
 
@@ -117,8 +119,8 @@ export const OrganisationsProvider: React.FC<{ children: React.ReactNode }> = ({
         // loading: organisationLoading,
         // error: organisationError,
     } = useResourceContext<Organisation, "Organisation_ID">(
-        "organisations", 
-        "Organisation_ID", 
+        "organisations",
+        "Organisation_ID",
         "users"
     );
 
@@ -184,8 +186,8 @@ export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // loading: teamLoading,
         // error: teamError,
     } = useResourceContext<Team, "Team_ID">(
-        "teams", 
-        "Team_ID", 
+        "teams",
+        "Team_ID",
         "organisations"
     );
 
@@ -247,8 +249,8 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
         // loading: teamUserSeatLoading,
         // error: teamUserSeatError,
     } = useResourceContext<TeamUserSeat, "Seat_ID">(
-        "team-user-seats", 
-        "Seat_ID", 
+        "team-user-seats",
+        "Seat_ID",
         "teams"
     );
 
@@ -312,8 +314,8 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // loading: projectLoading,
         // error: projectError,
     } = useResourceContext<Project, "Project_ID">(
-        "projects", 
-        "Project_ID", 
+        "projects",
+        "Project_ID",
         "teams"
     );
 
@@ -462,6 +464,69 @@ export const useTasksContext = () => {
     }
 }*/
 
+// TaskTimeTrack Context Type
+export type TaskTimeTrackContextType = {
+    taskTimeTracksById: TaskTimeTrack[];
+    taskTimeTrackDetail: TaskTimeTrack | undefined;
+    newTaskTimeTrack: TaskTimeTrack | undefined;
+    readTaskTimeTracksByTaskId: (taskId: number) => Promise<void>;
+    setTaskTimeTrackDetail: React.Dispatch<React.SetStateAction<TaskTimeTrack | undefined>>;
+    handleChangeNewTaskTimeTrack: (field: keyof TaskTimeTrack, value: string, object?: TaskTimeTrack | undefined) => Promise<void>;
+    addTaskTimeTrack: (taskId: number, object?: TaskTimeTrack | undefined) => Promise<void>;
+    saveTaskTimeTrackChanges: (taskTimeTrackChanges: TaskTimeTrack, taskId: number) => Promise<void>;
+    removeTaskTimeTrack: (itemId: number, taskId: number) => void;
+};
+
+// Create Context
+const TaskTimeTrackContext = createContext<TaskTimeTrackContextType | undefined>(undefined);
+
+// TaskTimeTrackProvider using useResourceContext
+export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Use useResourceContext directly for task-time-track related logic
+    const {
+        itemsById: taskTimeTracksById,
+        newItem: newTaskTimeTrack,
+        itemDetail: taskTimeTrackDetail,
+        readItemsById: readTaskTimeTracksByTaskId,
+        setItemDetail: setTaskTimeTrackDetail,
+        handleChangeNewItem: handleChangeNewTaskTimeTrack,
+        addItem: addTaskTimeTrack,
+        saveItemChanges: saveTaskTimeTrackChanges,
+        removeItem: removeTaskTimeTrack,
+    } = useResourceContext<TaskTimeTrack, "Time_Tracking_ID">(
+        "task-time-tracks",
+        "Time_Tracking_ID",
+        "tasks"
+    );
+
+    return (
+        <TaskTimeTrackContext.Provider
+            value={{
+                taskTimeTracksById,
+                taskTimeTrackDetail,
+                newTaskTimeTrack,
+                readTaskTimeTracksByTaskId,
+                setTaskTimeTrackDetail,
+                handleChangeNewTaskTimeTrack,
+                addTaskTimeTrack,
+                saveTaskTimeTrackChanges,
+                removeTaskTimeTrack,
+            }}
+        >
+            {children}
+        </TaskTimeTrackContext.Provider>
+    );
+};
+
+// Hook for using TaskTimeTrackContext
+export const useTaskTimeTrackContext = () => {
+    const context = useContext(TaskTimeTrackContext);
+    if (!context) {
+        throw new Error("useTaskTimeTrackContext must be used within a TaskTimeTrackProvider");
+    }
+    return context;
+};
+
 // TaskComments Context
 // Context API for TaskComments
 export type TaskCommentsContextType = {
@@ -561,7 +626,7 @@ export const TaskMediaFilesProvider: React.FC<{ children: React.ReactNode }> = (
         // error: taskMediaFileError,
     } = useResourceContext<TaskMediaFile, "Media_ID">(
         "task-media-files",
-        "Media_ID", 
+        "Media_ID",
         "tasks"
     );
 
