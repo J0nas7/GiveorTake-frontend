@@ -479,7 +479,9 @@ export type TaskTimeTrackContextType = {
     removeTaskTimeTrack: (itemId: number, taskId: number) => void;
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
     latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
+    taskTimeTracksByProjectId: TaskTimeTrack[]
     getLatestUniqueTaskTimeTracksByProject: (projectId: number) => Promise<any>
+    getTaskTimeTracksByProject: (projectId: number) => Promise<void>
 };
 
 // Create Context
@@ -513,6 +515,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
     )
 
     const [latestUniqueTaskTimeTracksByProject, setLatestUniqueTaskTimeTracksByProject] = useState<TaskTimeTrack[] | undefined>(undefined)
+    const [taskTimeTracksByProjectId, setTaskTimeTracksByProjectId] = useState<TaskTimeTrack[]>([])
 
     const getLatestUniqueTaskTimeTracksByProject = async (projectId: number) => {
         try {
@@ -533,6 +536,23 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         } catch (error: any) {
             console.log(error.message || `An error occurred while trying getLatestUniqueTaskTimeTracksByProject.`);
             setLatestUniqueTaskTimeTracksByProject(undefined)
+        }
+    }
+
+    const getTaskTimeTracksByProject = async (projectId: number) => {
+        try {
+            // : APIResponse<T[]>
+            const data = await httpGetRequest(`projects/${projectId}/task-time-tracks`)
+
+            if (data) {
+                setTaskTimeTracksByProjectId(data)
+                return
+            }
+
+            throw new Error(`Failed to getTaskTimeTracksByProject`);
+        } catch (error: any) {
+            console.log(error.message || `An error occurred while trying getTaskTimeTracksByProject.`);
+            setTaskTimeTracksByProjectId([])
         }
     }
 
@@ -617,6 +637,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
     return (
         <TaskTimeTrackContext.Provider
             value={{
+                // Default props from useResourceContext
                 taskTimeTracksById,
                 taskTimeTrackDetail,
                 newTaskTimeTrack,
@@ -627,9 +648,12 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 saveTaskTimeTrackChanges,
                 removeTaskTimeTrack,
 
+                // My custom props
                 handleTaskTimeTrack,
                 latestUniqueTaskTimeTracksByProject,
-                getLatestUniqueTaskTimeTracksByProject
+                taskTimeTracksByProjectId,
+                getLatestUniqueTaskTimeTracksByProject,
+                getTaskTimeTracksByProject
             }}
         >
             {children}
