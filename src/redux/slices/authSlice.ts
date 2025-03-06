@@ -48,7 +48,7 @@ export const authSlice = createSlice({
             state.authUserOrganisation = action.payload.data
         },
         setAuthUserTaskTimeTrack: (state: AuthState, action: PayloadAction<any>) => {
-            state.authUserTaskTimeTrack = action.payload.data
+            state.authUserTaskTimeTrack = action.payload
         },
         setAccessToken: (state: AuthState, action: PayloadAction<any>) => {
             state.accessToken = action.payload.data

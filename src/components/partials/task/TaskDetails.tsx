@@ -19,8 +19,8 @@ import Link from "next/link";
 import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
 import clsx from "clsx";
-import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useTypedSelector } from "@/redux";
-import { TimeSpentDisplay } from "./TaskTimeTrackPlayer";
+import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
+import { SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
 
 interface TaskDetailProps {
     task?: Task
@@ -62,6 +62,10 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
             readTasksByProjectId(parseInt(projectId), true)
         }
     };
+
+    useEffect(() => {
+        setTitle(task.Task_Title)
+    }, [task])
 
     return (
         <TitleAreaView
@@ -382,12 +386,32 @@ interface TaskDetailsAreaProps {
 }
 
 const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) => {
-    const authUser = useTypedSelector(selectAuthUser)
-    const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
     const { readTasksByProjectId, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
-    const { addTaskTimeTrack, saveTaskTimeTrackChanges } = useTaskTimeTrackContext()
-    const dispatch = useAppDispatch()
+    const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
+    
+    const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0) // Total amount of seconds spend
+
+    useEffect(() => {
+        if (task.Task_ID) {
+            readTaskTimeTracksByTaskId(task.Task_ID)
+        }
+    }, [task])
+
+    useEffect(() => {
+        if (Array.isArray(taskTimeTracksById)) {
+            const totalTimeInSeconds = taskTimeTracksById.reduce((total, timeTrack) => {
+                // If 'Time_Tracking_Duration' exists, add it to the total time in seconds
+                if (timeTrack.Time_Tracking_Duration) {
+                    return total + timeTrack.Time_Tracking_Duration;
+                }
+                return total;
+            }, 0);
+    
+            // Update the taskTimeSpent state with the calculated total time in seconds
+            setTaskTimeSpent(totalTimeInSeconds);
+        }
+    }, [taskTimeTracksById])
 
     // Handle status change
     const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -415,89 +439,12 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) =
         }
     }
 
-    const handleTaskTimeTrack = async (action: "Play" | "Stop") => {
-        if (!authUser) return
-        
-        if (authUser.User_ID) {
-            // Prepare the task time track object
-            const theNewTimeTrack: TaskTimeTrack = {
-                Task_ID: task.Task_ID,
-                User_ID: authUser.User_ID,
-                Time_Tracking_Start_Time: "", // We'll set this conditionally
-                Time_Tracking_End_Time: null,
-                Time_Tracking_Duration: null,
-                Time_Tracking_Notes: "",
-            };
-
-            // const activeTimeTrack: TaskTimeTrack | undefined = task.time_tracks?.find(track => !track.Time_Tracking_End_Time && track.User_ID === authUser.User_ID)
-
-            if (action === "Play") { // Start time tracking
-                console.log("Play")
-                theNewTimeTrack.Time_Tracking_Start_Time = new Date().toISOString(); // Get the current timestamp in ISO format
-
-                // Add the new time track (this will insert it into the database)
-                await addTaskTimeTrack(theNewTimeTrack.Task_ID, theNewTimeTrack)
-            } else if (action === "Stop" && taskTimeTrack) { // Stop time tracking
-                console.log("Stop")
-                // Calculate the duration
-                const currentTime = new Date();
-                const startTime = new Date(taskTimeTrack.Time_Tracking_Start_Time);
-                const duration = Math.floor((currentTime.getTime() - startTime.getTime()) / 1000); // Duration in seconds
-
-                // Update the time track to stop it and calculate the duration
-                taskTimeTrack.Time_Tracking_End_Time = currentTime.toISOString();
-                taskTimeTrack.Time_Tracking_Duration = duration;
-                
-                // Update the time tracking record in the database
-                await saveTaskTimeTrackChanges(taskTimeTrack, task.Task_ID)
-            }
-
-            /// Task changed
-            if (projectId) {
-                await readTasksByProjectId(parseInt(projectId), true)
-            }
-
-            let existingTimeTracks = task.time_tracks || [];
-            // Add the new time track if it's Play action, or update if it's Stop action
-            if (action === "Play") {
-                console.log("Push")
-                existingTimeTracks.push({
-                    ...theNewTimeTrack,
-                    Time_Tracking_ID: existingTimeTracks.length + 1
-                });
-
-                dispatch(setAuthUserTaskTimeTrack(theNewTimeTrack))
-            } else if (action === "Stop" && taskTimeTrack) {
-                console.log("FindIndex")
-                const index = existingTimeTracks.findIndex(
-                    (track) => track.Time_Tracking_ID === taskTimeTrack.Time_Tracking_ID
-                );
-                if (index !== -1) {
-                    existingTimeTracks[index] = taskTimeTrack;
-                }
-                dispatch(setAuthUserTaskTimeTrack(undefined))
-            }
-
-            if (taskDetail) {
-                console.log("setTaskDetail", existingTimeTracks)
-                setTaskDetail({
-                    ...taskDetail,
-                    time_tracks: existingTimeTracks, // Update the time_tracks with the latest entry
-                });
-            } else {
-                console.log("setTheTask", existingTimeTracks)
-                setTheTask({
-                    ...task,
-                    time_tracks: existingTimeTracks, // Update the time_tracks with the latest entry
-                })
-            }
-        }
-    }
-
     return (
         <TaskDetailsView
             task={task}
             taskDetail={taskDetail}
+            taskTimeSpent={taskTimeSpent}
+            taskTimeTracksById={taskTimeTracksById}
             setTaskDetail={setTaskDetail}
             saveTaskChanges={saveTaskChanges}
             handleStatusChange={handleStatusChange}
@@ -510,16 +457,18 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) =
 interface TaskDetailsViewProps {
     task: Task
     taskDetail: Task | undefined
+    taskTimeSpent: number
+    taskTimeTracksById: TaskTimeTrack[]
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     saveTaskChanges: (taskChanges: Task, parentId: number) => void
     handleStatusChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleTaskChanges: (field: keyof Task, value: string) => void
-    handleTaskTimeTrack: (action: "Play" | "Stop") => Promise<void>
+    handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
 }
 
 interface TimeSpentDisplayViewProps {
     task: Task
-    handleTaskTimeTrack: (action: "Play" | "Stop") => Promise<void>
+    handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
 }
 
 const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({
@@ -533,7 +482,7 @@ const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({
         <>
             {(taskTimeTrack && taskTimeTrack.Task_ID === task.Task_ID) ? (
                 <Block variant="span" className="flex gap-2 items-center">
-                    <button className={clsx("timetrack-button", "timetrack-stopbutton")} onClick={() => handleTaskTimeTrack("Stop")}>
+                    <button className={clsx("timetrack-button", "timetrack-stopbutton")} onClick={() => handleTaskTimeTrack("Stop", task)}>
                         <FontAwesomeIcon icon={faStop} />
                     </button>
                     <Block variant="span">
@@ -544,7 +493,7 @@ const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({
                     </Block>
                 </Block>
             ) : (
-                <button className={clsx("timetrack-button", "timetrack-playbutton")} onClick={() => handleTaskTimeTrack("Play")}>
+                <button className={clsx("timetrack-button", "timetrack-playbutton")} onClick={() => handleTaskTimeTrack("Play", task)}>
                     <FontAwesomeIcon icon={faPlay} />
                 </button>
             )}
@@ -555,11 +504,13 @@ const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({
 export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     task,
     taskDetail,
+    taskTimeSpent,
+    taskTimeTracksById,
     setTaskDetail,
     saveTaskChanges,
     handleStatusChange,
     handleTaskChanges,
-    handleTaskTimeTrack
+    handleTaskTimeTrack,
 }) => {
     return (
         <Card className={styles.detailsSection}>
@@ -583,6 +534,13 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
             <p className="timetrack-metric">
                 <strong>Time Tracking:</strong>
                 <TimeSpentDisplayView task={task} handleTaskTimeTrack={handleTaskTimeTrack} />
+            </p>
+            <p className="timespent-metric mt-2">
+                <strong>Time Spent:</strong>
+                <Block variant="span">
+                    <SecondsToTimeDisplay totalSeconds={taskTimeSpent} />{" "}
+                    <Block variant="small">({taskTimeTracksById.length} entries)</Block>
+                </Block>
             </p>
         </Card>
     )
@@ -613,6 +571,12 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
         // Attach event listener when component is visible
         window.addEventListener("keydown", handleEscPress)
     }, [taskDetail]); // This ensures it runs whenever taskDetail is set
+
+    useEffect(() => {
+        if (task) {
+            setTheTask(task)
+        }
+    }, [task])
 
     if (!theTask) return null;
 
@@ -672,12 +636,15 @@ export const TaskDetailWithoutModal = () => {
     const [renderTask, setRenderTask] = useState<Task | undefined>(undefined)
 
     useEffect(() => {
+        setRenderTask(undefined)
         readTaskById(parseInt(taskId))
         setTaskDetail(undefined)
     }, [taskId])
+
     useEffect(() => {
         if (taskId) {
             setRenderTask(taskById)
+            console.log("tasktask", taskId, taskById)
             document.title = `Task: ${taskById?.Task_Title} - GiveOrTake`
         }
     }, [taskById])

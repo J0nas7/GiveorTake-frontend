@@ -1,7 +1,7 @@
 "use client"
 
 // External
-import React, { createContext, useContext } from "react"
+import React, { createContext, useContext, useState } from "react"
 
 // Internal
 import { useResourceContext } from "@/contexts"
@@ -25,6 +25,8 @@ import {
     TaskTimeTrack,
     TaskTimeTrackFields
 } from "@/types"
+import { useAxios } from "@/hooks";
+import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
 
 // Context for Users
 export type UsersContextType = {
@@ -475,6 +477,9 @@ export type TaskTimeTrackContextType = {
     addTaskTimeTrack: (taskId: number, object?: TaskTimeTrack | undefined) => Promise<void>;
     saveTaskTimeTrackChanges: (taskTimeTrackChanges: TaskTimeTrack, taskId: number) => Promise<void>;
     removeTaskTimeTrack: (itemId: number, taskId: number) => void;
+    handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
+    latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
+    getLatestUniqueTaskTimeTracksByProject: (projectId: number) => Promise<any>
 };
 
 // Create Context
@@ -482,6 +487,14 @@ const TaskTimeTrackContext = createContext<TaskTimeTrackContextType | undefined>
 
 // TaskTimeTrackProvider using useResourceContext
 export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { httpGetRequest } = useAxios()
+    const { readTasksByProjectId, taskDetail, setTaskDetail } = useTasksContext()
+    const { fetchIsLoggedInStatus } = useAuthActions()
+    const dispatch = useAppDispatch()
+
+    const authUser = useTypedSelector(selectAuthUser)
+    const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
+
     // Use useResourceContext directly for task-time-track related logic
     const {
         itemsById: taskTimeTracksById,
@@ -497,7 +510,109 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         "task-time-tracks",
         "Time_Tracking_ID",
         "tasks"
-    );
+    )
+
+    const [latestUniqueTaskTimeTracksByProject, setLatestUniqueTaskTimeTracksByProject] = useState<TaskTimeTrack[] | undefined>(undefined)
+
+    const getLatestUniqueTaskTimeTracksByProject = async (projectId: number) => {
+        try {
+            // : APIResponse<T[]>
+            const data = await httpGetRequest(`projects/${projectId}/latest-task-time-tracks`)
+
+            if (data) {
+                // Assuming 'data' is the object with task time tracks
+                const entriesArray: TaskTimeTrack[] = Object.entries(data).map(([key, value]) => value as TaskTimeTrack);
+
+                // Now you can safely set the state
+                setLatestUniqueTaskTimeTracksByProject(entriesArray);
+                
+                return
+            }
+
+            throw new Error(`Failed to getLatestUniqueTaskTimeTracksByProject`);
+        } catch (error: any) {
+            console.log(error.message || `An error occurred while trying getLatestUniqueTaskTimeTracksByProject.`);
+            setLatestUniqueTaskTimeTracksByProject(undefined)
+        }
+    }
+
+    const handleTaskTimeTrack = async (action: "Play" | "Stop", task: Task) => {
+        if (!authUser) return
+
+        if (authUser.User_ID) {
+            // Prepare the task time track object
+            const theNewTimeTrack: TaskTimeTrack = {
+                Task_ID: task.Task_ID,
+                Project_ID: task.Project_ID,
+                User_ID: authUser.User_ID,
+                Time_Tracking_Start_Time: "", // We'll set this conditionally
+                Time_Tracking_End_Time: null,
+                Time_Tracking_Duration: null,
+                Time_Tracking_Notes: "",
+            }
+
+            if (action === "Play") { // Start time tracking
+                theNewTimeTrack.Time_Tracking_Start_Time = new Date().toISOString(); // Get the current timestamp in ISO format
+
+                // Add the new time track (this will insert it into the database)
+                await addTaskTimeTrack(theNewTimeTrack.Task_ID, theNewTimeTrack)
+            } else if (action === "Stop" && taskTimeTrack) { // Stop time tracking
+                // Calculate the duration
+                const currentTime = new Date();
+                const startTime = new Date(taskTimeTrack.Time_Tracking_Start_Time);
+                const duration = Math.floor((currentTime.getTime() - startTime.getTime()) / 1000); // Duration in seconds
+
+                // Update the time track to stop it and calculate the duration
+                const updatedTimeTrack: TaskTimeTrack = {
+                    ...taskTimeTrack,
+                    Time_Tracking_End_Time: currentTime.toISOString(),
+                    Time_Tracking_Duration: duration
+                }
+
+                // Update the time tracking record in the database
+                await saveTaskTimeTrackChanges(updatedTimeTrack, task.Task_ID)
+            }
+
+            /// Task changed
+            if (task.Project_ID) {
+                await readTasksByProjectId(task.Project_ID, true)
+            }
+
+            let existingTimeTracks = task.time_tracks || [];
+            // Add the new time track if it's Play action, or update if it's Stop action
+            if (action === "Play") {
+                console.log("Push")
+                existingTimeTracks.push({
+                    ...theNewTimeTrack,
+                    Time_Tracking_ID: existingTimeTracks.length + 1
+                });
+
+                //dispatch(setAuthUserTaskTimeTrack(theNewTimeTrack))
+                dispatch(fetchIsLoggedInStatus())
+            } else if (action === "Stop" && taskTimeTrack) {
+                console.log("FindIndex")
+                const index = existingTimeTracks.findIndex(
+                    (track) => track.Time_Tracking_ID === taskTimeTrack.Time_Tracking_ID
+                );
+                if (index !== -1) {
+                    existingTimeTracks[index] = taskTimeTrack;
+                }
+                dispatch(setAuthUserTaskTimeTrack(undefined))
+            }
+
+            if (taskDetail) {
+                setTaskDetail({
+                    ...taskDetail,
+                    time_tracks: existingTimeTracks, // Update the time_tracks with the latest entry
+                });
+            } else {
+                return {
+                    ...task,
+                    time_tracks: existingTimeTracks, // Update the time_tracks with the latest entry
+                }
+            }
+        }
+    }
 
     return (
         <TaskTimeTrackContext.Provider
@@ -511,6 +626,10 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 addTaskTimeTrack,
                 saveTaskTimeTrackChanges,
                 removeTaskTimeTrack,
+
+                handleTaskTimeTrack,
+                latestUniqueTaskTimeTracksByProject,
+                getLatestUniqueTaskTimeTracksByProject
             }}
         >
             {children}

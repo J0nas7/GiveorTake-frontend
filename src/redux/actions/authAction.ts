@@ -39,7 +39,7 @@ export const useAuthActions = () => {
                 }
                 
                 dispatch(setAuthUserOrganisation({ "data": data.userOrganisation }))
-                dispatch(setAuthUserTaskTimeTrack({ "data": data.userActiveTimeTrack }))
+                dispatch(setAuthUserTaskTimeTrack(data.userActiveTimeTrack))
             } else {
                 deleteTheCookie("accessToken")
                 // Optionally handle the "not logged in" scenario

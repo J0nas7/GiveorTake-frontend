@@ -128,6 +128,7 @@ export type TaskFields =
 export type TaskTimeTrack = {
     Time_Tracking_ID?: number;
     Task_ID: number;
+    Project_ID: number;
     User_ID: number;
     Comment_ID?: number | null;
     Time_Tracking_Start_Time: string; // ISO 8601 format (e.g., "YYYY-MM-DDTHH:mm:ssZ")
@@ -140,6 +141,7 @@ export type TaskTimeTrack = {
 
     // Relationships
     task?: Task;
+    project?: Project;
     user?: User;
     comment?: TaskComment;
 }
