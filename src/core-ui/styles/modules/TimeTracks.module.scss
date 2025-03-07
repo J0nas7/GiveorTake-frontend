@@ -4,10 +4,7 @@
 }
 
 .calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    @apply flex items-center mb-4 gap-4;
 }
 
 .calendar-header button {
@@ -31,13 +28,13 @@
 
 .calendar-row {
     display: grid;
-    grid-template-columns: 30px repeat(7, 1fr); /* 30px for the week number, 1fr for the days */
+    grid-template-columns: 64px repeat(7, 1fr); /* 64px for the week number, 1fr for the days */
     gap: 10px;
     margin-bottom: 10px;
 }
 
 .week-number {
-    width: 21px;
+    @apply w-16;
     font-size: 14px;
     font-weight: bold;
     color: #333;
@@ -65,7 +62,6 @@
 
 .time-entry {
     font-size: 14px;
-    color: #555;
 }
 
 .x-more-entries {
@@ -80,7 +76,7 @@
 /* calendar-week-days */
 .calendar-week-days {
     display: grid;
-    grid-template-columns: 30px repeat(7, 1fr); /* 30px for the week number, 1fr for the days */
+    grid-template-columns: 64px repeat(7, 1fr); /* 64px for the week number, 1fr for the days */
     gap: 10px;
     margin-bottom: 10px;
     font-weight: bold;

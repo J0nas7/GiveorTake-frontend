@@ -37,6 +37,7 @@ export const LeftNav: React.FC = () => {
         [`/project/dashboard/`]: "Dashboard",
         [`/backlog/`]: "Backlog",
         [`/kanban/`]: "Kanban Board",
+        [`/time-tracks/project/`]: "Time Entries",
     }
 
     useEffect(() => {

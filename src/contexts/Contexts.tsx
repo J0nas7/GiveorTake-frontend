@@ -481,7 +481,8 @@ export type TaskTimeTrackContextType = {
     latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
     taskTimeTracksByProjectId: TaskTimeTrack[]
     getLatestUniqueTaskTimeTracksByProject: (projectId: number) => Promise<any>
-    getTaskTimeTracksByProject: (projectId: number) => Promise<void>
+    getTaskTimeTracksByProject: (projectId: number, startTime: string, endTime: string, userId?: number) => Promise<void>
+    taskTimeTracksByProjectParams: { startTime: string; endTime: string; }
 };
 
 // Create Context
@@ -516,6 +517,12 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
 
     const [latestUniqueTaskTimeTracksByProject, setLatestUniqueTaskTimeTracksByProject] = useState<TaskTimeTrack[] | undefined>(undefined)
     const [taskTimeTracksByProjectId, setTaskTimeTracksByProjectId] = useState<TaskTimeTrack[]>([])
+    const [taskTimeTracksByProjectParams, setTaskTimeTracksByProjectParams] = useState<{
+        startTime: string, endTime: string
+    }>({
+        startTime: '',
+        endTime: ''
+    })
 
     const getLatestUniqueTaskTimeTracksByProject = async (projectId: number) => {
         try {
@@ -539,12 +546,30 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         }
     }
 
-    const getTaskTimeTracksByProject = async (projectId: number) => {
+    const getTaskTimeTracksByProject = async (projectId: number, startTime: string, endTime: string, userId?: number) => {
         try {
-            // : APIResponse<T[]>
-            const data = await httpGetRequest(`projects/${projectId}/task-time-tracks`)
+            // Build the URL with optional query parameters for startTime end endTime
+            let url = `projects/${projectId}/task-time-tracks`
+            
+            // Append query parameters if provided
+            const params: string[] = []
+            if (startTime && endTime) {
+                params.push(`startTime=${encodeURIComponent(startTime)}`)
+                params.push(`endTime=${encodeURIComponent(endTime)}`)
+                setTaskTimeTracksByProjectParams({ startTime, endTime })
+            }
+            
+            if (userId) {
+                params.push(`userId=${encodeURIComponent(userId)}`)                
+            }
 
-            if (data) {
+            if (params.length > 0) url += `?${params.join('&')}`
+            console.log("url", url)
+
+            const data = await httpGetRequest(url)
+            
+            if (!data.message) {
+                console.log("urlData", data)
                 setTaskTimeTracksByProjectId(data)
                 return
             }
@@ -619,6 +644,12 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 }
                 dispatch(setAuthUserTaskTimeTrack(undefined))
             }
+            
+            await getTaskTimeTracksByProject(
+                task.Project_ID, 
+                taskTimeTracksByProjectParams.startTime, 
+                taskTimeTracksByProjectParams.endTime
+            )
 
             if (taskDetail) {
                 setTaskDetail({
@@ -653,7 +684,8 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 latestUniqueTaskTimeTracksByProject,
                 taskTimeTracksByProjectId,
                 getLatestUniqueTaskTimeTracksByProject,
-                getTaskTimeTracksByProject
+                getTaskTimeTracksByProject,
+                taskTimeTracksByProjectParams
             }}
         >
             {children}

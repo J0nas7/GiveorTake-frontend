@@ -2,7 +2,7 @@
 
 // External
 import Link from "next/link"
-import { FormEvent, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
 import { useTranslation } from "next-i18next"
 import { useRouter } from "next/navigation"
 
@@ -39,6 +39,10 @@ export default function SignInPage() {
     }
     
     const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? doLogin() : null
+
+    useEffect(() => {
+        document.title = 'GiveOrTake - Log på eller tilmeld dig'
+    }, [])
     
     return (
         <Block className="login-page">
