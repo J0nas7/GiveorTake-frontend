@@ -23,7 +23,7 @@ npm i:
     i18next-http-backend
     i18next-browser-languagedetector
     @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome @fortawesome/free-brands-svg-icons
-    react-quill
+    react-quill quill-mention
     react-chartjs-2 chart.js
     react-merge-providers
     cookies-next@4.0
@@ -36,3 +36,4 @@ npm i:
         babel-jest @babel/core @babel/preset-env @babel/preset-react
         identity-obj-proxy
         @babel/plugin-transform-runtime @babel/preset-typescript
+        @types/quill

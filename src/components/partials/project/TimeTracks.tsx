@@ -214,10 +214,12 @@ export const TimeTracksContainer = () => {
                         
                         {userId && (() => {
                             const selectedUser = teamUserSeatsById.find((user) => user.User_ID === parseInt(userId))?.user
+                            if (!selectedUser) return null
+                            
                             return (
                                 <Block className="flex gap-3 items-center bg-gray-300 rounded-lg shadow-lg py-1 px-3">
                                     <FontAwesomeIcon icon={faUser} />
-                                    {selectedUser && `${selectedUser.User_FirstName} ${selectedUser.User_Surname}`}
+                                    {`${selectedUser.User_FirstName} ${selectedUser.User_Surname}`}
                                     <Link href={updateURLParams(startDateParam, endDateParam, undefined, true)!}>
                                         <FontAwesomeIcon icon={faXmark} />
                                     </Link>

@@ -1,20 +1,31 @@
 "use client"
 
 // External
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop } from "@fortawesome/free-solid-svg-icons";
-import "react-quill/dist/quill.snow.css"; // Import the Quill styles
-import dynamic from "next/dynamic";
 
+import "react-quill/dist/quill.snow.css"; // Import the Quill styles
+import "quill-mention/dist/quill.mention.css";
+import dynamic from "next/dynamic";
 // Dynamically import ReactQuill with SSR disabled
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+// Import Quill & register mention module in useEffect
+let Quill: any
+// Ensure Quill is loaded properly
+const loadQuill = async () => {
+    if (typeof window !== "undefined") {
+        // Dynamically import quill
+        const { default: QuillLibrary } = await import("quill");
+        Quill = QuillLibrary;
+    }
+};
 
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { useTaskCommentsContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
-import { Task, TaskComment, TaskTimeTrack, User } from "@/types";
+import { Task, TaskComment, TaskTimeTrack, TeamUserSeat, User } from "@/types";
 import Link from "next/link";
 import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
@@ -254,6 +265,23 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
         setIsEditorVisible(false); // Hide editor after cancel
     };
 
+    useEffect(() => {
+        // Only load Quill and mention module on the client
+        loadQuill().then(() => {
+            // if (Quill) {
+            //     Quill.register("modules/mention", Mention);
+            // }
+            if (Quill) {
+                // Dynamically import quill-mention once Quill is loaded
+                import("quill-mention").then((mentionModule) => {
+                    if (Quill && mentionModule) {
+                        // Quill.register("modules/mention", mentionModule);
+                    }
+                });
+            }
+        });
+    }, [Quill]);
+
     return (
         <CommentsAreaView
             newComment={newComment}
@@ -284,6 +312,43 @@ interface CommentsAreaViewProps {
 export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
     newComment, setNewComment, isEditorVisible, setIsEditorVisible, task, authUser, addTaskComment, handleCommentCancel, handleAddComment
 }) => {
+    // Quill Editor Modules (Mention plugin added)
+    // Mock User Data for Mentions
+    // Fetch users from the task/project data
+    let users: any[]
+    useEffect(() => {
+        console.log("task320", task)
+        /*users = task.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
+            User_ID: seat.user?.User_ID,
+            User_Status: seat.user?.User_Status || "", // Provide default value if undefined
+            User_Email: seat.user?.User_Email || "", // Provide default value if undefined
+            User_FirstName: seat.user?.User_FirstName || '',
+            User_Surname: seat.user?.User_Surname || '',
+            User_ImageSrc: seat.user?.User_ImageSrc,
+            User_CreatedAt: seat.user?.User_CreatedAt,
+            User_UpdatedAt: seat.user?.User_UpdatedAt,
+            User_DeletedAt: seat.user?.User_DeletedAt,
+        })) || [];*/
+    }, [task])
+    users = [
+        { User_ID: 1, User_FirstName: "John Doe" },
+        { User_ID: 2, User_FirstName: "Jane Smith" },
+        { User_ID: 3, User_FirstName: "Michael Brown" },
+    ];
+
+    const modules = useMemo(() => ({
+        toolbar: [["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }]],
+        mention: {
+            allowedChars: /^[A-Za-z\s]*$/,
+            mentionDenotationChars: ["@"], // Trigger character
+            source: (searchTerm: string, renderList: Function) => {
+                // Filter users based on search term
+                const matches = users.filter(user => user.User_FirstName.toLowerCase().includes(searchTerm.toLowerCase()));
+                renderList(matches);
+            }
+        }
+    }), []);
+
     return (
         <Card className={styles.commentsSection}>
             <h2>Comments</h2>
@@ -299,6 +364,7 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                         placeholder="Write a comment..."
                         className={styles.commentInput}
                         theme="snow"
+                        modules={modules}
                     />
                     <Block className={styles.newCommentActions}>
                         <button className={styles.sendButton} onClick={handleAddComment}>
@@ -389,7 +455,7 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) =
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
     const { readTasksByProjectId, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
-    
+
     const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0) // Total amount of seconds spend
 
     useEffect(() => {
@@ -407,7 +473,7 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) =
                 }
                 return total;
             }, 0);
-    
+
             // Update the taskTimeSpent state with the calculated total time in seconds
             setTaskTimeSpent(totalTimeInSeconds);
         }

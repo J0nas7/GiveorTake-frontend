@@ -1,7 +1,7 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "jsx": "preserve", // Use this for React 17+ (with automatic JSX runtime)
-    "module": "esnext"
-  }
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "jsx": "preserve", // Use this for React 17+ (with automatic JSX runtime)
+        "module": "esnext"
+    }
 }
