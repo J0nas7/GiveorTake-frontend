@@ -3,38 +3,40 @@
 // External
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faClock } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faClock, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions, ChartData, ChartTypeRegistry } from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import clsx from "clsx";
 
 // Internal
 import styles from "@/core-ui/styles/modules/TimeTracks.module.scss"
 import { Block, Text } from "@/components/ui/block-text";
-import { useProjectsContext, useTaskTimeTrackContext } from "@/contexts";
-import { Project, TaskTimeTrack } from "@/types";
+import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
+import { Project, TaskTimeTrack, TeamUserSeat } from "@/types";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 import { Heading } from "@/components/ui/heading";
-import clsx from "clsx";
-import { Params } from "next/dist/shared/lib/router/utils/route-matcher";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
-
 // Component
-export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ userId }) => {
+// export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ userId }) => {
+export const TimeTracksContainer = () => {
     // Get the necessary params from query parameter
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
-    
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const userId = searchParams.get("userId")
+
     const { t } = useTranslation(["timetrack"]);
-    
+
     const { projectById, readProjectById } = useProjectsContext();
-    const { taskTimeTracksByProjectParams, taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
+    const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
+    const { teamUserSeatsById,readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
 
     const [renderProject, setRenderProject] = useState<Project | undefined>(undefined);
     const [renderTimeTracks, setRenderTimeTracks] = useState<TaskTimeTrack[] | undefined>(undefined);
@@ -43,8 +45,91 @@ export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ us
     const [sortedByDuration, setSortedByDuration] = useState<TaskTimeTrack[] | undefined>(undefined)
     const [sortedByLatest, setSortedByLatest] = useState<TaskTimeTrack[] | undefined>(undefined)
 
-    // Use the function to get start and end times for the previous week
-    const { startTime, endTime } = getPreviousWeekStartAndEnd();
+    const getPreviousWeekStartAndEnd = (): { startTime: string; endTime: string } => {
+        const today = new Date();
+
+        // Set time to midnight for accuracy
+        today.setHours(0, 0, 0, 0);
+
+        // Get current day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        const dayOfWeek = today.getDay();
+
+        // Adjust so Monday is the first day of the week
+        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days; else go back (dayOfWeek - 1)
+
+        // Start of previous week (last week's Monday)
+        const startOfPreviousWeek = new Date(today);
+        startOfPreviousWeek.setDate(today.getDate() - mondayOffset - 7); // Go back 7 days from this week's Monday
+
+        // End of previous week (last week's Sunday)
+        const endOfPreviousWeek = new Date(startOfPreviousWeek);
+        endOfPreviousWeek.setDate(startOfPreviousWeek.getDate() + 6); // Move to Sunday of that week
+        endOfPreviousWeek.setHours(23, 59, 59, 0);
+
+        // Format function to YYYY-MM-DD HH:mm:ss
+        const formatDate = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            // return `${year}-${month}-${day}`;
+        };
+
+        return {
+            startTime: formatDate(startOfPreviousWeek),
+            endTime: formatDate(endOfPreviousWeek),
+        };
+    };
+
+    const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserId?: string, returnUrl?: boolean) => {
+        const url = new URL(window.location.href);
+        
+        if (newStartDate) {
+            url.searchParams.set("startDate", newStartDate);
+        } else {
+            url.searchParams.delete("startDate")
+        }
+        if (newEndDate) {
+            url.searchParams.set("endDate", newEndDate);
+        } else {
+            url.searchParams.delete("endDate")
+        }
+        if (newUserId === undefined) {
+            url.searchParams.delete("userId")
+        } else if (newUserId || userId) {
+            url.searchParams.set("userId", newUserId || userId!);
+        }
+        
+        if (returnUrl) {
+            return url.toString()
+        } else {
+            router.push(url.toString(), { scroll: false }); // Prevent full page reload
+        }
+    };
+
+    // Handle user input changes
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newStart = `${e.target.value} 00:00:00`;
+        setStartDate(newStart);
+        updateURLParams(newStart, endDate, userId || undefined);
+    };
+
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newEnd = `${e.target.value} 23:59:59`;
+        setEndDate(newEnd);
+        updateURLParams(startDate, newEnd, userId || undefined)
+    };
+
+    // Get previous week’s start and end dates
+    // Extract `startDate` and `endDate` from URL, or use defaults
+    const { startTime: defaultStart, endTime: defaultEnd } = getPreviousWeekStartAndEnd();
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+    const [startDate, setStartDate] = useState(startDateParam || defaultStart);
+    const [endDate, setEndDate] = useState(endDateParam || defaultEnd);
 
     // Fetch project data
     useEffect(() => {
@@ -52,15 +137,15 @@ export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ us
         const loadRenders = async () => {
             await getTaskTimeTracksByProject(
                 parseInt(projectId),
-                startTime,
-                endTime,
+                startDate,
+                endDate,
                 userId ? parseInt(userId) : 0
             )
 
             await readProjectById(parseInt(projectId));
         }
         loadRenders()
-    }, [projectId, userId])
+    }, [projectId, userId, startDate, endDate])
 
     useEffect(() => {
         if (projectId) {
@@ -74,12 +159,15 @@ export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ us
         if (taskTimeTracksByProjectId.length === 0 && renderTimeTracks) {
             setRenderTimeTracks(undefined);
         }
-        if (taskTimeTracksByProjectId.length && !renderTimeTracks) {
-            setRenderTimeTracks(taskTimeTracksByProjectId);
+        if (taskTimeTracksByProjectId.length) {
+            if (!userId && !renderTimeTracks) {
+                setRenderTimeTracks(taskTimeTracksByProjectId)
+            } else {
+                setRenderTimeTracks(taskTimeTracksByProjectId);
+            }
         }
     }, [taskTimeTracksByProjectId]);
 
-    // Prepare data for the Pie chart
     useEffect(() => {
         if (renderTimeTracks && renderTimeTracks.length > 0) {
             // Make a copy and sort by Time_Tracking_Duration in descending order
@@ -94,6 +182,12 @@ export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ us
         }
     }, [renderTimeTracks]);
 
+    useEffect(() => {
+        if (renderProject && renderProject.team?.Team_ID) {
+            readTeamUserSeatsByTeamId(renderProject.team?.Team_ID)
+        }
+    }, [renderProject])
+
     return (
         <Block className="page-content">
             <Link href={`/project/${renderProject?.Project_ID}`} className="page-back-navigation">
@@ -104,9 +198,32 @@ export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ us
                 title={`${t("timetrack.title")}: ${renderProject?.Project_Name}`}
                 titleAction={<>
                     <Block className="flex gap-3 items-center">
-                        <Text variant="span">{startTime}</Text>
+                        <input
+                            type="date"
+                            value={startDate.split(" ")[0]} // Show only YYYY-MM-DD
+                            onChange={handleStartDateChange}
+                            className="bg-transparent"
+                        />
                         <FontAwesomeIcon icon={faArrowRight} />
-                        <Text variant="span">{endTime}</Text>
+                        <input
+                            type="date"
+                            value={endDate.split(" ")[0]} // Show only YYYY-MM-DD
+                            onChange={handleEndDateChange}
+                            className="bg-transparent"
+                        />
+                        
+                        {userId && (() => {
+                            const selectedUser = teamUserSeatsById.find((user) => user.User_ID === parseInt(userId))?.user
+                            return (
+                                <Block className="flex gap-3 items-center bg-gray-300 rounded-lg shadow-lg py-1 px-3">
+                                    <FontAwesomeIcon icon={faUser} />
+                                    {selectedUser && `${selectedUser.User_FirstName} ${selectedUser.User_Surname}`}
+                                    <Link href={updateURLParams(startDateParam, endDateParam, undefined, true)!}>
+                                        <FontAwesomeIcon icon={faXmark} />
+                                    </Link>
+                                </Block>
+                            )
+                        })()}
                     </Block>
                 </>}
                 icon={faClock}
@@ -118,7 +235,7 @@ export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ us
                         <TimeSummary timeTracks={renderTimeTracks} />
                     </Block>
                     <Block className="w-full p-4 bg-white rounded-lg shadow-md">
-                        <TimeTracksCalendar timeTracks={renderTimeTracks} />
+                        <TimeTracksPeriodSum timeTracks={sortedByLatest} />
                     </Block>
                     <Block className="flex gap-4">
                         <Block className="w-1/4 p-4 bg-white rounded-lg shadow-md">
@@ -127,7 +244,13 @@ export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ us
 
                         {/* List of Time Tracks */}
                         <Block className="w-3/4 p-4 bg-white rounded-lg shadow-md">
-                            <LatestTimeLogs sortedByLatest={sortedByLatest} />
+                            <LatestTimeLogs 
+                                sortedByLatest={sortedByLatest} 
+                                startDateParam={startDateParam} 
+                                endDateParam={endDateParam} 
+                                userId={userId} 
+                                updateURLParams={updateURLParams}
+                            />
                         </Block>
                     </Block>
                 </Block>
@@ -160,7 +283,7 @@ export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks
     }, [timeTracks, totalTimeTracked]);
 
     return (
-        <Block className="w-full flex gap-4 p-4 bg-white rounded-lg shadow-md">
+        <Block className="w-full flex gap-4 p-4">
             <Block className="w-1/2 flex flex-col items-center">
                 <FontAwesomeIcon icon={faClock} className="text-blue-500 text-2xl mb-2" />
                 <Heading variant="h3" className="text-sm font-medium">
@@ -284,7 +407,7 @@ export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ tim
                     const theDay = isNotPlaceholder ? day : "1"
                     const firstDayOfWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), parseInt(theDay || "1"))
                     const weekNumber = getWeekNumber(firstDayOfWeek)
-                    
+
                     return (
                         <div key={dayNum} className={styles["calendar-row"]}>
                             <div className={styles["week-number"]}>{weekNumber}</div>
@@ -328,6 +451,73 @@ export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ tim
                 })}
             </div>
         </div>
+    );
+};
+
+export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks }) => {
+    const { t } = useTranslation(["timetrack"]);
+
+    if (!timeTracks || timeTracks.length === 0) {
+        return <p className="text-gray-500">{t("timetrack.noTimeTracks")}</p>;
+    }
+
+    // Group time tracks by day (YYYY-MM-DD format)
+    const groupedByDay = timeTracks.reduce<Record<string, TaskTimeTrack[]>>((acc, track) => {
+        const date = new Date(track.Time_Tracking_Start_Time).toISOString().split("T")[0]; // Extract YYYY-MM-DD
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(track);
+        return acc;
+    }, {});
+
+    const sortedGroupedByDay = Object.entries(groupedByDay)
+        .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+        .map(([date, tracks]) => ({ date, tracks }));
+
+    return (
+        <>
+            <Heading variant="h3" className="text-lg font-semibold mb-2">
+                {t("timetrack.timeTracksPeriodSum.title")}
+            </Heading>
+            <div className="grid grid-cols-3 gap-4">
+                {Object.entries(sortedGroupedByDay).map(([date, data]) => {
+                    // Format date with weekday name
+                    const dateObj = new Date(data.tracks[0].Time_Tracking_Start_Time);
+                    const formattedDate = dateObj.toLocaleDateString(undefined, {
+                        weekday: "long", // e.g., Monday
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    });
+
+                    // Calculate total time spent that day
+                    const totalDayTime = data.tracks.reduce((sum, track) => sum + (track.Time_Tracking_Duration || 0), 0);
+
+                    return (
+                        <div key={date} className="p-4 bg-white shadow rounded-lg">
+                            {/* 📅 Display Date */}
+                            <h3 className="text-lg font-semibold">{formattedDate}</h3>
+                            <p className="text-sm text-gray-600">
+                                {t("timetrack.timeTracksPeriodSum.totalTimeTracked")}: <SecondsToTimeDisplay totalSeconds={totalDayTime} />
+                            </p>
+
+                            {/* 📝 List of Tasks for that Day */}
+                            <ul className="mt-3 space-y-2">
+                                {data.tracks.map((track) => (
+                                    <li key={track.Time_Tracking_ID} className="flex justify-between items-center bg-gray-100 p-2 rounded-md">
+                                        {/* Link to Task */}
+                                        <Link href={`/task/${track.task?.Task_ID}`} className="blue-link-light inline text-gray-700">
+                                            {track.task?.Task_Title}
+                                        </Link>
+                                        {/* ⏳ Time Spent */}
+                                        <SecondsToTimeDisplay totalSeconds={track.Time_Tracking_Duration || 0} />
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    );
+                })}
+            </div>
+        </>
     );
 };
 
@@ -424,7 +614,17 @@ export const TimeSpentPerTask: React.FC<{ sortedByDuration: TaskTimeTrack[] | un
     );
 };
 
-export const LatestTimeLogs: React.FC<{ sortedByLatest: TaskTimeTrack[] | undefined }> = ({ sortedByLatest }) => {
+interface LatestTimeLogsProps {
+    sortedByLatest: TaskTimeTrack[] | undefined
+    startDateParam: string | null
+    endDateParam: string | null
+    userId: string | null
+    updateURLParams: (newStartDate: string | null, newEndDate: string | null, newUserId?: string, returnUrl?: boolean) => string | undefined
+}
+
+export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
+    sortedByLatest, startDateParam, endDateParam, userId, updateURLParams
+}) => {
     const { t } = useTranslation(["timetrack"]);
 
     if (!sortedByLatest || sortedByLatest.length === 0) {
@@ -496,8 +696,8 @@ export const LatestTimeLogs: React.FC<{ sortedByLatest: TaskTimeTrack[] | undefi
                             <li className="py-2 font-bold text-gray-700">{section}</li>
                             {groupedLogs[section].map((track) => (
                                 <li key={track.Time_Tracking_ID} className="py-2">
-                                    <Link 
-                                        href={`/time-tracks/project/${track.Project_ID}?userId=${track.user?.User_ID}`} 
+                                    <Link
+                                        href={updateURLParams(startDateParam, endDateParam, track.user?.User_ID?.toString(), true)!}
                                         className="inline blue-link"
                                     >
                                         {track.user?.User_FirstName} {track.user?.User_Surname}
@@ -530,42 +730,3 @@ export const LatestTimeLogs: React.FC<{ sortedByLatest: TaskTimeTrack[] | undefi
         </>
     );
 }
-
-const getPreviousWeekStartAndEnd = (): { startTime: string; endTime: string } => {
-    const today = new Date();
-
-    // Set time to midnight for accuracy
-    today.setHours(0, 0, 0, 0);
-
-    // Get current day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-    const dayOfWeek = today.getDay();
-
-    // Adjust so Monday is the first day of the week
-    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days; else go back (dayOfWeek - 1)
-
-    // Start of previous week (last week's Monday)
-    const startOfPreviousWeek = new Date(today);
-    startOfPreviousWeek.setDate(today.getDate() - mondayOffset - 7); // Go back 7 days from this week's Monday
-
-    // End of previous week (last week's Sunday)
-    const endOfPreviousWeek = new Date(startOfPreviousWeek);
-    endOfPreviousWeek.setDate(startOfPreviousWeek.getDate() + 6); // Move to Sunday of that week
-    endOfPreviousWeek.setHours(23, 59, 59, 0);
-
-    // Format function to YYYY-MM-DD HH:mm:ss
-    const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-        const day = String(date.getDate()).padStart(2, '0');
-        // const hours = String(date.getHours()).padStart(2, '0');
-        // const minutes = String(date.getMinutes()).padStart(2, '0');
-        // const seconds = String(date.getSeconds()).padStart(2, '0');
-        // return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-        return `${year}-${month}-${day}`;
-    };
-
-    return {
-        startTime: formatDate(startOfPreviousWeek),
-        endTime: formatDate(endOfPreviousWeek),
-    };
-};

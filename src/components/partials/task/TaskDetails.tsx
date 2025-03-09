@@ -526,7 +526,6 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     <option value="Done">Done</option>
                 </select>
             </p>
-            {/* Task Assignee */}
             <p><strong>Assigned To:</strong> {task.Assigned_User_ID || "Unassigned"}</p>
             <p><strong>Team:</strong> {task.project?.team?.Team_Name}</p>
             <p><strong>Created At:</strong> {task.Task_CreatedAt}</p>
@@ -584,6 +583,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
         <>
             <Block>
                 <Link
+                    onClick={() => setTaskDetail(undefined)}
                     href={`/project/${theTask.project?.Project_ID}`}
                     className="page-back-navigation"
                 >

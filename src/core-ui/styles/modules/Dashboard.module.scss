@@ -11,10 +11,10 @@
     width: 22%;
     min-width: 160px;
     transition: transform 0.2s ease;
-}
-
-.kpiCard:hover {
-    transform: scale(1.05);
+    
+    &:hover {
+        transform: scale(1.05);
+    }
 }
 
 .progressSection {
@@ -23,7 +23,12 @@
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     text-align: center;
+    transition: transform 0.2s ease;
     @apply mb-4;
+
+    &:hover {
+        transform: scale(1.05);
+    }
 }
 
 .chartSection {
@@ -38,6 +43,11 @@
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+    
+    &:hover {
+        transform: scale(1.05);
+    }
 }
 
 .chartBlock canvas {

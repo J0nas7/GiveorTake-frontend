@@ -5,17 +5,9 @@
             "totalTimeTracked": "Total Time Tracked",
             "avgDailyTimeSpent": "Avg. Daily Time Spent"
         },
-        "timeTracksCalendar": {
-            "week": "Week",
-            "monday": "Mon",
-            "tuesday": "Tue",
-            "wednesday": "Wed",
-            "thursday": "Thu",
-            "friday": "Fri",
-            "saturday": "Sat",
-            "sunday": "Sun",
-            "andOthers": "and {{count}} others",
-            "noEntries": "No time entries"
+        "timeTracksPeriodSum": {
+            "title": "Summaries per Day",
+            "totalTimeTracked": "Total Time Tracked"
         },
         "timeSpentPerTask": {
             "title": "Time Spent per Task",
