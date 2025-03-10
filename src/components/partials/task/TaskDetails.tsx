@@ -33,10 +33,6 @@ import clsx from "clsx";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
 import { SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
 
-interface TaskDetailProps {
-    task?: Task
-}
-
 interface CardProps {
     children: React.ReactNode;
     className?: string;
@@ -47,8 +43,8 @@ const Card: React.FC<CardProps> = ({ children, className = "" }) => {
 };
 
 const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
-    const { readTasksByProjectId, saveTaskChanges } = useTasksContext();
+    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
+    const { readTasksByProjectId, readTaskById, saveTaskChanges } = useTasksContext();
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [isEditing, setIsEditing] = useState(false);
@@ -68,9 +64,10 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
             task.Project_ID
         );
 
-        /// Task changed
-        if (projectId) {
-            readTasksByProjectId(parseInt(projectId), true)
+        //// Task changed
+        if (projectId || taskId) {
+            if (projectId) readTasksByProjectId(parseInt(projectId), true)
+            if (taskId) readTaskById(parseInt(taskId))
         }
     };
 
@@ -124,82 +121,134 @@ export const TitleAreaView: React.FC<TitleAreaViewProps> = ({
 };
 
 const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { saveTaskChanges } = useTasksContext();
+    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
+    const { readTaskById, readTasksByProjectId, saveTaskChanges } = useTasksContext();
     const [isEditing, setIsEditing] = useState(false);
     const [description, setDescription] = useState(task.Task_Description || "");
-
+    
     const handleSave = () => {
         setIsEditing(false);
         saveTaskChanges(
             { ...task, Task_Description: description },
             task.Project_ID
         )
+
+        //// Task changed
+        if (projectId || taskId) {
+            if (projectId) readTasksByProjectId(parseInt(projectId), true)
+            if (taskId) readTaskById(parseInt(taskId))
+        }
     };
 
     const handleCancel = () => {
         setIsEditing(false);
     };
 
+    // Quill Editor Modules (Mention plugin added)
+    const [mentionUsers, setMentionUsers] = useState<any[]>([])
+    useEffect(() => {
+        const restructureUsers = task.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
+            id: seat.user?.User_ID, // Ensure the id field is used for mentions
+            value: `${seat.user?.User_FirstName || ''} ${seat.user?.User_Surname || ''}`, // Concatenating first & last name
+        })) || [];
+
+        setMentionUsers(restructureUsers);
+    }, [task])
+
+    const quillModule = useMemo(() => ({
+        mention: {
+            allowedChars: /^[A-Za-z\s]*$/,
+            mentionDenotationChars: ["@"], // Trigger character
+            source: (searchTerm: string, renderList: Function) => {
+                // Filter users based on search term
+                const matches = mentionUsers && mentionUsers.filter(user => user.value.toLowerCase().includes(searchTerm.toLowerCase()));
+                renderList(matches);
+            },
+            /*renderItem: (item: any) => {
+                const memberLink = document.createElement("a");
+                memberLink.href = `/profile/${item.id}`; // Adjust link as needed
+                memberLink.style.color = "#007bff"; // Bootstrap primary color or your preference
+                memberLink.style.textDecoration = "none";
+                memberLink.textContent = item.value;
+                return memberLink;
+            }*/
+        }
+    }), [mentionUsers]);
+
     return (
         <DescriptionAreaView
             task={task}
-            saveTaskChanges={saveTaskChanges}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+            description={description}
+            setDescription={setDescription}
+            handleSave={handleSave}
+            handleCancel={handleCancel}
+            quillModule={quillModule}
         />
     );
 };
 
 interface DescriptionAreaViewProps {
-    task: Task;
-    saveTaskChanges: (task: Task, projectId: number) => void;
+    task: Task
+    isEditing: boolean
+    setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
+    description: string
+    setDescription: React.Dispatch<React.SetStateAction<string>>
+    handleSave: () => void
+    handleCancel: () => void
+    quillModule: {
+        mention: {
+            allowedChars: RegExp;
+            mentionDenotationChars: string[];
+            source: (searchTerm: string, renderList: Function) => void;
+        };
+    }
 }
 
-export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> = ({ task, saveTaskChanges }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [description, setDescription] = useState(task.Task_Description || "");
-
-    const handleSave = () => {
-        setIsEditing(false);
-        saveTaskChanges(
-            { ...task, Task_Description: description },
-            task.Project_ID
+export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> =
+    ({
+        task,
+        isEditing,
+        setIsEditing,
+        description,
+        setDescription,
+        handleSave,
+        handleCancel,
+        quillModule
+    }) => {
+        return (
+            <Card className={styles.descriptionSection}>
+                <h2>Task Description</h2>
+                {!isEditing ? (
+                    <div
+                        className={styles.descriptionPlaceholder}
+                        onClick={() => setIsEditing(true)}
+                        dangerouslySetInnerHTML={{ __html: description || "Click to add a description..." }}
+                    />
+                ) : (
+                    <Block className={styles.descriptionEditor}>
+                        <ReactQuill
+                            className={styles.descriptionInput}
+                            theme="snow"
+                            value={description}
+                            onChange={setDescription}
+                            onBlur={handleSave}
+                            modules={quillModule}
+                        />
+                        <Block className={styles.editDescriptionActions}>
+                            <button className={styles.sendButton} onClick={handleSave}>
+                                <FontAwesomeIcon icon={faPaperPlane} />
+                            </button>
+                            <button className={styles.cancelButton} onClick={handleCancel}>
+                                Cancel
+                            </button>
+                        </Block>
+                    </Block>
+                )}
+            </Card>
         );
     };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-    };
-
-    return (
-        <Card className={styles.descriptionSection}>
-            <h2>Task Description</h2>
-            {!isEditing ? (
-                <div
-                    className={styles.descriptionPlaceholder}
-                    onClick={() => setIsEditing(true)}
-                    dangerouslySetInnerHTML={{ __html: description || "Click to add description..." }}
-                />
-            ) : (
-                <Block className={styles.descriptionEditor}>
-                    <ReactQuill
-                        className={styles.descriptionInput}
-                        theme="snow"
-                        value={description}
-                        onChange={setDescription}
-                        onBlur={handleSave}
-                    />
-                    <Block className={styles.editDescriptionActions}>
-                        <button className={styles.sendButton} onClick={handleSave}>
-                            <FontAwesomeIcon icon={faPaperPlane} />
-                        </button>
-                        <button className={styles.cancelButton} onClick={handleCancel}>
-                            Cancel
-                        </button>
-                    </Block>
-                </Block>
-            )}
-        </Card>
-    );
-};
 
 const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
     return (
@@ -236,7 +285,9 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task }) 
 };
 
 const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { addTaskComment, handleChangeNewTaskComment } = useTaskCommentsContext();
+    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
+    const { addTaskComment } = useTaskCommentsContext();
+    const { readTasksByProjectId, readTaskById } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser)
 
     const [newComment, setNewComment] = useState("");
@@ -255,7 +306,13 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
             await addTaskComment(theNewComment.Task_ID, theNewComment)
 
             setNewComment("");
-            setIsEditorVisible(false);
+            setIsEditorVisible(false)
+
+            //// Task changed
+            if (projectId || taskId) {
+                if (projectId) readTasksByProjectId(parseInt(projectId), true)
+                if (taskId) readTaskById(parseInt(taskId))
+            }
         }
     }
 
@@ -280,7 +337,39 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
                 });
             }
         });
-    }, [Quill]);
+    }, [Quill])
+
+    // Quill Editor Modules (Mention plugin added)
+    const [mentionUsers, setMentionUsers] = useState<any[]>([])
+    useEffect(() => {
+        const restructureUsers = task.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
+            id: seat.user?.User_ID, // Ensure the id field is used for mentions
+            value: `${seat.user?.User_FirstName || ''} ${seat.user?.User_Surname || ''}`, // Concatenating first & last name
+        })) || [];
+
+        setMentionUsers(restructureUsers);
+    }, [task])
+
+    const quillModule = useMemo(() => ({
+        toolbar: [["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }]],
+        mention: {
+            allowedChars: /^[A-Za-z\s]*$/,
+            mentionDenotationChars: ["@"], // Trigger character
+            source: (searchTerm: string, renderList: Function) => {
+                // Filter users based on search term
+                const matches = mentionUsers && mentionUsers.filter(user => user.value.toLowerCase().includes(searchTerm.toLowerCase()));
+                renderList(matches);
+            },
+            /*renderItem: (item: any) => {
+                const memberLink = document.createElement("a");
+                memberLink.href = `/profile/${item.id}`; // Adjust link as needed
+                memberLink.style.color = "#007bff"; // Bootstrap primary color or your preference
+                memberLink.style.textDecoration = "none";
+                memberLink.textContent = item.value;
+                return memberLink;
+            }*/
+        }
+    }), [mentionUsers]);
 
     return (
         <CommentsAreaView
@@ -293,6 +382,7 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
             addTaskComment={addTaskComment}
             handleCommentCancel={handleCommentCancel}
             handleAddComment={handleAddComment}
+            quillModule={quillModule}
         />
     );
 };
@@ -307,48 +397,30 @@ interface CommentsAreaViewProps {
     addTaskComment: (taskId: number, comment: TaskComment) => Promise<void>
     handleCommentCancel: () => void
     handleAddComment: () => Promise<void>
+    quillModule: {
+        toolbar: (string[] | {
+            list: string;
+        }[])[];
+        mention: {
+            allowedChars: RegExp;
+            mentionDenotationChars: string[];
+            source: (searchTerm: string, renderList: Function) => void;
+        };
+    }
 }
 
 export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
-    newComment, setNewComment, isEditorVisible, setIsEditorVisible, task, authUser, addTaskComment, handleCommentCancel, handleAddComment
+    newComment,
+    setNewComment,
+    isEditorVisible,
+    setIsEditorVisible,
+    task,
+    authUser,
+    addTaskComment,
+    handleCommentCancel,
+    handleAddComment,
+    quillModule
 }) => {
-    // Quill Editor Modules (Mention plugin added)
-    // Mock User Data for Mentions
-    // Fetch users from the task/project data
-    let users: any[]
-    useEffect(() => {
-        console.log("task320", task)
-        /*users = task.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
-            User_ID: seat.user?.User_ID,
-            User_Status: seat.user?.User_Status || "", // Provide default value if undefined
-            User_Email: seat.user?.User_Email || "", // Provide default value if undefined
-            User_FirstName: seat.user?.User_FirstName || '',
-            User_Surname: seat.user?.User_Surname || '',
-            User_ImageSrc: seat.user?.User_ImageSrc,
-            User_CreatedAt: seat.user?.User_CreatedAt,
-            User_UpdatedAt: seat.user?.User_UpdatedAt,
-            User_DeletedAt: seat.user?.User_DeletedAt,
-        })) || [];*/
-    }, [task])
-    users = [
-        { User_ID: 1, User_FirstName: "John Doe" },
-        { User_ID: 2, User_FirstName: "Jane Smith" },
-        { User_ID: 3, User_FirstName: "Michael Brown" },
-    ];
-
-    const modules = useMemo(() => ({
-        toolbar: [["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }]],
-        mention: {
-            allowedChars: /^[A-Za-z\s]*$/,
-            mentionDenotationChars: ["@"], // Trigger character
-            source: (searchTerm: string, renderList: Function) => {
-                // Filter users based on search term
-                const matches = users.filter(user => user.User_FirstName.toLowerCase().includes(searchTerm.toLowerCase()));
-                renderList(matches);
-            }
-        }
-    }), []);
-
     return (
         <Card className={styles.commentsSection}>
             <h2>Comments</h2>
@@ -364,7 +436,7 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                         placeholder="Write a comment..."
                         className={styles.commentInput}
                         theme="snow"
-                        modules={modules}
+                        modules={quillModule}
                     />
                     <Block className={styles.newCommentActions}>
                         <button className={styles.sendButton} onClick={handleAddComment}>
@@ -383,7 +455,14 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                         dangerouslySetInnerHTML={{ __html: comment.Comment_Text }}
                     />
                     <Block className={styles.commentMeta}>
-                        <span>Created: {comment.Comment_CreatedAt}</span>
+                        <span>
+                            Created:{" "}
+                            {comment.Comment_CreatedAt ? (
+                                new Date(comment.Comment_CreatedAt).toLocaleString()
+                            ) : (
+                                "N/A"
+                            )}
+                        </span>
                         <Block className={styles.commentActions}>
                             <FontAwesomeIcon icon={faEdit} className={styles.icon} />
                             <FontAwesomeIcon icon={faTrash} className={styles.icon} />
@@ -395,28 +474,27 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
     );
 };
 
-const CtaButtons = ({
-    theTask, task
-}: {
-    theTask: Task,
-    task: Task | undefined
-}) => {
+interface CtaButtonsProps {
+    task: Task
+}
+
+const CtaButtons: React.FC<CtaButtonsProps> = ({ task }) => {
+    const { taskDetail } = useTasksContext()
+
     return (
         <CtaButtonsView
-            theTask={theTask}
             task={task}
+            taskDetail={taskDetail}
         />
     );
 };
 
 interface CtaButtonsViewProps {
-    theTask: Task,
-    task: Task | undefined
+    task: Task
+    taskDetail: Task | undefined
 }
 
-export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
-    theTask, task
-}) => {
+export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail }) => {
     return (
         <Block className={styles.ctaButtons}>
             <button className={clsx(
@@ -433,8 +511,8 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
                 <FontAwesomeIcon icon={faArrowUpFromBracket} />
                 <Text variant="span">Share</Text>
             </button>
-            {task === undefined && (
-                <Link href={`/task/${theTask.Task_ID}`} className={clsx(
+            {taskDetail !== undefined && (
+                <Link href={`/task/${taskDetail.Task_ID}`} className={clsx(
                     "blue-link",
                     styles.ctaButton
                 )}>
@@ -447,13 +525,12 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
 }
 
 interface TaskDetailsAreaProps {
-    task: Task,
-    setTheTask: React.Dispatch<React.SetStateAction<Task | undefined>>
+    task: Task
 }
 
-const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) => {
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
-    const { readTasksByProjectId, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
+const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task }) => {
+    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
+    const { readTasksByProjectId, readTaskById, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
 
     const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0) // Total amount of seconds spend
@@ -492,9 +569,10 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task, setTheTask }) =
             task.Project_ID
         )
 
-        /// Task changed
-        if (projectId) {
-            readTasksByProjectId(parseInt(projectId), true)
+        //// Task changed
+        if (projectId || taskId) {
+            if (projectId) readTasksByProjectId(parseInt(projectId), true)
+            if (taskId) readTaskById(parseInt(taskId))
         }
 
         if (taskDetail) {
@@ -594,8 +672,18 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
             </p>
             <p><strong>Assigned To:</strong> {task.Assigned_User_ID || "Unassigned"}</p>
             <p><strong>Team:</strong> {task.project?.team?.Team_Name}</p>
-            <p><strong>Created At:</strong> {task.Task_CreatedAt}</p>
-            <p><strong>Due Date:</strong> {task.Task_Due_Date || "N/A"}</p>
+            <p>
+                <strong>Created At:</strong>{" "}
+                {new Date(task.Task_CreatedAt).toLocaleString()}
+            </p>
+            <p>
+                <strong>Due Date:</strong>{" "}
+                {task.Task_Due_Date ? (
+                    new Date(task.Task_Due_Date).toLocaleString()
+                ) : (
+                    "N/A"
+                )}
+            </p>
             <p className="timetrack-metric">
                 <strong>Time Tracking:</strong>
                 <TimeSpentDisplayView task={task} handleTaskTimeTrack={handleTaskTimeTrack} />
@@ -611,37 +699,12 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     )
 }
 
-export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
-    const { taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
+interface TaskDetailProps {
+    theTask: Task
+}
 
-    const [theTask, setTheTask] = useState<Task | undefined>(task || taskDetail)
-
-    // Disable body scrolling when TaskDetailContainer is mounted
-    useEffect(() => {
-        if (taskDetail) {
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
-        }
-
-        return () => {
-            document.body.style.overflow = ''; // Restore scrolling on unmount
-        };
-    }, [taskDetail]);
-
-    // Effect to listen for the ESC key
-    useEffect(() => {
-        const handleEscPress = (event: KeyboardEvent) => {
-            if (event.key === "Escape" && taskDetail) setTaskDetail(undefined)
-        };
-
-        // Attach event listener when component is visible
-        window.addEventListener("keydown", handleEscPress)
-    }, [taskDetail]); // This ensures it runs whenever taskDetail is set
-
-    useEffect(() => {
-        if (task) {
-            setTheTask(task)
-        }
-    }, [task])
+export const TaskDetail: React.FC<TaskDetailProps> = ({ theTask }) => {
+    const { setTaskDetail } = useTasksContext()
 
     if (!theTask) return null;
 
@@ -664,8 +727,8 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
                     <CommentsArea task={theTask} />
                 </Block>
                 <Block className={styles.rightPanel}>
-                    <CtaButtons theTask={theTask} task={task} />
-                    <TaskDetailsArea task={theTask} setTheTask={setTheTask} />
+                    <CtaButtons task={theTask} />
+                    <TaskDetailsArea task={theTask} />
                 </Block>
             </Block>
         </>
@@ -674,21 +737,47 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task }) => {
 
 export const TaskDetailWithModal = () => {
     const taskDetailRef = useRef<HTMLDivElement>(null);
-    const { taskDetail, setTaskDetail } = useTasksContext()
+    const { taskDetail, setTaskDetail, tasksById } = useTasksContext()
 
     // Handle clicks outside taskDetailContainer but inside taskDetailModalBackground
     const handleBackgroundClick = (event: React.MouseEvent<HTMLDivElement>) => {
         if (taskDetail && taskDetailRef.current && !taskDetailRef.current.contains(event.target as Node)) {
             setTaskDetail(undefined)
         }
-    };
+    }
+
+    useEffect(() => {
+        // Disable body scrolling when TaskDetailContainer is mounted
+        if (taskDetail) {
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        // Effect to listen for the ESC key
+        const handleEscPress = (event: KeyboardEvent) => {
+            if (event.key === "Escape" && taskDetail) setTaskDetail(undefined)
+        };
+
+        // Attach event listener when component is visible
+        window.addEventListener("keydown", handleEscPress)
+
+        return () => {
+            document.body.style.overflow = ''; // Restore scrolling on unmount
+        };
+    }, [taskDetail])
+
+    useEffect(() => {
+        if (tasksById.length) {
+            const updatedTask = tasksById.find(task => task.Task_ID === taskDetail?.Task_ID)
+            if (updatedTask) setTaskDetail({ ...updatedTask })
+        }
+    }, [tasksById])
 
     if (!taskDetail) return null
 
     return (
         <Block className={styles.taskDetailModalBackground} onClick={handleBackgroundClick}>
             <Block className={clsx(styles.taskDetailContainer, styles.withModal)} ref={taskDetailRef}>
-                <TaskDetail />
+                <TaskDetail theTask={taskDetail} />
             </Block>
         </Block>
     )
@@ -726,7 +815,7 @@ export const TaskDetailWithoutModal = () => {
                 &laquo; Go to Project
             </Link> */}
             <Block className={styles.taskDetailContainer} ref={taskDetailRef}>
-                <TaskDetail task={renderTask} />
+                <TaskDetail theTask={renderTask} />
             </Block>
         </Block>
     )

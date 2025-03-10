@@ -26,12 +26,12 @@ const BacklogContainer = () => {
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     
     useEffect(() => {
-        console.log("tasksByID changed")
+        // console.log("tasksByID changed")
         if (tasksById.length == 0 && renderTasks) {
             setRenderTasks(undefined)
         }
         if (tasksById.length && !renderTasks) {
-            console.log("renderTasks", renderTasks)
+            // console.log("renderTasks", renderTasks, "tasksById", tasksById)
             setRenderTasks(tasksById)
         }
     }, [tasksById])

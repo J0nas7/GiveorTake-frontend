@@ -43,7 +43,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
         try {
             // : APIResponse<T>
             const response = await httpGetRequest(`${resource}/${itemId}`)
-            console.log(response)
+            // console.log(`fetch${resource}`, response)
             
             if (response) return response
 
