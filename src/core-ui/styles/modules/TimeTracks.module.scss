@@ -86,3 +86,14 @@
     text-align: center;
     padding: 12px;
 }
+
+/* Filter Time Entries */
+.filter-time-entries {
+    @apply fixed z-10 top-36 left-auto h-auto w-auto bg-gray-200 py-4 px-8 rounded-lg shadow-lg flex flex-col gap-3;
+    transition: right 0.2s ease;
+    right: -378px;
+
+    &.open {
+        @apply right-10;
+    }
+}

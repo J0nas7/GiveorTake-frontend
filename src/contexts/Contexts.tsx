@@ -481,7 +481,7 @@ export type TaskTimeTrackContextType = {
     latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
     taskTimeTracksByProjectId: TaskTimeTrack[]
     getLatestUniqueTaskTimeTracksByProject: (projectId: number) => Promise<any>
-    getTaskTimeTracksByProject: (projectId: number, startTime: string, endTime: string, userId?: number) => Promise<void>
+    getTaskTimeTracksByProject: (projectId: number, startTime: string, endTime: string, userIds?: string[]) => Promise<void>
     taskTimeTracksByProjectParams: { startTime: string; endTime: string; }
 };
 
@@ -546,7 +546,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         }
     }
 
-    const getTaskTimeTracksByProject = async (projectId: number, startTime: string, endTime: string, userId?: number) => {
+    const getTaskTimeTracksByProject = async (projectId: number, startTime: string, endTime: string, userIds?: string[]) => {
         try {
             // Build the URL with optional query parameters for startTime end endTime
             let url = `projects/${projectId}/task-time-tracks`
@@ -559,17 +559,17 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 setTaskTimeTracksByProjectParams({ startTime, endTime })
             }
             
-            if (userId) {
-                params.push(`userId=${encodeURIComponent(userId)}`)                
+            if (userIds?.length) {
+                params.push(`userIds=${JSON.stringify(userIds)}`)
             }
 
             if (params.length > 0) url += `?${params.join('&')}`
-            console.log("url", url)
+            // console.log("url", url)
 
             const data = await httpGetRequest(url)
             
             if (!data.message) {
-                console.log("urlData", data)
+                // console.log("urlData", data)
                 setTaskTimeTracksByProjectId(data)
                 return
             }

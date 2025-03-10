@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faClock, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faClock, faSliders, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import clsx from "clsx";
@@ -30,13 +30,16 @@ export const TimeTracksContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
     const searchParams = useSearchParams();
     const router = useRouter();
-    const userId = searchParams.get("userId")
-
     const { t } = useTranslation(["timetrack"]);
+
+    const [filterTimeEntries, setFilterTimeEntries] = useState<boolean>(false)
+
+    const urlUserId = searchParams.get("userIds")
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
 
     const { projectById, readProjectById } = useProjectsContext();
     const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
-    const { teamUserSeatsById,readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
+    const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
 
     const [renderProject, setRenderProject] = useState<Project | undefined>(undefined);
     const [renderTimeTracks, setRenderTimeTracks] = useState<TaskTimeTrack[] | undefined>(undefined);
@@ -84,45 +87,6 @@ export const TimeTracksContainer = () => {
         };
     };
 
-    const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserId?: string, returnUrl?: boolean) => {
-        const url = new URL(window.location.href);
-        
-        if (newStartDate) {
-            url.searchParams.set("startDate", newStartDate);
-        } else {
-            url.searchParams.delete("startDate")
-        }
-        if (newEndDate) {
-            url.searchParams.set("endDate", newEndDate);
-        } else {
-            url.searchParams.delete("endDate")
-        }
-        if (newUserId === undefined) {
-            url.searchParams.delete("userId")
-        } else if (newUserId || userId) {
-            url.searchParams.set("userId", newUserId || userId!);
-        }
-        
-        if (returnUrl) {
-            return url.toString()
-        } else {
-            router.push(url.toString(), { scroll: false }); // Prevent full page reload
-        }
-    };
-
-    // Handle user input changes
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newStart = `${e.target.value} 00:00:00`;
-        setStartDate(newStart);
-        updateURLParams(newStart, endDate, userId || undefined);
-    };
-
-    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newEnd = `${e.target.value} 23:59:59`;
-        setEndDate(newEnd);
-        updateURLParams(startDate, newEnd, userId || undefined)
-    };
-
     // Get previous week’s start and end dates
     // Extract `startDate` and `endDate` from URL, or use defaults
     const { startTime: defaultStart, endTime: defaultEnd } = getPreviousWeekStartAndEnd();
@@ -131,21 +95,36 @@ export const TimeTracksContainer = () => {
     const [startDate, setStartDate] = useState(startDateParam || defaultStart);
     const [endDate, setEndDate] = useState(endDateParam || defaultEnd);
 
+    // Get user IDs from URL
+    useEffect(() => {
+        if (urlUserId) {
+            // If userIds exist in the URL, use them
+            const userIdsFromURL = urlUserId ? urlUserId.split(",") : [];
+            setSelectedUserIds(userIdsFromURL);
+        } else if (teamUserSeatsById.length) {
+            // If no userIds in URL, select all users by default
+            console.log("If no userIds in URL, select all users by default")
+            const allUserIds = teamUserSeatsById
+                .map((userSeat: TeamUserSeat) => userSeat.user?.User_ID?.toString())
+                .filter((userId) => userId !== undefined) // Remove undefined values
+            setSelectedUserIds(allUserIds)
+        }
+    }, [urlUserId, teamUserSeatsById])
+
     // Fetch project data
     useEffect(() => {
-        console.log("userId", userId)
         const loadRenders = async () => {
             await getTaskTimeTracksByProject(
                 parseInt(projectId),
                 startDate,
                 endDate,
-                userId ? parseInt(userId) : 0
+                selectedUserIds
             )
 
             await readProjectById(parseInt(projectId));
         }
         loadRenders()
-    }, [projectId, userId, startDate, endDate])
+    }, [projectId, selectedUserIds, startDate, endDate])
 
     useEffect(() => {
         if (projectId) {
@@ -160,7 +139,7 @@ export const TimeTracksContainer = () => {
             setRenderTimeTracks(undefined);
         }
         if (taskTimeTracksByProjectId.length) {
-            if (!userId && !renderTimeTracks) {
+            if (!selectedUserIds.length && !renderTimeTracks) {
                 setRenderTimeTracks(taskTimeTracksByProjectId)
             } else {
                 setRenderTimeTracks(taskTimeTracksByProjectId);
@@ -183,50 +162,29 @@ export const TimeTracksContainer = () => {
     }, [renderTimeTracks]);
 
     useEffect(() => {
-        if (renderProject && renderProject.team?.Team_ID) {
+        if (renderProject && renderProject.team?.Team_ID && !teamUserSeatsById.length) {
             readTeamUserSeatsByTeamId(renderProject.team?.Team_ID)
         }
     }, [renderProject])
 
+    if (!renderProject) return null
+
     return (
         <Block className="page-content">
-            <Link href={`/project/${renderProject?.Project_ID}`} className="page-back-navigation">
+            <Link href={`/project/${renderProject.Project_ID}`} className="page-back-navigation">
                 &laquo; Go to Project
             </Link>
 
             <FlexibleBox
-                title={`${t("timetrack.title")}: ${renderProject?.Project_Name}`}
+                title={`${t("timetrack.title")}: ${renderProject.Project_Name}`}
                 titleAction={<>
-                    <Block className="flex gap-3 items-center">
-                        <input
-                            type="date"
-                            value={startDate.split(" ")[0]} // Show only YYYY-MM-DD
-                            onChange={handleStartDateChange}
-                            className="bg-transparent"
-                        />
-                        <FontAwesomeIcon icon={faArrowRight} />
-                        <input
-                            type="date"
-                            value={endDate.split(" ")[0]} // Show only YYYY-MM-DD
-                            onChange={handleEndDateChange}
-                            className="bg-transparent"
-                        />
-                        
-                        {userId && (() => {
-                            const selectedUser = teamUserSeatsById.find((user) => user.User_ID === parseInt(userId))?.user
-                            if (!selectedUser) return null
-                            
-                            return (
-                                <Block className="flex gap-3 items-center bg-gray-300 rounded-lg shadow-lg py-1 px-3">
-                                    <FontAwesomeIcon icon={faUser} />
-                                    {`${selectedUser.User_FirstName} ${selectedUser.User_Surname}`}
-                                    <Link href={updateURLParams(startDateParam, endDateParam, undefined, true)!}>
-                                        <FontAwesomeIcon icon={faXmark} />
-                                    </Link>
-                                </Block>
-                            )
-                        })()}
-                    </Block>
+                    <button
+                        className="blue-link !inline-flex gap-2 items-center"
+                        onClick={() => setFilterTimeEntries(!filterTimeEntries)}
+                    >
+                        <FontAwesomeIcon icon={faSliders} />
+                        <Text variant="span" className="text-sm font-semibold">Filter Time Entries</Text>
+                    </button>
                 </>}
                 icon={faClock}
                 className="no-box w-auto inline-block"
@@ -246,20 +204,232 @@ export const TimeTracksContainer = () => {
 
                         {/* List of Time Tracks */}
                         <Block className="w-3/4 p-4 bg-white rounded-lg shadow-md">
-                            <LatestTimeLogs 
-                                sortedByLatest={sortedByLatest} 
-                                startDateParam={startDateParam} 
-                                endDateParam={endDateParam} 
-                                userId={userId} 
-                                updateURLParams={updateURLParams}
+                            <LatestTimeLogs
+                                sortedByLatest={sortedByLatest}
                             />
                         </Block>
                     </Block>
                 </Block>
             </FlexibleBox>
+
+            <FilterTimeEntries
+                filterTimeEntries={filterTimeEntries}
+                setFilterTimeEntries={setFilterTimeEntries}
+                teamUserSeatsById={teamUserSeatsById}
+                selectedUserIds={selectedUserIds}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                startDateParam={startDateParam}
+                endDateParam={endDateParam}
+            />
         </Block>
     );
 }
+
+interface FilterTimeEntriesProps {
+    filterTimeEntries: boolean
+    setFilterTimeEntries: React.Dispatch<React.SetStateAction<boolean>>
+    teamUserSeatsById: TeamUserSeat[]
+    selectedUserIds: string[]
+    startDate: string
+    setStartDate: React.Dispatch<React.SetStateAction<string>>
+    endDate: string
+    setEndDate: React.Dispatch<React.SetStateAction<string>>
+    startDateParam: string | null
+    endDateParam: string | null
+}
+
+const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
+    ({
+        filterTimeEntries,
+        setFilterTimeEntries,
+        teamUserSeatsById,
+        selectedUserIds,
+        startDate,
+        setStartDate,
+        endDate,
+        setEndDate,
+        startDateParam,
+        endDateParam
+    }) => {
+        const router = useRouter()
+        const searchParams = useSearchParams();
+
+        const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserIds?: string[] | string, returnUrl?: boolean) => {
+            const url = new URL(window.location.href);
+
+            if (newStartDate) {
+                url.searchParams.set("startDate", newStartDate);
+            } else {
+                url.searchParams.delete("startDate")
+            }
+            if (newEndDate) {
+                url.searchParams.set("endDate", newEndDate);
+            } else {
+                url.searchParams.delete("endDate")
+            }
+            if (newUserIds === undefined) {
+                url.searchParams.delete("userIds")
+            } else if (Array.isArray(newUserIds)) { // Handle userIds (convert array to a comma-separated string)
+                if (newUserIds.length > 0) {
+                    if (teamUserSeatsById.length > newUserIds.length) {
+                        url.searchParams.set("userIds", newUserIds.join(",")); // Store as comma-separated values
+                    } else {
+                        url.searchParams.delete("userIds"); // Remove if all are selected, as that is default 
+                    }
+                } else {
+                    url.searchParams.set("userIds", "");
+                    // url.searchParams.delete("userIds"); // Remove if empty
+                }
+            }
+            // } else if (newUserId || userId) {
+            //     url.searchParams.set("userId", newUserId || userId!);
+            // }
+
+            if (returnUrl) {
+                return url.toString()
+            } else {
+                router.push(url.toString(), { scroll: false }); // Prevent full page reload
+            }
+        };
+
+        const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const newStart = `${e.target.value} 00:00:00`;
+            setStartDate(newStart);
+            updateURLParams(newStart, endDate, selectedUserIds || undefined);
+        };
+
+        const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const newEnd = `${e.target.value} 23:59:59`;
+            setEndDate(newEnd);
+            updateURLParams(startDate, newEnd, selectedUserIds || undefined)
+        };
+
+        const handleSelectAllChange = () => {
+            console.log(`handleSelectAllChange ${selectedUserIds.length} === ${teamUserSeatsById.length}`)
+            if (selectedUserIds.length === teamUserSeatsById.length) {
+                // Deselect all if all are already selected
+                updateURLParams(startDateParam, endDateParam, ["0"])
+            } else {
+                // Select all
+                updateURLParams(startDateParam, endDateParam, undefined)
+            }
+        };
+
+        const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            const { value, checked } = event.target;
+
+            let updatedUserIds = selectedUserIds;
+
+            if (checked) {
+                updatedUserIds = [...selectedUserIds, value]; // Add new ID
+            } else {
+                updatedUserIds = selectedUserIds.filter(id => id !== value); // Remove unchecked ID
+            }
+
+            updateURLParams(startDate, endDate, updatedUserIds)
+        };
+
+        useEffect(() => {
+            // Effect to listen for the ESC key
+            const handleEscPress = (event: KeyboardEvent) => {
+                if (event.key === "Escape" && filterTimeEntries) setFilterTimeEntries(!filterTimeEntries)
+            };
+
+            // Attach event listener when component is visible
+            window.addEventListener("keydown", handleEscPress)
+        }, [])
+
+        return (
+            <Block
+                className={clsx(
+                    styles["filter-time-entries"],
+                    { [styles.open]: filterTimeEntries }
+                )}
+            >
+                <Block className="flex justify-between items-center">
+                    <Text className="font-bold">
+                        Filter Time Entries
+                    </Text>
+                    <button>
+                        <FontAwesomeIcon
+                            icon={faXmark}
+                            onClick={() => setFilterTimeEntries(!filterTimeEntries)}
+                        />
+                    </button>
+                </Block>
+                <Block>
+                    <Text className="text-sm font-semibold">Entry period</Text>
+
+                    <Block className="flex gap-3 items-center">
+                        <input
+                            type="date"
+                            value={startDate.split(" ")[0]} // Show only YYYY-MM-DD
+                            onChange={handleStartDateChange}
+                            className="bg-transparent"
+                        />
+                        <FontAwesomeIcon icon={faArrowRight} />
+                        <input
+                            type="date"
+                            value={endDate.split(" ")[0]} // Show only YYYY-MM-DD
+                            onChange={handleEndDateChange}
+                            className="bg-transparent"
+                        />
+                    </Block>
+                </Block>
+                <Block>
+                    <Text className="text-sm font-semibold">Team members</Text>
+
+                    <Text
+                        variant="span"
+                        onClick={() => handleSelectAllChange()}
+                        className="cursor-pointer text-xs hover:underline"
+                    >
+                        Select/Deselect All
+                    </Text>
+
+                    <Block className="flex flex-col mt-3">
+                        {teamUserSeatsById.length && teamUserSeatsById.map(userSeat => {
+                            const userDetails = userSeat.user
+
+                            if (!userDetails) return null
+
+                            return (
+                                <Block variant="span" className="flex gap-2" key={userSeat.Seat_ID}>
+                                    <input
+                                        type="checkbox"
+                                        value={userDetails.User_ID}
+                                        checked={userDetails.User_ID ? selectedUserIds.includes(userDetails.User_ID.toString()) : false}
+                                        onChange={handleCheckboxChange}
+                                    />
+                                    <Text>{userDetails?.User_FirstName} {userDetails?.User_Surname}</Text>
+                                </Block>
+                            )
+                        })}
+                    </Block>
+                </Block>
+                <Block>
+                    {selectedUserIds && (() => {
+                        const selectedUser = teamUserSeatsById && teamUserSeatsById.find((user) => user.User_ID === parseInt(selectedUserIds[0]))?.user
+                        if (!selectedUser) return null
+
+                        return (
+                            <Block className="flex gap-3 items-center bg-gray-100 rounded-lg shadow-lg py-1 px-3">
+                                <FontAwesomeIcon icon={faUser} />
+                                {`${selectedUser.User_FirstName} ${selectedUser.User_Surname}`}
+                                <Link href={updateURLParams(startDateParam, endDateParam, undefined, true)!}>
+                                    <FontAwesomeIcon icon={faXmark} />
+                                </Link>
+                            </Block>
+                        )
+                    })()}
+                </Block>
+            </Block>
+        )
+    }
+
 
 interface TimeTracksSubComponentsProps {
     timeTracks: TaskTimeTrack[] | undefined;
@@ -618,14 +788,10 @@ export const TimeSpentPerTask: React.FC<{ sortedByDuration: TaskTimeTrack[] | un
 
 interface LatestTimeLogsProps {
     sortedByLatest: TaskTimeTrack[] | undefined
-    startDateParam: string | null
-    endDateParam: string | null
-    userId: string | null
-    updateURLParams: (newStartDate: string | null, newEndDate: string | null, newUserId?: string, returnUrl?: boolean) => string | undefined
 }
 
 export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
-    sortedByLatest, startDateParam, endDateParam, userId, updateURLParams
+    sortedByLatest
 }) => {
     const { t } = useTranslation(["timetrack"]);
 
@@ -698,12 +864,7 @@ export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
                             <li className="py-2 font-bold text-gray-700">{section}</li>
                             {groupedLogs[section].map((track) => (
                                 <li key={track.Time_Tracking_ID} className="py-2">
-                                    <Link
-                                        href={updateURLParams(startDateParam, endDateParam, track.user?.User_ID?.toString(), true)!}
-                                        className="inline blue-link"
-                                    >
-                                        {track.user?.User_FirstName} {track.user?.User_Surname}
-                                    </Link>{" "}
+                                    {track.user?.User_FirstName} {track.user?.User_Surname}{" "}
                                     logged work on{" "}
                                     <Link href={`/task/${track.task?.Task_ID}`} className="inline blue-link">
                                         {track.task?.Task_Title}
