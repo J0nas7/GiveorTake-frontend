@@ -17,7 +17,7 @@ import { Team, TeamFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 
 const TeamDetails: React.FC = () => {
@@ -105,14 +105,24 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                     icon={faUsers}
                     className="no-box w-auto inline-block"
                     numberOfColumns={2}
-                    titleAction={
-                        <Link
-                            href={`${pathname}/seats`}
-                            className="blue-link !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faUsers} />
-                            <Text variant="span">Handle Seats</Text>
-                        </Link>
+                    titleAction={<>
+                        <Block className="flex gap-2">
+                            <Link
+                                href={`${pathname}/seats`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faUsers} />
+                                <Text variant="span">Handle Seats</Text>
+                            </Link>
+                            <Link
+                                href={`${pathname}/create-project`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faLightbulb} />
+                                <Text variant="span">Create Project</Text>
+                            </Link>
+                        </Block>
+                    </>
                     }
                 >
                     <Card>

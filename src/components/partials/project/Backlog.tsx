@@ -97,6 +97,18 @@ const BacklogContainer = () => {
         });
     }, [renderTasks, currentSort, currentOrder]);
 
+    const prepareCreateTask = () => {
+        const newTaskPlaceholder: Task = {
+            Project_ID: parseInt(projectId),
+            Task_Title: newTask?.Task_Title || "",
+            Task_Status: "To Do",
+            Task_Number: 0,
+            Team_ID: renderProject?.team?.Team_ID ? renderProject?.team?.Team_ID : 0
+        }
+        
+        addTask(parseInt(projectId), newTaskPlaceholder)
+    }
+
     return (
         <BacklogContainerView
             renderProject={renderProject}
@@ -107,7 +119,7 @@ const BacklogContainer = () => {
             showActionMenu={showActionMenu}
             t={t}
             handleSort={handleSort}
-            handleCreateTask={() => addTask(parseInt(projectId), newTask)}
+            handleCreateTask={prepareCreateTask}
             handleChangeNewTask={handleChangeNewTask}
             setTaskDetail={setTaskDetail}
             setActionMenu={setActionMenu}
@@ -210,9 +222,13 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                 </td>
                                 <td className={styles.status}>{task.Task_Status}</td>
                                 <td>{task.Assigned_User_ID ? `User ${task.Assigned_User_ID}` : "Unassigned"}</td>
-                                <td>{task.Task_CreatedAt || "N/A"}</td>
+                                <td>{task.Task_CreatedAt ? (
+                                    new Date(task.Task_CreatedAt).toLocaleString()
+                                ): (
+                                    "N/A"
+                                )}</td>
                                 <td className={styles.actions}>
-                                    <button onClick={() => setActionMenu(task.Task_ID)} className={styles.actionButton}>
+                                    <button onClick={() => task.Task_ID && setActionMenu(task.Task_ID)} className={styles.actionButton}>
                                         <FontAwesomeIcon icon={faEllipsisV} />
                                     </button>
                                     {showActionMenu === task.Task_ID && (

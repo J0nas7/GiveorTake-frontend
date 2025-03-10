@@ -86,7 +86,6 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
             >
                 &laquo; Go to Project
             </Link>
-            {/* <Heading variant="h1">{`Kanban: ${project?.Project_Name}`}</Heading> */}
             <FlexibleBox
                 title={`Kanban: ${project?.Project_Name}`}
                 icon={faWindowRestore}

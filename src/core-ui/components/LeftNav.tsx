@@ -63,7 +63,7 @@ export const LeftNav: React.FC = () => {
             <ul className={styles.navList}>
                 {!authUserSeats &&
                     authUser && organisationsById.length &&
-                    organisationsById[0].User_ID === authUser.User_ID ? (
+                    organisationsById[0].User_ID !== authUser.User_ID ? (
                     <Text variant="span">
                         {t('leftnav:noseats')}
                     </Text>

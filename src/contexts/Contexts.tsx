@@ -587,7 +587,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         if (authUser.User_ID) {
             // Prepare the task time track object
             const theNewTimeTrack: TaskTimeTrack = {
-                Task_ID: task.Task_ID,
+                Task_ID: task.Task_ID || 0,
                 Project_ID: task.Project_ID,
                 User_ID: authUser.User_ID,
                 Time_Tracking_Start_Time: "", // We'll set this conditionally
@@ -615,7 +615,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 }
 
                 // Update the time tracking record in the database
-                await saveTaskTimeTrackChanges(updatedTimeTrack, task.Task_ID)
+                await (task.Task_ID && saveTaskTimeTrackChanges(updatedTimeTrack, task.Task_ID))
             }
 
             /// Task changed

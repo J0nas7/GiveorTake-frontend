@@ -20,7 +20,7 @@ export type UserFields =
 
 // Organisation Type
 export type Organisation = {
-    Organisation_ID: number;
+    Organisation_ID?: number;
     User_ID: number;
     Organisation_Name: string;
     Organisation_Description?: string;
@@ -37,7 +37,7 @@ export type OrganisationFields =
 
 // Team Type
 export type Team = {
-    Team_ID: number;
+    Team_ID?: number;
     Organisation_ID: number;
     Team_Name: string;
     Team_Description?: string;
@@ -57,7 +57,7 @@ export type TeamFields =
 
 // Project Type
 export type Project = {
-    Project_ID: number;
+    Project_ID?: number;
     Team_ID: number;
     Project_Name: string;
     Project_Description?: string;
@@ -101,8 +101,8 @@ export type TeamUserSeatFields =
 
 // Task Type
 export type Task = {
-    Task_ID: number;
-    Task_Number: number;
+    Task_ID?: number;
+    Task_Number?: number;
     Project_ID: number;
     Team_ID: number; // Nullable if not assigned to a team
     Assigned_User_ID?: number; // Nullable if unassigned
@@ -110,8 +110,8 @@ export type Task = {
     Task_Description?: string;
     Task_Status: 'To Do' | 'In Progress' | 'Waiting for Review' | 'Done'
     Task_Due_Date?: string; // YYYY-MM-DD format
-    Task_CreatedAt: string;
-    Task_UpdatedAt: string;
+    Task_CreatedAt?: string;
+    Task_UpdatedAt?: string;
 
     // Relationships
     project?: Project

@@ -16,9 +16,9 @@ import { Organisation, OrganisationFields, User } from '@/types';
 import Link from 'next/link';
 import { Block, Text } from '@/components/ui/block-text';
 import { selectAuthUser, useTypedSelector } from '@/redux';
-import { Heading } from '@/components/ui/heading';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import { faBuilding } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const OrganisationDetails: React.FC = () => {
     const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
@@ -89,6 +89,14 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                 {/* <Heading variant="h1">Organisation Settings</Heading> */}
                 <FlexibleBox
                     title="Organisation Settings"
+                    titleAction={<>
+                        <Block className="flex gap-3">
+                            <Link href={`/organisation/${organisation.Organisation_ID}/create-team`} className="blue-link !inline-flex gap-2 items-center">
+                                <FontAwesomeIcon icon={faUsers} />
+                                <Text variant="span">Create Team</Text>
+                            </Link>
+                        </Block>
+                    </>}
                     icon={faBuilding}
                     className="no-box w-auto inline-block"
                     numberOfColumns={2}
@@ -176,7 +184,12 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                                         }} />
                                     </Typography>
                                     <Typography variant="body2" color="textSecondary">
-                                        Created at: {team.Team_CreatedAt || 'N/A'}
+                                        Created at:{" "}
+                                        {team.Team_CreatedAt ? (
+                                            new Date(team.Team_CreatedAt).toLocaleString()
+                                        ) : (
+                                            'N/A'
+                                        )}
                                     </Typography>
                                     <Typography variant="body2" color="textSecondary">
                                         Team Members: {team.user_seats?.length || 0}
