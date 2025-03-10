@@ -119,7 +119,7 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
         <Block className="page-content">
             <Link
                 href={`/`}
-                className="page-back-navigation"
+                className="blue-link"
             >
                 &laquo; Go to Start Page
             </Link>

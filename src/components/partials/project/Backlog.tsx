@@ -147,7 +147,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
         <Block className="page-content">
             <Link
                 href={`/project/${renderProject?.Project_ID}`}
-                className="page-back-navigation"
+                className="blue-link"
             >
                 &laquo; Go to Project
             </Link>

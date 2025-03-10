@@ -171,7 +171,10 @@ export const TimeTracksContainer = () => {
 
     return (
         <Block className="page-content">
-            <Link href={`/project/${renderProject.Project_ID}`} className="page-back-navigation">
+            <Link 
+                href={`/project/${renderProject.Project_ID}`} 
+                className="blue-link"
+            >
                 &laquo; Go to Project
             </Link>
 

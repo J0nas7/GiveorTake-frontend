@@ -203,7 +203,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
             <Box mb={6}>
                 <Link
                     href={`/team/${renderTeam?.Team_ID}`}
-                    className="page-back-navigation"
+                    className="blue-link"
                 >
                     &laquo; Go to Team
                 </Link>

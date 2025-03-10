@@ -3,17 +3,6 @@
     flex-direction: column;
     min-height: 100vh;
     
-    .page-back-navigation {
-        @apply text-xs text-gray-800 no-underline;
-        @apply inline-block p-2 rounded;
-        transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-
-        &:hover {
-            @apply bg-blue-100 text-blue-600;
-            transform: scale(1.1);
-        }
-    }
-
     .content-wrapper {
         display: flex;
         flex: 1;

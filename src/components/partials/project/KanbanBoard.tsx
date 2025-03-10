@@ -82,7 +82,7 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
         <Block className="page-content">
             <Link
                 href={`/project/${project?.Project_ID}`}
-                className="page-back-navigation"
+                className="blue-link"
             >
                 &laquo; Go to Project
             </Link>

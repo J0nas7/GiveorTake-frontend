@@ -96,7 +96,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
             <Box mb={4}>
                 <Link
                     href={`/organisation/${team.organisation?.Organisation_ID}`}
-                    className="page-back-navigation"
+                    className="blue-link"
                 >
                     &laquo; Go to Organisation
                 </Link>

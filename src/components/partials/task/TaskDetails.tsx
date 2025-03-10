@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 import "quill-mention/dist/quill.mention.css";
@@ -704,20 +704,25 @@ interface TaskDetailProps {
 }
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ theTask }) => {
-    const { setTaskDetail } = useTasksContext()
+    const { taskDetail, setTaskDetail } = useTasksContext()
 
-    if (!theTask) return null;
+    if (!theTask) return null
 
     return (
         <>
-            <Block>
+            <Block className="flex justify-between">
                 <Link
                     onClick={() => setTaskDetail(undefined)}
                     href={`/project/${theTask.project?.Project_ID}`}
-                    className="page-back-navigation"
+                    className="blue-link"
                 >
                     &laquo; Go to Project
                 </Link>
+                {taskDetail !== undefined && (
+                    <button onClick={() => setTaskDetail(undefined)} className="blue-link">
+                        <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                )}
             </Block>
             <Block className={styles.content}>
                 <Block className={styles.leftPanel}>
@@ -808,12 +813,6 @@ export const TaskDetailWithoutModal = () => {
 
     return (
         <Block className="page-content">
-            {/* <Link
-                href={`/project/${renderTask.project?.Project_ID}`}
-                className="page-back-navigation"
-            >
-                &laquo; Go to Project
-            </Link> */}
             <Block className={styles.taskDetailContainer} ref={taskDetailRef}>
                 <TaskDetail theTask={renderTask} />
             </Block>
