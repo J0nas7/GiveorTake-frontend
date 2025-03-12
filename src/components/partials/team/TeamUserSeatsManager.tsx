@@ -3,7 +3,7 @@
 // External
 import React, { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
-import { TextField, Card, CardContent, Typography, Grid, Box, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { TextField, Card, CardContent, Typography, Grid, Box, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Checkbox } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
 // Internal
@@ -60,6 +60,7 @@ const TeamUserSeatsManager: React.FC = () => {
     }, [teamUserSeatsById, teamById]);
 
     const handleSaveChanges = () => {
+        console.log("selectedSeat", selectedSeat)
         if (selectedSeat) {
             saveTeamUserSeatChanges(selectedSeat, parseInt(teamId));
         }
@@ -118,6 +119,22 @@ const TeamUserSeatsManager: React.FC = () => {
         await saveTeamUserSeatChanges(newSeat, parseInt(teamId));
     };
 
+    const availablePermissions = [
+        "Manage Team Members", "Modify Team Settings", "Modify Organisation Settings"
+    ];
+
+    const togglePermission = (permission: string, isChecked: boolean) => {
+        setSelectedSeat((prevSeat) => {
+            if (!prevSeat) return prevSeat;
+
+            const updatedPermissions = isChecked
+                ? [...(prevSeat.Seat_Permissions || []), permission]
+                : ((Array.isArray(prevSeat.Seat_Permissions) && prevSeat.Seat_Permissions) || []).filter((perm) => perm !== permission);
+                
+            return { ...prevSeat, Seat_Permissions: JSON.stringify(updatedPermissions) };
+        });
+    };
+
     return (
         <TeamUserSeatsView
             renderUserSeats={renderUserSeats}
@@ -128,6 +145,7 @@ const TeamUserSeatsManager: React.FC = () => {
             newUserDetails={newUserDetails}
             teamId={teamId}
             t={t}
+            availablePermissions={availablePermissions}
             addTeamUserSeat={addTeamUserSeat}
             readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
             handleSelectSeat={handleSelectSeat}
@@ -139,6 +157,7 @@ const TeamUserSeatsManager: React.FC = () => {
             setNewUserDetails={setNewUserDetails}
             setSelectedSeat={setSelectedSeat}
             setDisplayInviteForm={setDisplayInviteForm}
+            togglePermission={togglePermission}
         />
     );
 };
@@ -158,6 +177,7 @@ export interface TeamUserSeatsViewProps {
     };
     teamId: string
     t: TFunction
+    availablePermissions: string[]
     addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     handleSelectSeat: (seat: TeamUserSeat) => void;
@@ -175,6 +195,7 @@ export interface TeamUserSeatsViewProps {
     }>) => void
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
     setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
+    togglePermission: (permission: string, isChecked: boolean) => void
 }
 
 export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
@@ -186,6 +207,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
     newUserDetails,
     teamId,
     t,
+    availablePermissions,
     addTeamUserSeat,
     readTeamUserSeatsByTeamId,
     handleSelectSeat,
@@ -196,7 +218,8 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
     handleCreateNewUser,
     setNewUserDetails,
     setSelectedSeat,
-    setDisplayInviteForm
+    setDisplayInviteForm,
+    togglePermission
 }) => {
     return (
         <Block className="page-content">
@@ -273,7 +296,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                         </CardContent>
                     </Card>
                 </FlexibleBox>
-                
+
                 {selectedSeat ? (
                     <Card className="shadow-lg rounded-lg mt-4">
                         <CardContent className="p-4">
@@ -282,6 +305,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                             </Typography>
 
                             <Grid container spacing={3}>
+                                {/* Role Input */}
                                 <Grid item xs={12} sm={6}>
                                     <TextField
                                         label={t('team:seatsManager:userRole')}
@@ -292,6 +316,8 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                         className="bg-white"
                                     />
                                 </Grid>
+
+                                {/* Status Dropdown */}
                                 <Grid item xs={12} sm={6}>
                                     <FormControl fullWidth>
                                         <InputLabel>{t('team:seatsManager:status')}</InputLabel>
@@ -308,6 +334,57 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                 </Grid>
                             </Grid>
 
+                            {/* Permissions Section */}
+                            <Box mt={4}>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    {t('team:seatsManager:permissions')}
+                                </Typography>
+
+                                <Grid container spacing={2}>
+                                    {renderTeam?.projects?.map(project => {
+                                        const permissions = [
+                                            {
+                                                key: `editProject.${project.Project_ID}`,
+                                                label: `Manage Project: ${project.Project_Name}`
+                                            },
+                                            {
+                                                key: `archivingTasks.${project.Project_ID}`,
+                                                label: `Archiving Tasks: ${project.Project_Name}`
+                                            }
+                                        ]
+                                        
+                                        return permissions.map(permission => (
+                                            <Grid item key={permission.key} xs={6} sm={4}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Checkbox
+                                                            checked={selectedSeat.Seat_Permissions?.includes(permission.key) || false}
+                                                            onChange={(e) => togglePermission(permission.key, e.target.checked)}
+                                                        />
+                                                    }
+                                                    label={permission.label}
+                                                />
+                                            </Grid>
+                                        ))
+                                    })}
+
+                                    {availablePermissions.map((permission) => (
+                                        <Grid item key={permission} xs={6} sm={4}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={selectedSeat.Seat_Permissions?.includes(permission) || false}
+                                                        onChange={(e) => togglePermission(permission, e.target.checked)}
+                                                    />
+                                                }
+                                                label={permission}
+                                            />
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Box>
+
+                            {/* Actions */}
                             <Box mt={4} className="flex gap-4 justify-end">
                                 <button
                                     className="blue-link-light"

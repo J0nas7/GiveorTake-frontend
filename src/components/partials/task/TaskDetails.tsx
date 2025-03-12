@@ -125,7 +125,7 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
     const { readTaskById, readTasksByProjectId, saveTaskChanges } = useTasksContext();
     const [isEditing, setIsEditing] = useState(false);
     const [description, setDescription] = useState(task.Task_Description || "");
-    
+
     const handleSave = () => {
         setIsEditing(false);
         saveTaskChanges(
@@ -562,6 +562,11 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task }) => {
         handleTaskChanges("Task_Status", newStatus)
     };
 
+    const handleAssigneeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
+        if (newAssigneeID) handleTaskChanges("Assigned_User_ID", newAssigneeID.toString())
+    }
+
     const handleTaskChanges = async (field: keyof Task, value: string) => {
         // Update the task change (this will update it in the database)
         await saveTaskChanges(
@@ -592,6 +597,7 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task }) => {
             setTaskDetail={setTaskDetail}
             saveTaskChanges={saveTaskChanges}
             handleStatusChange={handleStatusChange}
+            handleAssigneeChange={handleAssigneeChange}
             handleTaskChanges={handleTaskChanges}
             handleTaskTimeTrack={handleTaskTimeTrack}
         />
@@ -606,6 +612,7 @@ interface TaskDetailsViewProps {
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     saveTaskChanges: (taskChanges: Task, parentId: number) => void
     handleStatusChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+    handleAssigneeChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleTaskChanges: (field: keyof Task, value: string) => void
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
 }
@@ -653,6 +660,7 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     setTaskDetail,
     saveTaskChanges,
     handleStatusChange,
+    handleAssigneeChange,
     handleTaskChanges,
     handleTaskTimeTrack,
 }) => {
@@ -670,7 +678,22 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     <option value="Done">Done</option>
                 </select>
             </p>
-            <p><strong>Assigned To:</strong> {task.Assigned_User_ID || "Unassigned"}</p>
+            <p>
+                <strong>Assigned To:</strong>
+                {/* Dropdown to change the user assignee */}
+                <select
+                    value={task.Assigned_User_ID || ""}
+                    onChange={handleAssigneeChange}
+                    className="p-2 border rounded"
+                >
+                    <option value="">Unassigned</option>
+                    {task.project?.team?.user_seats?.map(userSeat => {
+                        return (
+                            <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
+                        )
+                    })}
+                </select>
+            </p>
             <p><strong>Team:</strong> {task.project?.team?.Team_Name}</p>
             <p>
                 <strong>Created At:</strong>{" "}

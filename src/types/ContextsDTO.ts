@@ -86,7 +86,7 @@ export type TeamUserSeat = {
     Seat_Role: string;
     Seat_Status: string;
     Seat_Role_Description?: string;
-    Seat_Permissions?: string[];
+    Seat_Permissions?: string[] | string;
     Seat_CreatedAt?: string;
     Seat_UpdatedAt?: string;
     Seat_DeletedAt?: string;
