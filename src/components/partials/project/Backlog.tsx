@@ -18,20 +18,28 @@ import { FlexibleBox } from "@/components/ui/flexible-box";
 
 const BacklogContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const { t } = useTranslation(['backlog'])
+
     const { projectById, readProjectById } = useProjectsContext()
-    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask } = useTasksContext()
+    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
     const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
-    
+
+    const urlTaskIds = searchParams.get("taskIds")
+    const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
+    const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
+
     useEffect(() => {
         // console.log("tasksByID changed")
         if (tasksById.length == 0 && renderTasks) {
             setRenderTasks(undefined)
         }
         if (tasksById.length && !renderTasks) {
-            // console.log("renderTasks", renderTasks, "tasksById", tasksById)
+            console.log("renderTasks", renderTasks, "tasksById", tasksById)
             setRenderTasks(tasksById)
         }
     }, [tasksById])
@@ -42,25 +50,24 @@ const BacklogContainer = () => {
     useEffect(() => {
         if (projectId) {
             setRenderProject(projectById)
+            handleChangeNewTask("Task_Status", "To Do")
             document.title = `Backlog: ${projectById?.Project_Name} - GiveOrTake`
         }
     }, [projectById])
 
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const { t } = useTranslation(['backlog'])
+    // Get user IDs from URL
+    useEffect(() => {
+        if (urlTaskIds) {
+            // If userIds exist in the URL, use them
+            const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : [];
+            setSelectedTaskIds(taskIdsFromURL);
+        } else {
+            setSelectedTaskIds([])
+        }
+    }, [urlTaskIds])
 
-    const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
-    const setActionMenu = (taskId: number) => {
-        setShowActionMenu(showActionMenu === taskId ? null : taskId);
-    };
-
-    const handleCreateTask = () => {
-        addTask(parseInt(projectId), newTask)
-    }
-
-    const currentSort = searchParams.get("sort") || "Task_Title";
-    const currentOrder = searchParams.get("order") || "asc";
+    const currentSort = searchParams.get("sort") || "Task_ID";
+    const currentOrder = searchParams.get("order") || "desc";
 
     const SORT_KEYS: Record<number, keyof Task> = {
         1: "Task_Title",
@@ -70,7 +77,7 @@ const BacklogContainer = () => {
     };
 
     // Default sorting field if an invalid key is used
-    const DEFAULT_SORT_KEY: keyof Task = "Task_CreatedAt";
+    const DEFAULT_SORT_KEY: keyof Task = "Task_ID";
 
     // Function to toggle sorting order
     const handleSort = (column: string) => {
@@ -80,6 +87,7 @@ const BacklogContainer = () => {
 
     // Sorting logic based on URL query parameters
     const sortedTasks = useMemo(() => {
+        console.log("renderTasks sortedTasks = ")
         if (!Array.isArray(renderTasks)) return []; // Ensure tasks is an array
 
         const sortField = SORT_KEYS[Number(currentSort)] || DEFAULT_SORT_KEY; // Convert number to field name
@@ -97,17 +105,83 @@ const BacklogContainer = () => {
         });
     }, [renderTasks, currentSort, currentOrder]);
 
-    const prepareCreateTask = () => {
+    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? prepareCreateTask() : null
+
+    const prepareCreateTask = async () => {
         const newTaskPlaceholder: Task = {
             Project_ID: parseInt(projectId),
+            Team_ID: renderProject?.team?.Team_ID ? renderProject?.team?.Team_ID : 0,
             Task_Title: newTask?.Task_Title || "",
-            Task_Status: "To Do",
-            Task_Number: 0,
-            Team_ID: renderProject?.team?.Team_ID ? renderProject?.team?.Team_ID : 0
+            Task_Status: newTask?.Task_Status || "To Do",
+            Assigned_User_ID: newTask?.Assigned_User_ID
         }
-        
-        addTask(parseInt(projectId), newTaskPlaceholder)
+
+        await addTask(parseInt(projectId), newTaskPlaceholder)
+
+        await readTasksByProjectId(parseInt(projectId), true)
     }
+
+    const archiveTask = async (task: Task) => {
+        if (!task.Task_ID) return
+
+        await removeTask(task.Task_ID, task.Project_ID)
+
+        await readTasksByProjectId(parseInt(projectId), true)
+    }
+
+    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value, checked } = event.target;
+
+        let updatedTaskIds = selectedTaskIds;
+
+        if (checked) {
+            updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
+        } else {
+            updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
+        }
+
+        updateURLParams(updatedTaskIds)
+    };
+
+    const handleSelectAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { checked } = e.target;
+        setSelectAll(checked);
+
+        let updatedTaskIds = selectedTaskIds
+
+        if (checked) {
+            // Select all task IDs
+            updatedTaskIds = sortedTasks.map((task) => task.Task_ID!.toString())
+        } else {
+            // Deselect all task IDs
+            updatedTaskIds = []
+        }
+
+        updateURLParams(updatedTaskIds)
+    };
+
+    const updateURLParams = (newTaskIds?: string[] | string, returnUrl?: boolean) => {
+        const url = new URL(window.location.href)
+
+        if (newTaskIds === undefined) {
+            url.searchParams.delete("taskIds")
+        } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
+            if (newTaskIds.length > 0 && newTaskIds.length <= tasksById.length) {
+                url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
+            } else {
+                url.searchParams.delete("taskIds"); // Remove if empty
+            }
+        }
+        // } else if (newUserId || userId) {
+        //     url.searchParams.set("userId", newUserId || userId!);
+        // }
+
+        if (returnUrl) {
+            return url.toString()
+        } else {
+            router.push(url.toString(), { scroll: false }); // Prevent full page reload
+        }
+    };
 
     return (
         <BacklogContainerView
@@ -116,13 +190,16 @@ const BacklogContainer = () => {
             newTask={newTask}
             currentSort={currentSort}
             currentOrder={currentOrder}
-            showActionMenu={showActionMenu}
             t={t}
+            selectedTaskIds={selectedTaskIds}
+            selectAll={selectAll}
             handleSort={handleSort}
             handleCreateTask={prepareCreateTask}
+            ifEnter={ifEnter}
             handleChangeNewTask={handleChangeNewTask}
             setTaskDetail={setTaskDetail}
-            setActionMenu={setActionMenu}
+            handleCheckboxChange={handleCheckboxChange}
+            handleSelectAllChange={handleSelectAllChange}
         />
     );
 }
@@ -133,13 +210,16 @@ export interface BacklogContainerViewProps {
     newTask: Task | undefined;
     currentSort: string;
     currentOrder: string;
-    showActionMenu: number | null;
     t: TFunction
+    selectedTaskIds: string[]
+    selectAll: boolean
     handleSort: (column: string) => void;
     handleCreateTask: () => void;
+    ifEnter: (e: React.KeyboardEvent) => Promise<void> | null
     handleChangeNewTask: (field: TaskFields, value: string) => Promise<void>
     setTaskDetail: (task: Task) => void;
-    setActionMenu: (taskId: number) => void;
+    handleCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+    handleSelectAllChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
@@ -148,12 +228,15 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     currentSort,
     currentOrder,
     newTask,
-    showActionMenu,
+    selectedTaskIds,
+    selectAll,
     handleSort,
     handleCreateTask,
+    ifEnter,
     handleChangeNewTask,
-    setActionMenu,
     setTaskDetail,
+    handleCheckboxChange,
+    handleSelectAllChange
 }) => {
     return (
         <Block className="page-content">
@@ -165,21 +248,28 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
             </Link>
             {/* <Heading variant="h1">{`Backlog: ${renderProject?.Project_Name}`}</Heading> */}
             <FlexibleBox
-                    title={`Backlog: ${renderProject?.Project_Name}`}
-                    icon={faList}
-                    className="no-box w-auto inline-block"
-                    numberOfColumns={2}
+                title={`Backlog: ${renderProject?.Project_Name}`}
+                icon={faList}
+                className="no-box w-auto inline-block"
+                numberOfColumns={2}
             >
                 <table className={styles.taskTable}>
                     <thead>
                         <tr>
+                            <th>
+                                <input
+                                    type="checkbox"
+                                    checked={selectAll}
+                                    onChange={handleSelectAllChange}
+                                />
+                            </th>
+                            <th onClick={() => handleSort("2")}>
+                                <Text variant="span">Task Key</Text>
+                                {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
                             <th onClick={() => handleSort("1")}>
                                 <Text variant="span">Task Title</Text>
                                 {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                            </th>
-                            <th onClick={() => handleSort("2")}>
-                                <Text variant="span">Task Number</Text>
-                                {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
                             </th>
                             <th onClick={() => handleSort("3")}>
                                 <Text variant="span">Status</Text>
@@ -193,50 +283,94 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                 <Text variant="span">Created At</Text>
                                 {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
                             </th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td colSpan={5}>
-                                <Block className={styles.inputContainer}>
-                                    <Field
-                                        type="text"
-                                        lbl="New Task"
-                                        innerLabel={true}
-                                        value={newTask?.Task_Title ?? ''}
-                                        onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
-                                        disabled={false}
-                                    />
-                                    <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
-                                        <FontAwesomeIcon icon={faPlus} /> Add
-                                    </button>
-                                </Block>
+                            <td colSpan={2}></td>
+                            <td>
+                                <Field
+                                    type="text"
+                                    lbl="New Task"
+                                    innerLabel={true}
+                                    value={newTask?.Task_Title ?? ''}
+                                    onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
+                                    onKeyDown={
+                                        (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                                            ifEnter(event)
+                                    }
+                                    disabled={false}
+                                    className="w-full"
+                                />
+                            </td>
+                            <td>
+                                {/* Dropdown to change the status */}
+                                <select
+                                    value={newTask?.Task_Status}
+                                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                                        const newStatus = event.target.value as Task["Task_Status"]
+                                        handleChangeNewTask("Task_Status", newStatus)
+                                    }}
+                                    className="p-2 border rounded"
+                                >
+                                    <option value="To Do">To Do</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Waiting for Review">Waiting for Review</option>
+                                    <option value="Done">Done</option>
+                                </select>
+                            </td>
+                            <td>
+                                {/* Dropdown to change the user assignee */}
+                                <select
+                                    value={newTask?.Assigned_User_ID}
+                                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                                        const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
+                                        if (newAssigneeID) handleChangeNewTask("Assigned_User_ID", newAssigneeID.toString())
+                                    }}
+                                    className="p-2 border rounded"
+                                >
+                                    <option value="">Assignee</option>
+                                    {renderProject?.team?.user_seats?.map(userSeat => {
+                                        return (
+                                            <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
+                                        )
+                                    })}
+                                </select>
+                            </td>
+                            <td>
+                                <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
+                                    <FontAwesomeIcon icon={faPlus} /> Create
+                                </button>
                             </td>
                         </tr>
                         {sortedTasks.map((task) => (
                             <tr key={task.Task_ID}>
-                                <td>{task.Task_Title}</td>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        value={task.Task_ID}
+                                        checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
+                                        onChange={handleCheckboxChange}
+                                    />
+                                </td>
                                 <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                    GOT-{task.Task_Number}
+                                    {renderProject?.Project_Key}-{task.Task_Key}
+                                </td>
+                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                    {task.Task_Title}
                                 </td>
                                 <td className={styles.status}>{task.Task_Status}</td>
-                                <td>{task.Assigned_User_ID ? `User ${task.Assigned_User_ID}` : "Unassigned"}</td>
-                                <td>{task.Task_CreatedAt ? (
-                                    new Date(task.Task_CreatedAt).toLocaleString()
-                                ): (
-                                    "N/A"
-                                )}</td>
-                                <td className={styles.actions}>
-                                    <button onClick={() => task.Task_ID && setActionMenu(task.Task_ID)} className={styles.actionButton}>
-                                        <FontAwesomeIcon icon={faEllipsisV} />
-                                    </button>
-                                    {showActionMenu === task.Task_ID && (
-                                        <div className={styles.actionMenu}>
-                                            <button>Edit</button>
-                                            <button>Archive</button>
-                                            <button>Details</button>
-                                        </div>
+                                {(() => {
+                                    const assignee = renderProject?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
+                                    return (
+                                        <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
+                                    )
+                                })()}
+                                <td>
+                                    {task.Task_CreatedAt ? (
+                                        new Date(task.Task_CreatedAt).toLocaleString()
+                                    ) : (
+                                        "N/A"
                                     )}
                                 </td>
                             </tr>
@@ -244,7 +378,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                     </tbody>
                 </table>
             </FlexibleBox>
-        </Block>
+        </Block >
     );
 };
 

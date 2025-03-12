@@ -37,7 +37,7 @@ export type UsersContextType = {
     handleChangeNewUser: (field: UserFields, value: string) => Promise<void>
     addUser: (parentId: number, object?: User) => Promise<void>
     saveUserChanges: (itemChanges: User, parentId: number) => Promise<void>
-    removeUser: (itemId: number, parentId: number) => void;
+    removeUser: (itemId: number, parentId: number) => Promise<void>
     // userLoading: boolean;
     // userError: string | null;
 };
@@ -100,7 +100,7 @@ export type OrganisationsContextType = {
     handleChangeNewOrganisation: (field: OrganisationFields, value: string) => Promise<void>
     addOrganisation: (parentId: number, object?: Organisation) => Promise<void>
     saveOrganisationChanges: (organisationChanges: Organisation, parentId: number) => Promise<void>
-    removeOrganisation: (itemId: number, parentId: number) => void;
+    removeOrganisation: (itemId: number, parentId: number) => Promise<void>
 };
 
 const OrganisationsContext = createContext<OrganisationsContextType | undefined>(undefined);
@@ -167,7 +167,7 @@ export type TeamsContextType = {
     handleChangeNewTeam: (field: TeamFields, value: string) => Promise<void>
     addTeam: (parentId: number, object?: Team) => Promise<void>
     saveTeamChanges: (teamChanges: Team, parentId: number) => Promise<void>
-    removeTeam: (itemId: number, parentId: number) => void;
+    removeTeam: (itemId: number, parentId: number) => Promise<void>
 };
 
 const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
@@ -232,7 +232,7 @@ export type TeamUserSeatsContextType = {
     handleChangeNewTeamUserSeat: (field: TeamUserSeatFields, value: string) => Promise<void>
     addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
     saveTeamUserSeatChanges: (teamUserSeatChanges: TeamUserSeat, parentId: number) => Promise<void>
-    removeTeamUserSeat: (itemId: number, parentId: number) => void;
+    removeTeamUserSeat: (itemId: number, parentId: number) => Promise<void>
 };
 
 const TeamUserSeatsContext = createContext<TeamUserSeatsContextType | undefined>(undefined);
@@ -295,7 +295,7 @@ export type ProjectsContextType = {
     handleChangeNewProject: (field: ProjectFields, value: string) => Promise<void>
     addProject: (parentId: number, object?: Project) => Promise<void>
     saveProjectChanges: (projectChanges: Project, parentId: number) => Promise<void>
-    removeProject: (itemId: number, parentId: number) => void;
+    removeProject: (itemId: number, parentId: number) => Promise<void>
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -372,10 +372,10 @@ export type TasksContextType = {
     readTasksByProjectId: (parentId: number, refresh?: boolean) => Promise<void>
     readTaskById: (itemId: number) => Promise<void>
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
-    handleChangeNewTask: (field: TaskFields, value: string) => Promise<void>
+    handleChangeNewTask: (field: TaskFields, value: string, object?: Task) => Promise<void>
     addTask: (parentId: number, object?: Task) => Promise<void>
     saveTaskChanges: (taskChanges: Task, parentId: number) => Promise<void>
-    removeTask: (itemId: number, parentId: number) => void
+    removeTask: (itemId: number, parentId: number) => Promise<void>
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined)
@@ -476,7 +476,7 @@ export type TaskTimeTrackContextType = {
     handleChangeNewTaskTimeTrack: (field: keyof TaskTimeTrack, value: string, object?: TaskTimeTrack | undefined) => Promise<void>;
     addTaskTimeTrack: (taskId: number, object?: TaskTimeTrack | undefined) => Promise<void>;
     saveTaskTimeTrackChanges: (taskTimeTrackChanges: TaskTimeTrack, taskId: number) => Promise<void>;
-    removeTaskTimeTrack: (itemId: number, taskId: number) => void;
+    removeTaskTimeTrack: (itemId: number, parentId: number) => Promise<void>
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
     latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
     taskTimeTracksByProjectId: TaskTimeTrack[]
@@ -713,7 +713,7 @@ export type TaskCommentsContextType = {
     handleChangeNewTaskComment: (field: TaskCommentFields, value: string, object?: TaskComment | undefined) => Promise<void>
     addTaskComment: (parentId: number, object?: TaskComment | undefined) => Promise<void>
     saveTaskCommentChanges: (taskCommentChanges: TaskComment, parentId: number) => Promise<void>
-    removeTaskComment: (itemId: number, parentId: number) => void;
+    removeTaskComment: (itemId: number, parentId: number) => Promise<void>
 }
 
 const TaskCommentsContext = createContext<TaskCommentsContextType | undefined>(undefined);
@@ -779,7 +779,7 @@ export type TaskMediaFilesContextType = {
     handleChangeNewTaskMediaFile: (field: TaskMediaFileFields, value: string) => Promise<void>
     addTaskMediaFile: (parentId: number, object?: TaskMediaFile | undefined) => Promise<void>
     saveTaskMediaFileChanges: (taskMediaFileChanges: TaskMediaFile, parentId: number) => Promise<void>
-    removeTaskMediaFile: (itemId: number, parentId: number) => void
+    removeTaskMediaFile: (itemId: number, parentId: number) => Promise<void>
 }
 
 const TaskMediaFilesContext = createContext<TaskMediaFilesContextType | undefined>(undefined);

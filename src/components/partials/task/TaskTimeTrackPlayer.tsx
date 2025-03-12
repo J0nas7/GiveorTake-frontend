@@ -1,17 +1,20 @@
 // External
 import React, { useEffect, useState } from 'react'
-import clsx from 'clsx';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import { faStop } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
 import { Block } from '@/components/ui/block-text'
 import { selectAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from '@/redux';
 import { useTasksContext, useTaskTimeTrackContext } from '@/contexts';
 import { TaskTimeTrack } from '@/types';
-import Link from 'next/link';
 
 export const TaskTimeTrackPlayer = () => {
+    const searchParams = useSearchParams();
+    const urlTaskIds = searchParams.get("taskIds")
+
     const { latestUniqueTaskTimeTracksByProject, getLatestUniqueTaskTimeTracksByProject, handleTaskTimeTrack } = useTaskTimeTrackContext()
     const { taskDetail } = useTasksContext()
     const { fetchIsLoggedInStatus } = useAuthActions()
@@ -25,10 +28,10 @@ export const TaskTimeTrackPlayer = () => {
         if (taskTimeTrack) getLatestUniqueTaskTimeTracksByProject(taskTimeTrack.Project_ID)
     }, [taskTimeTrack])
 
-    if (!taskTimeTrack || taskDetail) return null
+    if (!taskTimeTrack || taskDetail || urlTaskIds) return null
 
     return (
-        <Block className="timetrackplayer-container">
+        <Block className="taskplayer-container">
             <Block className="timetrack-metric">
                 {taskTimeTrack && (
                     <Block variant="span" className="w-full flex gap-3 items-center">

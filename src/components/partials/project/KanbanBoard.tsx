@@ -52,12 +52,20 @@ const KanbanBoardContainer = () => {
         done: "Done"
     }
 
+    const archiveTask = async (task: Task) => {
+        if (!task.Task_ID) return
+        
+        await removeTask(task.Task_ID, task.Project_ID)
+
+        await readTasksByProjectId(parseInt(projectId), true)
+    }
+
     return (
         <KanbanBoardView
             project={renderProject}
             tasks={renderTasks}
             columns={columns}
-            removeTask={removeTask}
+            archiveTask={archiveTask}
             setTaskDetail={setTaskDetail}
         />
     )
@@ -67,7 +75,7 @@ export interface KanbanBoardViewProps {
     project: Project | undefined
     tasks: Task[] | undefined
     columns: { [key: string]: string }
-    removeTask: (taskId: number, projectId: number) => void
+    archiveTask: (task: Task) => Promise<void>
     setTaskDetail: (task: Task) => void
 }
 
@@ -75,7 +83,7 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
     project,
     tasks,
     columns,
-    removeTask,
+    archiveTask,
     setTaskDetail
 }) => {
     return (
@@ -108,7 +116,7 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
                                                 {task.Task_Title}
                                             </Text>
                                             <button
-                                                onClick={() => removeTask(task.Task_ID, task.Project_ID)}
+                                                onClick={() => archiveTask(task)}
                                                 className={styles.removeButton}
                                             >
                                                 <FontAwesomeIcon icon={faTrash} />

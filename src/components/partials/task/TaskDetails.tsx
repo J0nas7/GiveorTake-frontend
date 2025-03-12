@@ -298,7 +298,7 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
         if (newComment.trim() && authUser.User_ID) {
             const theNewComment: TaskComment = {
-                Task_ID: task.Task_ID,
+                Task_ID: task.Task_ID ?? 0,
                 User_ID: authUser.User_ID,
                 Comment_Text: newComment.trim()
             }
@@ -674,7 +674,7 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
             <p><strong>Team:</strong> {task.project?.team?.Team_Name}</p>
             <p>
                 <strong>Created At:</strong>{" "}
-                {new Date(task.Task_CreatedAt).toLocaleString()}
+                {task.Task_CreatedAt && new Date(task.Task_CreatedAt).toLocaleString()}
             </p>
             <p>
                 <strong>Due Date:</strong>{" "}

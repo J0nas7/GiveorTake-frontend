@@ -98,10 +98,10 @@ export const LeftNav: React.FC = () => {
                                 <li className="ml-[-1.5rem]">
                                     <Block
                                         className="flex gap-2 items-center cursor-pointer"
-                                        onClick={() => handleToggle(project.Project_ID.toString())}
+                                        onClick={() => project.Project_ID && handleToggle(project.Project_ID.toString())}
                                     >
                                         <FontAwesomeIcon
-                                            icon={visibleProject === project.Project_ID.toString() ? faChevronDown : faChevronRight}
+                                            icon={project.Project_ID && visibleProject === project.Project_ID.toString() ? faChevronDown : faChevronRight}
                                             className="button-link !px-0"
                                         />
                                         <Link
@@ -119,7 +119,7 @@ export const LeftNav: React.FC = () => {
                                 </li>
 
                                 {/* Rendering Navigation Links */}
-                                {visibleProject === project.Project_ID.toString() && (
+                                {project.Project_ID && visibleProject === project.Project_ID.toString() && (
                                     <ul>
                                         {Object.entries(navLinks).map(([url, title]) => (
                                             <li key={url}>

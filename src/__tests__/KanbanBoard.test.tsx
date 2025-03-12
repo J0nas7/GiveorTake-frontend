@@ -19,6 +19,7 @@ const mockProject: Project = {
     Project_ID: 1,
     Team_ID: 1,
     Project_Name: "Test Project",
+    Project_Key: "TEST",
     Project_Status: "Active",
     Project_Description: "This is a test project",
     Project_Start_Date: "2025-01-01",
@@ -32,7 +33,7 @@ const mockProject: Project = {
 const mockTasks: Task[] = [
     {
         Task_ID: 1,
-        Task_Number: 1,
+        Task_Key: "TEST-1",
         Project_ID: 1,
         Team_ID: 1,
         Task_Title: "Test Task 1",
@@ -43,7 +44,7 @@ const mockTasks: Task[] = [
     },
     {
         Task_ID: 2,
-        Task_Number: 2,
+        Task_Key: "TEST-2",
         Project_ID: 1,
         Team_ID: 1,
         Task_Title: "Test Task 2",

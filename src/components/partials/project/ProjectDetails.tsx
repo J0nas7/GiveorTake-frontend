@@ -112,6 +112,16 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                                         name="Project_Name"
                                     />
                                 </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="Project Key"
+                                        variant="outlined"
+                                        fullWidth
+                                        value={renderProject?.Project_Key}
+                                        onChange={(e) => handleProjectChange("Project_Key", e.target.value)}
+                                        name="Project_Key"
+                                    />
+                                </Grid>
                                 <Grid item xs={12}>
                                     <Text>Project Description</Text>
                                     <ReactQuill

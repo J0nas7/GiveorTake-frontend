@@ -6,6 +6,7 @@ import { Header, LeftNav, Footer } from "../";
 import { TasksProvider } from "@/contexts";
 import { TaskDetailWithModal } from "@/components/partials/task/TaskDetails";
 import { TaskTimeTrackPlayer } from "@/components/partials/task/TaskTimeTrackPlayer";
+import { TaskBuldActionMenu } from "@/components/partials/task/TaskBuldActionMenu";
 
 export const PrivateLayout = (
     { children }: { children: React.ReactNode }
@@ -14,6 +15,7 @@ export const PrivateLayout = (
         <div className="layout-container">
             <TaskDetailWithModal />
             <TaskTimeTrackPlayer />
+            <TaskBuldActionMenu />
             <Header />
             <div className="content-wrapper">
                 <LeftNav />

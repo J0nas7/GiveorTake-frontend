@@ -1,5 +1,5 @@
 // External
-import axios from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 
 // Internal
 import { env, paths } from '@/env.urls'
@@ -44,7 +44,7 @@ export const useAxios = () => {
             Accept: 'application/json',
             Authorization: `Bearer ${accessToken}`//+getCurrentToken(tokenName)
         }
-        let config = {
+        let config: AxiosRequestConfig = {
             withCredentials: true,
             headers: headers,
         }
@@ -59,7 +59,7 @@ export const useAxios = () => {
             }
             dataToSend = formData;
             // Adjust headers for file upload
-            config.headers['Content-Type'] = 'multipart/form-data';
+            if (config.headers) config.headers['Content-Type'] = 'multipart/form-data';
         } else {
             dataToSend = postContent
             // Otherwise, stringify postContent for non-file data

@@ -7,6 +7,7 @@ import Link from "next/link";
 // Internal
 import styles from "../styles/modules/Header.module.scss";
 import { Block, Text } from "@/components";
+import SearchBar from "./SearchBar";
 
 export const Header: React.FC = () => {
     return (
@@ -30,6 +31,9 @@ export const Header: React.FC = () => {
                         </Text>
                     </Block>
                 </Link>
+                
+                <SearchBar />
+                
                 <nav>
                     <ul className={styles.navList}>
                         <li>

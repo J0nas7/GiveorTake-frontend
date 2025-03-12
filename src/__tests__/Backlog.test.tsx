@@ -11,6 +11,7 @@ const mockProps: BacklogContainerViewProps = {
         Project_ID: 1,
         Team_ID: 1,
         Project_Name: "Test Project",
+        Project_Key: "TEST",
         Project_Status: "Active",
         Project_CreatedAt: "2024-01-01",
         Project_UpdatedAt: "2024-03-01",
@@ -18,7 +19,7 @@ const mockProps: BacklogContainerViewProps = {
     sortedTasks: [
         {
             Task_ID: 1,
-            Task_Number: 101,
+            Task_Key: "TEST-101",
             Project_ID: 1,
             Team_ID: 1,
             Task_Title: "Task 1",
@@ -28,7 +29,7 @@ const mockProps: BacklogContainerViewProps = {
         },
         {
             Task_ID: 2,
-            Task_Number: 102,
+            Task_Key: "TEST-102",
             Project_ID: 1,
             Team_ID: 1,
             Task_Title: "Task 2",
@@ -39,7 +40,7 @@ const mockProps: BacklogContainerViewProps = {
     ],
     newTask: {
         Task_ID: 3,
-        Task_Number: 103,
+        Task_Key: "TEST-103",
         Project_ID: 1,
         Team_ID: 1,
         Task_Title: "New Task",

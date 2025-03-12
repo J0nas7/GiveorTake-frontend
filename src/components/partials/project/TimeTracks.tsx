@@ -34,7 +34,7 @@ export const TimeTracksContainer = () => {
 
     const [filterTimeEntries, setFilterTimeEntries] = useState<boolean>(false)
 
-    const urlUserId = searchParams.get("userIds")
+    const urlUserIds = searchParams.get("userIds")
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
 
     const { projectById, readProjectById } = useProjectsContext();
@@ -97,9 +97,9 @@ export const TimeTracksContainer = () => {
 
     // Get user IDs from URL
     useEffect(() => {
-        if (urlUserId) {
+        if (urlUserIds) {
             // If userIds exist in the URL, use them
-            const userIdsFromURL = urlUserId ? urlUserId.split(",") : [];
+            const userIdsFromURL = urlUserIds ? urlUserIds.split(",") : [];
             setSelectedUserIds(userIdsFromURL);
         } else if (teamUserSeatsById.length) {
             // If no userIds in URL, select all users by default
@@ -109,7 +109,7 @@ export const TimeTracksContainer = () => {
                 .filter((userId) => userId !== undefined) // Remove undefined values
             setSelectedUserIds(allUserIds)
         }
-    }, [urlUserId, teamUserSeatsById])
+    }, [urlUserIds, teamUserSeatsById])
 
     // Fetch project data
     useEffect(() => {

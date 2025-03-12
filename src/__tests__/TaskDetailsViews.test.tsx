@@ -16,7 +16,7 @@ import { Task } from '@/types';
 
 const mockTask: Task = {
     Task_ID: 1,
-    Task_Number: 1,
+    Task_Key: "TEST-1",
     Project_ID: 1,
     Team_ID: 1,
     Assigned_User_ID: 2,
@@ -28,35 +28,77 @@ const mockTask: Task = {
     Task_UpdatedAt: '2024-05-02',
 };
 
+const mockRef = { current: { focus: jest.fn() } } as unknown as React.RefObject<HTMLInputElement>;
+
 describe('TitleAreaView', () => {
     test('renders correctly with valid task', () => {
-        render(<TitleAreaView task={mockTask} saveTaskChanges={jest.fn()} />);
+        render(<TitleAreaView
+            isEditing={false}
+            setIsEditing={jest.fn()}
+            title={"Samle Task"}
+            setTitle={jest.fn()}
+            inputRef={mockRef}
+            task={mockTask}
+            handleBlur={jest.fn()}
+        />);
         expect(screen.getByText('Sample Task')).toBeInTheDocument();
     });
 
     test('renders placeholder when task title is empty', () => {
-        render(<TitleAreaView task={{ ...mockTask, Task_Title: '' }} saveTaskChanges={jest.fn()} />);
+        render(<TitleAreaView
+            isEditing={false}
+            setIsEditing={jest.fn()}
+            title={"Samle Task"}
+            setTitle={jest.fn()}
+            inputRef={mockRef}
+            task={{ ...mockTask, Task_Title: '' }}
+            handleBlur={jest.fn()}
+        />);
         expect(screen.getByText('Click to add title...')).toBeInTheDocument();
     });
 
     test('calls saveTaskChanges on blur', () => {
-        const saveTaskChangesMock = jest.fn();
-        render(<TitleAreaView task={mockTask} saveTaskChanges={saveTaskChangesMock} />);
+        const handleBlurMock = jest.fn();
+        render(<TitleAreaView
+            isEditing={false}
+            setIsEditing={jest.fn()}
+            title={"Samle Task"}
+            setTitle={jest.fn()}
+            inputRef={mockRef}
+            task={mockTask}
+            handleBlur={handleBlurMock}
+        />);
         fireEvent.click(screen.getByText('Sample Task'));
         fireEvent.blur(screen.getByRole('textbox'));
-        expect(saveTaskChangesMock).toHaveBeenCalled();
+        expect(handleBlurMock).toHaveBeenCalled();
     });
 
     // Edge case: long title
     test('renders long task title without breaking layout', () => {
         const longTitle = 'A'.repeat(300);
-        render(<TitleAreaView task={{ ...mockTask, Task_Title: longTitle }} saveTaskChanges={jest.fn()} />);
+        render(<TitleAreaView
+            isEditing={false}
+            setIsEditing={jest.fn()}
+            title={"Samle Task"}
+            setTitle={jest.fn()}
+            inputRef={mockRef}
+            task={{ ...mockTask, Task_Title: longTitle }}
+            handleBlur={jest.fn()}
+        />);
         expect(screen.getByText(longTitle)).toBeInTheDocument();
     });
 
     // Edge case: undefined task
     test('handles undefined task gracefully', () => {
-        render(<TitleAreaView task={undefined as any} saveTaskChanges={jest.fn()} />);
+        render(<TitleAreaView
+            isEditing={false}
+            setIsEditing={jest.fn()}
+            title={"Samle Task"}
+            setTitle={jest.fn()}
+            inputRef={mockRef}
+            task={undefined as any}
+            handleBlur={jest.fn()}
+        />);
         expect(screen.getByText('Click to add title...')).toBeInTheDocument();
     });
 });
