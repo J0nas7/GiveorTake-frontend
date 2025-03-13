@@ -176,9 +176,10 @@ export type TaskCommentFields =
 
 // Task Media File Type
 export type TaskMediaFile = {
-    Media_ID: number;
+    Media_ID?: number;
     Task_ID: number;
     Uploaded_By_User_ID: number;
+    Media_File: File | null;
     Media_File_Name: string;
     Media_File_Path: string;
     Media_File_Type: string; // E.g. 'image/jpeg', 'application/pdf'

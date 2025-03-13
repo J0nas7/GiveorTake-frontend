@@ -24,8 +24,8 @@ const loadQuill = async () => {
 
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
-import { useTaskCommentsContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
-import { Task, TaskComment, TaskTimeTrack, TeamUserSeat, User } from "@/types";
+import { useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
+import { Task, TaskComment, TaskMediaFile, TaskTimeTrack, TeamUserSeat, User } from "@/types";
 import Link from "next/link";
 import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
@@ -44,8 +44,7 @@ export const Card: React.FC<CardProps> = ({ children, className = "" }) => {
 };
 
 const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
-    const { readTasksByProjectId, readTaskById, saveTaskChanges } = useTasksContext();
+    const { readTasksByProjectId, readTaskByKeys, saveTaskChanges } = useTasksContext();
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [isEditing, setIsEditing] = useState(false);
@@ -66,9 +65,9 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
         );
 
         //// Task changed
-        if (projectId || taskId) {
-            if (projectId) readTasksByProjectId(parseInt(projectId), true)
-            if (taskId) readTaskById(parseInt(taskId))
+        if (task) {
+            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
+            if (task.project?.Project_Key && task.Task_Key) readTaskByKeys(task.project.Project_Key, task.Task_Key.toString())
         }
     };
 
@@ -122,8 +121,7 @@ export const TitleAreaView: React.FC<TitleAreaViewProps> = ({
 };
 
 const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
-    const { readTaskById, readTasksByProjectId, saveTaskChanges } = useTasksContext();
+    const { readTaskByKeys, readTasksByProjectId, saveTaskChanges } = useTasksContext();
     const [isEditing, setIsEditing] = useState(false);
     const [description, setDescription] = useState(task.Task_Description || "");
 
@@ -135,9 +133,9 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
         )
 
         //// Task changed
-        if (projectId || taskId) {
-            if (projectId) readTasksByProjectId(parseInt(projectId), true)
-            if (taskId) readTaskById(parseInt(taskId))
+        if (task) {
+            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
+            if (task.project?.Project_Key && task.Task_Key) readTaskByKeys(task.project.Project_Key, task.Task_Key.toString())
         }
     };
 
@@ -252,27 +250,68 @@ export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> =
     };
 
 const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
+    const [toggleAddFile, setToggleAddFile] = useState<boolean>(false)
+
     return (
-        <MediaFilesAreaView
-            task={task}
-        />
+        <>
+            {!toggleAddFile ? (
+                <MediaFilesAreaView
+                    task={task}
+                    setToggleAddFile={setToggleAddFile}
+                />
+            ) : (
+                <AddTaskMediaFile
+                    task={task}
+                    setToggleAddFile={setToggleAddFile}
+                />
+            )}
+        </>
     );
 };
 
 interface MediaFilesAreaViewProps {
     task: Task;
+    setToggleAddFile: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task }) => {
+export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, setToggleAddFile }) => {
     return (
         <Card className={styles.mediaSection}>
-            <h2>Media Files</h2>
+            <Block className="flex gap-2 items-center">
+                <h2>Media Files</h2>
+                <button
+                    className="blue-link-light"
+                    onClick={() => setToggleAddFile(true)}
+                >
+                    Add file
+                </button>
+            </Block>
             <Block className={styles.mediaPlaceholders}>
-                {[1, 2, 3].map((index) => (
-                    <Block key={index} className={styles.mediaItem}>
-                        <Block className={styles.mediaPlaceholder}>Image {index}</Block>
+                {task.media_files?.map((media, index) => (
+                    <Block key={index} className={clsx(
+                        styles.mediaItem,
+                        "flex flex-col items-center"
+                    )}>
+                        <Block variant="span" className="font-semibold text-xs">
+                            {/* Split the Media_File_Name by hyphen (-) and get the part after the first hyphen */}
+                            {media.Media_File_Name.split('-').slice(1).join('-')}
+                        </Block>
+                        {media.Media_File_Type === "jpeg" ? (
+                            <img 
+                                className={styles.mediaPlaceholder}
+                                src={`http://localhost:8000/storage/${media.Media_File_Path}`}
+                            />
+                        ) : (
+                            <Link 
+                                className={styles.mediaPlaceholder}
+                                href={`http://localhost:8000/storage/${media.Media_File_Path}`}
+                                target="_blank"
+                            >
+                                <Text variant="span" className="text-sm font-semibold">PDF</Text>
+                            </Link>
+                        )}
                         <Block className={styles.mediaMeta}>
-                            <span>Created: {new Date().toISOString().split('T')[0]}</span>
+                            <span>Created: {new Date(media.Media_CreatedAt).toLocaleString()}</span>
                             <Block className={styles.mediaActions}>
                                 <FontAwesomeIcon icon={faEdit} className={styles.icon} />
                                 <FontAwesomeIcon icon={faTrash} className={styles.icon} />
@@ -285,10 +324,115 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task }) 
     );
 };
 
+type AddTaskMediaFileProps = {
+    task: Task; // Task ID to associate the media file with
+    setToggleAddFile: React.Dispatch<React.SetStateAction<boolean>>
+};
+
+export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({ task, setToggleAddFile }) => {
+    // Hooks
+    const { addTaskMediaFile } = useTaskMediaFilesContext()
+    const { readTasksByProjectId, readTaskByKeys } = useTasksContext()
+
+    // Internal variables
+    const [file, setFile] = useState<File | null>(null);
+    const [mediaFileName, setMediaFileName] = useState<string>("");
+    const [mediaFileType, setMediaFileType] = useState<string>("");
+
+    /**
+     * Methods
+     */
+    // Handle file change
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) {
+            setFile(selectedFile);
+            setMediaFileName(selectedFile.name);
+            setMediaFileType(selectedFile.type);
+        }
+    };
+
+    // Handle form submission
+    const handleSubmit = async (e: React.FormEvent) => {
+        if (!task.Task_ID) return
+
+        e.preventDefault();
+
+        if (!file || !mediaFileName || !mediaFileType) {
+            alert("Please select a file and provide all necessary details.");
+            return;
+        }
+
+        // Prepare the media file object
+        const newMediaFile: TaskMediaFile = {
+            Task_ID: task.Task_ID,
+            Uploaded_By_User_ID: 1, // You can get the user ID dynamically (e.g., from auth context)
+            Media_File: file,
+            Media_File_Name: mediaFileName,
+            Media_File_Path: "", // Will be populated by the response from API
+            Media_File_Type: mediaFileType,
+            Media_CreatedAt: new Date().toISOString(), // Current timestamp
+            Media_UpdatedAt: new Date().toISOString(),
+        };
+
+        // Send the file to the API through the context function
+        if (addTaskMediaFile) {
+            await addTaskMediaFile(task.Task_ID, newMediaFile);
+            alert("Media file uploaded successfully!");
+            // Clear form
+            setFile(null);
+            setMediaFileName("");
+            setMediaFileType("");
+
+            //// Task changed
+            if (task) {
+                if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true)
+                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+            }
+
+            setToggleAddFile(false);
+        }
+    };
+
+    if (!task.Task_ID) return
+
+    return (
+        <Card className={styles.mediaSection}>
+            <Block className="flex gap-2 items-center">
+                <h2>Upload Media File</h2>
+                <button
+                    className="blue-link-light"
+                    onClick={() => setToggleAddFile(false)}
+                >
+                    Cancel
+                </button>
+            </Block>
+            <form
+                onSubmit={handleSubmit}
+                className="flex items-center justify-between"
+            >
+                <input
+                    type="file"
+                    id="mediaFile"
+                    name="mediaFile"
+                    accept="image/jpeg, image/png, application/pdf"
+                    onChange={handleFileChange}
+                />
+                <button
+                    type="submit"
+                    disabled={!file}
+                    className="blue-link"
+                >
+                    Upload Media File
+                </button>
+            </form>
+        </Card>
+    );
+};
+
 const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
     const { addTaskComment } = useTaskCommentsContext();
-    const { readTasksByProjectId, readTaskById } = useTasksContext()
+    const { readTasksByProjectId, readTaskByKeys } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser)
 
     const [newComment, setNewComment] = useState("");
@@ -310,9 +454,9 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
             setIsEditorVisible(false)
 
             //// Task changed
-            if (projectId || taskId) {
-                if (projectId) readTasksByProjectId(parseInt(projectId), true)
-                if (taskId) readTaskById(parseInt(taskId))
+            if (task) {
+                if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
+                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
             }
         }
     }
@@ -550,7 +694,7 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail
                 <Text variant="span">Share</Text>
             </button>
             {taskDetail !== undefined && (
-                <Link href={`/task/${taskDetail.Task_ID}`} className={clsx(
+                <Link href={`/task/${taskDetail.project?.Project_Key}/${taskDetail.Task_Key}`} className={clsx(
                     "blue-link",
                     styles.ctaButton
                 )}>
@@ -568,7 +712,7 @@ interface TaskDetailsAreaProps {
 
 const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task }) => {
     const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
-    const { readTasksByProjectId, readTaskById, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
+    const { readTasksByProjectId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
 
     const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0) // Total amount of seconds spend
@@ -613,9 +757,9 @@ const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task }) => {
         )
 
         //// Task changed
-        if (projectId || taskId) {
-            if (projectId) readTasksByProjectId(parseInt(projectId), true)
-            if (taskId) readTaskById(parseInt(taskId))
+        if (task) {
+            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
+            if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
         }
 
         if (taskDetail) {

@@ -370,7 +370,7 @@ export type TasksContextType = {
     taskDetail: Task | undefined
     newTask: Task | undefined
     readTasksByProjectId: (parentId: number, refresh?: boolean) => Promise<void>
-    readTaskById: (itemId: number) => Promise<void>
+    // readTaskById: (itemId: number) => Promise<void>
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     handleChangeNewTask: (field: TaskFields, value: string, object?: Task) => Promise<void>
     addTask: (parentId: number, object?: Task) => Promise<void>
@@ -434,7 +434,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 taskDetail,
                 newTask,
                 readTasksByProjectId,
-                readTaskById,
+                // readTaskById,
                 setTaskDetail,
                 handleChangeNewTask,
                 addTask,

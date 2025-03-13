@@ -199,7 +199,7 @@ const SearchBar = () => {
                 break
             case "GT_Tasks":
                 const task: Task = item
-                router.push(`/task/${task.Task_ID}`)
+                router.push(`/task/${task.project?.Project_Key}/${task.Task_Key}`)
                 clearSearch()
                 break
             default:
