@@ -850,25 +850,28 @@ export const TaskDetailWithModal = () => {
 }
 
 export const TaskDetailWithoutModal = () => {
-    const { taskId } = useParams<{ taskId: string }>(); // Get taskId from URL
-    const { taskById, readTaskById, setTaskDetail } = useTasksContext()
+    const { projectKey, taskKey } = useParams<{ projectKey: string, taskKey: string }>(); // Get taskId from URL
+    const { taskByKeys, readTaskByKeys, setTaskDetail } = useTasksContext()
     const taskDetailRef = useRef<HTMLDivElement>(null);
 
     const [renderTask, setRenderTask] = useState<Task | undefined>(undefined)
 
     useEffect(() => {
-        setRenderTask(undefined)
-        readTaskById(parseInt(taskId))
-        setTaskDetail(undefined)
-    }, [taskId])
+        const fetch = async () => {
+            setRenderTask(undefined)
+            await readTaskByKeys(projectKey, taskKey)
+            setTaskDetail(undefined)
+        }
+
+        if (projectKey && taskKey) fetch()
+    }, [projectKey, taskKey])
 
     useEffect(() => {
-        if (taskId) {
-            setRenderTask(taskById)
-            console.log("tasktask", taskId, taskById)
-            document.title = `Task: ${taskById?.Task_Title} - GiveOrTake`
+        if (taskKey) {
+            setRenderTask(taskByKeys)
+            document.title = `Task: ${taskByKeys?.Task_Title} - GiveOrTake`
         }
-    }, [taskById])
+    }, [taskByKeys])
 
     if (!renderTask) return <Block>Task not found</Block>
 

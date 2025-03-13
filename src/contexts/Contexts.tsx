@@ -376,12 +376,16 @@ export type TasksContextType = {
     addTask: (parentId: number, object?: Task) => Promise<void>
     saveTaskChanges: (taskChanges: Task, parentId: number) => Promise<void>
     removeTask: (itemId: number, parentId: number) => Promise<boolean>
+    taskByKeys: Task | undefined
+    readTaskByKeys: (projectKey: string, taskKey: string) => Promise<boolean>
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined)
 
 // TasksProvider using useResourceContext
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { httpGetRequest } = useAxios()
+
     // Use useResourceContext directly for task-related logic
     const {
         itemsById: tasksById,
@@ -403,6 +407,25 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         "projects"
     );
 
+    const [taskByKeys, setTaskByKeys] = useState<Task|undefined>(undefined)
+
+    const readTaskByKeys = async (projectKey: string, taskKey: string) => {
+        try {
+            const data = await httpGetRequest(`taskByKeys/${projectKey}/${taskKey}`)
+
+            if (data) {
+                // Assuming 'data' is the object with task
+                setTaskByKeys(data)
+                return true
+            }
+
+            throw new Error(`Failed to readTaskByKeys`);
+        } catch (error: any) {
+            console.log(error.message || `An error occurred while trying readTaskByKeys.`);
+            return false
+        }
+    }
+
     return (
         <TasksContext.Provider
             value={{
@@ -417,6 +440,8 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 addTask,
                 saveTaskChanges,
                 removeTask,
+                taskByKeys,
+                readTaskByKeys,
                 // taskLoading,
                 // taskError,
             }}
