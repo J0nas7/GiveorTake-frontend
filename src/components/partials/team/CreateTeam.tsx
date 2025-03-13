@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
 // Internal
-import { useTeamsContext } from "@/contexts";
+import { useOrganisationsContext, useTeamsContext } from "@/contexts";
 import { Team, TeamFields } from "@/types";
 import { Block, Text } from "@/components/ui/block-text";
 import { FlexibleBox } from "@/components/ui/flexible-box";
@@ -24,6 +24,7 @@ const CreateTeam: React.FC = () => {
     const router = useRouter();
     const authUser = useTypedSelector(selectAuthUser)
     const { addTeam } = useTeamsContext()
+    const { organisationById, readOrganisationById } = useOrganisationsContext()
     
     // Internal variables
     const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
@@ -54,6 +55,21 @@ const CreateTeam: React.FC = () => {
         await addTeam(parseInt(organisationId), newTeam);
         router.push(`/organisation/${organisationId}`); // Redirect to organisation page
     };
+
+    /**
+     * Effects
+     */
+    useEffect(() => {
+        if (organisationId) readOrganisationById(parseInt(organisationId))
+    }, [organisationId])
+
+    useEffect(() => {
+        if (organisationById && authUser) {
+            if (organisationById.User_ID !== authUser.User_ID) {
+                router.push(`/organisation/${organisationById.Organisation_ID}`)
+            }
+        }
+    }, [organisationById])
 
     return (
         <Block className="page-content">

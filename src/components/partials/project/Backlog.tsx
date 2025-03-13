@@ -30,6 +30,7 @@ const BacklogContainer = () => {
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     const urlTaskIds = searchParams.get("taskIds")
+    const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
 
@@ -90,9 +91,17 @@ const BacklogContainer = () => {
         console.log("renderTasks sortedTasks = ")
         if (!Array.isArray(renderTasks)) return []; // Ensure tasks is an array
 
+        let arrayToSort: Task[] = renderTasks
+
+        if (urlTaskBulkFocus && urlTaskIds) {
+            const taskIdsBulkFocus: string[] = urlTaskIds.split(",")
+
+            arrayToSort = arrayToSort.filter(task => taskIdsBulkFocus.includes(task.Task_ID!.toString()))
+        }
+
         const sortField = SORT_KEYS[Number(currentSort)] || DEFAULT_SORT_KEY; // Convert number to field name
 
-        return [...renderTasks].sort((a, b) => {
+        return [...arrayToSort].sort((a, b) => {
             const aValue = a[sortField] ?? "";
             const bValue = b[sortField] ?? "";
 
@@ -103,7 +112,7 @@ const BacklogContainer = () => {
             }
             return 0;
         });
-    }, [renderTasks, currentSort, currentOrder]);
+    }, [renderTasks, currentSort, currentOrder, urlTaskBulkFocus, urlTaskIds]);
 
     const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? prepareCreateTask() : null
 

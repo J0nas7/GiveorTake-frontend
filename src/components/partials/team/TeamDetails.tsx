@@ -112,15 +112,17 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                 className="blue-link !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faUsers} />
-                                <Text variant="span">Handle Seats</Text>
+                                <Text variant="span">Seats</Text>
                             </Link>
-                            <Link
-                                href={`${pathname}/create-project`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faLightbulb} />
-                                <Text variant="span">Create Project</Text>
-                            </Link>
+                            {authUser && team.organisation?.User_ID === authUser.User_ID && (
+                                <Link
+                                    href={`${pathname}/create-project`}
+                                    className="blue-link !inline-flex gap-2 items-center"
+                                >
+                                    <FontAwesomeIcon icon={faLightbulb} />
+                                    <Text variant="span">Create Project</Text>
+                                </Link>
+                            )}
                         </Block>
                     </>
                     }

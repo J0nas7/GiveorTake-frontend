@@ -24,7 +24,7 @@ export const LeftNav: React.FC = () => {
     const authUserSeats = useTypedSelector(selectAuthUserSeat); // Redux
     const authUserOrganisation = useTypedSelector(selectAuthUserOrganisation); // Redux
 
-    const [renderOrganisation, setRenderOrganisation] = useState<Organisation|undefined>(undefined)
+    const [renderOrganisation, setRenderOrganisation] = useState<Organisation | undefined>(undefined)
 
     // Toggle state for each project
     const [visibleProject, setVisibleProject] = useState<string | null>(null);
@@ -41,10 +41,11 @@ export const LeftNav: React.FC = () => {
     }
 
     useEffect(() => {
-        if (authUserSeats && authUserSeats.team?.projects?.[0]?.Project_ID) {
-            setVisibleProject(authUserSeats.team?.projects?.[0].Project_ID.toString())
-            setRenderOrganisation(authUserSeats.team?.organisation)
-        } else if (authUserOrganisation && authUserOrganisation.teams?.[0].projects?.[0].Project_ID) {
+        // if (authUserSeats && authUserSeats.team?.projects?.[0]?.Project_ID) {
+        //     setVisibleProject(authUserSeats.team?.projects?.[0].Project_ID.toString())
+        //     setRenderOrganisation(authUserSeats.team?.organisation)
+        // } else 
+        if (authUserOrganisation && authUserOrganisation.teams?.[0].projects?.[0].Project_ID) {
             setVisibleProject(authUserOrganisation.teams?.[0].projects?.[0].Project_ID.toString())
             setRenderOrganisation(authUserOrganisation)
         }
@@ -136,19 +137,25 @@ export const LeftNav: React.FC = () => {
                 ) : null} {/* Default case: Render nothing */}
 
                 <li>
-                    <Block variant="span" className="flex items-center gap-2">
-                        <FontAwesomeIcon icon={faUser} />
-                        <Block variant="span">
-                            <Link
-                                href="/profile"
-                                className={clsx(
-                                    "button-link",
-                                    `inline-block text-sm`
-                                )}
-                            >
-                                Profile
-                            </Link>
-                        </Block>
+                    <Block variant="span" className="flex items-center space-x-3">
+                        {authUser.User_ImageSrc ? (
+                            <img
+                                src={authUser.User_ImageSrc}
+                                alt={authUser.User_FirstName}
+                                className="w-5 h-5 rounded-full border border-gray-300"
+                            />
+                        ) : (
+                            <FontAwesomeIcon icon={faUser} />
+                        )}
+                        <Link
+                            href="/profile"
+                            className={clsx(
+                                "button-link",
+                                `inline-block text-sm`
+                            )}
+                        >
+                            <Text variant="span" className="text-sm">{authUser.User_FirstName} {authUser.User_Surname}</Text>
+                        </Link>
                     </Block>
                 </li>
                 <li>

@@ -87,7 +87,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
 
     // Delete an item (D in CRUD)
     const deleteItem = async (itemId: number) => {
-        if (!confirm(`Are you sure you want to delete this ${resource}?`)) return;
+        if (!confirm(`Are you sure you want to delete this ${resource}?`)) return false;
 
         try {
             const response = await httpDeleteRequest(`${resource}/${itemId}`);

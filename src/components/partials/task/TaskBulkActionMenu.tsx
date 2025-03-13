@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faCopy, faPencil, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faCopy, faEye, faEyeSlash, faPencil, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 
 // Internal
@@ -13,7 +13,7 @@ import { Router } from 'next/router';
 import clsx from 'clsx';
 import { Project, Task } from '@/types';
 
-export const TaskBuldActionMenu = () => {
+export const TaskBulkActionMenu = () => {
     // Hooks
     const router = useRouter()
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
@@ -24,8 +24,10 @@ export const TaskBuldActionMenu = () => {
     // Internal variables
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [copySuccess, setCopySuccess] = useState(false)
-    const [taskBulkEditing, setTaskBuldEditing] = useState(false)
+    const [taskBulkEditing, setTaskBulkEditing] = useState(false)
+    const [taskBulkFocus, setTaskBulkFocus] = useState<boolean>(false)
     const urlTaskIds = searchParams.get("taskIds")
+    const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
 
     // Methods
     const updateURLParams = (returnUrl?: boolean) => {
@@ -51,9 +53,9 @@ export const TaskBuldActionMenu = () => {
             setCopySuccess(false);
             console.error("Failed to copy text:", err);
         }
-    };
+    }
 
-    const handleEdit = async () => setTaskBuldEditing(true)
+    const handleEdit = async () => setTaskBulkEditing(true)
 
     const handleDelete = async () => {
         if (!selectedTaskIds.length) return
@@ -71,10 +73,20 @@ export const TaskBuldActionMenu = () => {
         }
     }
 
+    const handleFocus = (newFocus: boolean) => {
+        const url = new URL(window.location.href);
+        if (newFocus) {
+            url.searchParams.set("taskBulkFocus", "1")
+        } else {
+            url.searchParams.delete("taskBulkFocus")
+        }
+        
+        return url.toString()
+    }
+
     /**
      * Effects
      */
-
     // Get user IDs from URL
     useEffect(() => {
         if (urlTaskIds) {
@@ -83,6 +95,10 @@ export const TaskBuldActionMenu = () => {
             setSelectedTaskIds(taskIdsFromURL);
         }
     }, [urlTaskIds])
+
+    useEffect(() => {
+        setTaskBulkFocus(urlTaskBulkFocus ? true : false)
+    }, [urlTaskBulkFocus])
 
     if (!urlTaskIds) return null
 
@@ -94,7 +110,7 @@ export const TaskBuldActionMenu = () => {
                     { ["task-bulkedit-container-open"]: taskBulkEditing }
                 )}
             >
-                {taskBulkEditing && <BulkEdit selectedTaskIds={selectedTaskIds} setTaskBulkEditing={setTaskBuldEditing} />}
+                {taskBulkEditing && <BulkEdit selectedTaskIds={selectedTaskIds} setTaskBulkEditing={setTaskBulkEditing} />}
             </Block>
             <Block className="taskplayer-container flex items-center justify-between">
                 <Block className="flex gap-2 items-center">
@@ -103,6 +119,21 @@ export const TaskBuldActionMenu = () => {
                     </Link>
                     <strong>{selectedTaskIds.length} tasks selected</strong>
                 </Block>
+
+                <Link
+                    href={handleFocus(!taskBulkFocus)}
+                    className="flex gap-2 items-center cursor-pointer"
+                >
+                    <FontAwesomeIcon icon={taskBulkFocus ? faEye : faEyeSlash} />
+                    <Text variant="span">
+                        {taskBulkFocus ? (
+                            <>Show</>
+                        ) : (
+                            <>Hide</>
+                        )}
+                        {" "}others
+                    </Text>
+                </Link>
 
                 <Block className="flex gap-2 items-center cursor-pointer" onClick={() => handleEdit()}>
                     <FontAwesomeIcon icon={faPencil} />

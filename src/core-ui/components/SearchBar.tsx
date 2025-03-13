@@ -123,7 +123,7 @@ const SearchBar = () => {
                             <img
                                 src={user.User_ImageSrc}
                                 alt={user.User_FirstName}
-                                className="w-10 h-10 rounded-full"
+                                className="w-10 h-10 rounded-full border border-gray-300"
                             />
                         ) : (
                             <div className="w-10 h-10 flex items-center justify-center bg-gray-300 text-white font-semibold rounded-full">

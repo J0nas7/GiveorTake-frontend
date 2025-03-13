@@ -17,7 +17,8 @@ import { Block, Heading, Text } from '@/components';
 import Link from 'next/link';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import { faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faGauge, faLightbulb, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const ProjectDetails: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
@@ -82,8 +83,8 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
 }) => {
     return (
         <Block className="page-content">
-            <Link 
-                href={`/team/${renderProject?.team?.Team_ID}`} 
+            <Link
+                href={`/team/${renderProject?.team?.Team_ID}`}
                 className="blue-link"
             >
                 &laquo; Go to Team
@@ -91,6 +92,38 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
             {/* <Heading variant="h1">Project Info</Heading> */}
             <FlexibleBox
                 title={`Project Info`}
+                titleAction={<>
+                    <Block className="flex gap-2 items-center">
+                        <Link
+                            href={`/project/dashboard/${renderProject?.Project_ID}`}
+                            className="blue-link !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faGauge} />
+                            <Text variant="span">Dashboard</Text>
+                        </Link>
+                        <Link
+                            href={`/backlog/${renderProject?.Project_ID}`}
+                            className="blue-link !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faList} />
+                            <Text variant="span">Backlog</Text>
+                        </Link>
+                        <Link
+                            href={`/kanban/${renderProject?.Project_ID}`}
+                            className="blue-link !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faWindowRestore} />
+                            <Text variant="span">Kanban Board</Text>
+                        </Link>
+                        <Link
+                            href={`/time-tracks/project/${renderProject?.Project_ID}`}
+                            className="blue-link !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faClock} />
+                            <Text variant="span">Time Entries</Text>
+                        </Link>
+                    </Block>
+                </>}
                 icon={faLightbulb}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
@@ -181,6 +214,14 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                                 <Grid item xs={12} sm={6}>
                                     <strong>Project Name:</strong><br />
                                     {renderProject?.Project_Name}
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                    <strong>Project Status:</strong><br />
+                                    {renderProject?.Project_Status}
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                    <strong>Project Key:</strong><br />
+                                    {renderProject?.Project_Key}-0
                                 </Grid>
                                 <Grid item xs={12}>
                                     <strong>Project Description:</strong><br />

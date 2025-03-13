@@ -415,7 +415,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                 </Block>
                 <Block>
                     {selectedUserIds && (() => {
-                        const selectedUser = teamUserSeatsById && teamUserSeatsById.find((user) => user.User_ID === parseInt(selectedUserIds[0]))?.user
+                        const selectedUser = teamUserSeatsById && teamUserSeatsById.length && teamUserSeatsById.find((user) => user.User_ID === parseInt(selectedUserIds[0]))?.user
                         if (!selectedUser) return null
 
                         return (

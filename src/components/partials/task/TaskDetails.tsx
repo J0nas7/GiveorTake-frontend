@@ -2,7 +2,7 @@
 
 // External
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
 
@@ -32,6 +32,7 @@ import { Heading } from "@/components/ui/heading";
 import clsx from "clsx";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
 import { SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
+import { Router } from "next/router";
 
 interface CardProps {
     children: React.ReactNode;
@@ -479,12 +480,41 @@ interface CtaButtonsProps {
 }
 
 const CtaButtons: React.FC<CtaButtonsProps> = ({ task }) => {
-    const { taskDetail } = useTasksContext()
+    const router = useRouter()
+    const { taskDetail, setTaskDetail, removeTask, readTasksByProjectId } = useTasksContext()
+
+    const archiveTask = async (task: Task) => {
+        if (!task.Task_ID) return
+
+        const removed = await removeTask(task.Task_ID, task.Project_ID)
+        if (!removed) return
+
+        await readTasksByProjectId(task.Project_ID, true)
+
+        if (taskDetail) {
+            setTaskDetail(undefined)
+        } else {
+            router.push(`/project/${task.Project_ID}`, { scroll: false })
+        }
+    }
+
+    const shareTask = async () => {
+        try {
+            const url = new URL(window.location.href)
+            // Copy the task url to clipboard
+            await navigator.clipboard.writeText(url.toString());
+            alert("Link to task was copied to your clipboard");
+        } catch (err) {
+            alert("Failed to copy link to task");
+        }
+    };
 
     return (
         <CtaButtonsView
             task={task}
             taskDetail={taskDetail}
+            archiveTask={archiveTask}
+            shareTask={shareTask}
         />
     );
 };
@@ -492,22 +522,30 @@ const CtaButtons: React.FC<CtaButtonsProps> = ({ task }) => {
 interface CtaButtonsViewProps {
     task: Task
     taskDetail: Task | undefined
+    archiveTask: (task: Task) => Promise<void>
+    shareTask: () => Promise<void>
 }
 
-export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail }) => {
+export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail, archiveTask, shareTask }) => {
     return (
         <Block className={styles.ctaButtons}>
-            <button className={clsx(
-                "blue-link",
-                styles.ctaButton
-            )}>
+            <button
+                className={clsx(
+                    "blue-link",
+                    styles.ctaButton
+                )}
+                onClick={() => archiveTask(task)}
+            >
                 <FontAwesomeIcon icon={faTrashCan} />
                 <Text variant="span">Archive</Text>
             </button>
-            <button className={clsx(
-                "blue-link",
-                styles.ctaButton
-            )}>
+            <button
+                className={clsx(
+                    "blue-link",
+                    styles.ctaButton
+                )}
+                onClick={() => shareTask()}
+            >
                 <FontAwesomeIcon icon={faArrowUpFromBracket} />
                 <Text variant="span">Share</Text>
             </button>

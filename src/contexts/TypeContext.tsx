@@ -73,6 +73,7 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
             const data = await fetchItemsByParent(parentId) // Refresh items after deletion
             if (data) setItemsById(data)
         }
+        return success
     }
 
     return {

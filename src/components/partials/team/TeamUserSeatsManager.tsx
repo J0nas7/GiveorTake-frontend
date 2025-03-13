@@ -2,9 +2,13 @@
 
 // External
 import React, { useEffect, useState } from 'react';
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { TextField, Card, CardContent, Typography, Grid, Box, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Checkbox } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'next-i18next';
+import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChair, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
 import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
@@ -12,16 +16,16 @@ import { Team, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { useAxios } from '@/hooks';
-import { TFunction } from 'next-i18next';
-import Link from 'next/link';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChair, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 
 const TeamUserSeatsManager: React.FC = () => {
     const { t } = useTranslation(['team'])
+    const router = useRouter()
+    const searchParams = useSearchParams()
 
     const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
+    const urlSeatId = searchParams.get("seatId")
+
     const {
         teamUserSeatsById,
         readTeamUserSeatsByTeamId,
@@ -37,7 +41,6 @@ const TeamUserSeatsManager: React.FC = () => {
     const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined);
     const [selectedSeat, setSelectedSeat] = useState<TeamUserSeat | undefined>(undefined);
     const [displayInviteForm, setDisplayInviteForm] = useState<boolean>(false);
-
     // New User Form State
     const [newUserDetails, setNewUserDetails] = useState({
         email: '',
@@ -46,19 +49,10 @@ const TeamUserSeatsManager: React.FC = () => {
         role: 'user', // default role
         status: 'active', // default status
     });
-
-    useEffect(() => {
-        if (teamId) {
-            readTeamById(parseInt(teamId))
-            readTeamUserSeatsByTeamId(parseInt(teamId));
-        }
-    }, [teamId]);
-
-    useEffect(() => {
-        setRenderUserSeats(teamUserSeatsById);
-        setRenderTeam(teamById)
-    }, [teamUserSeatsById, teamById]);
-
+    
+    /** 
+     * Methods
+     */
     const handleSaveChanges = () => {
         console.log("selectedSeat", selectedSeat)
         if (selectedSeat) {
@@ -66,9 +60,7 @@ const TeamUserSeatsManager: React.FC = () => {
         }
     };
 
-    const handleRemoveSeat = (seatId: number) => {
-        removeTeamUserSeat(seatId, parseInt(teamId));
-    };
+    const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(seatId, parseInt(teamId))
 
     const handleSeatChange = (field: TeamUserSeatFields, value: string) => {
         if (selectedSeat) {
@@ -80,8 +72,12 @@ const TeamUserSeatsManager: React.FC = () => {
     };
 
     const handleSelectSeat = (seat: TeamUserSeat) => {
-        setSelectedSeat(seat)
-        setDisplayInviteForm(false)
+        if (!seat.Seat_ID) return
+
+        const url = new URL(window.location.href)
+        url.searchParams.set("seatId", seat.Seat_ID.toString())
+
+        router.push(url.toString(), { scroll: false }); // Prevent full page reload
     };
 
     const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,14 +122,54 @@ const TeamUserSeatsManager: React.FC = () => {
     const togglePermission = (permission: string, isChecked: boolean) => {
         setSelectedSeat((prevSeat) => {
             if (!prevSeat) return prevSeat;
-
+            
             const updatedPermissions = isChecked
-                ? [...(prevSeat.Seat_Permissions || []), permission]
-                : ((Array.isArray(prevSeat.Seat_Permissions) && prevSeat.Seat_Permissions) || []).filter((perm) => perm !== permission);
-                
+                ? [
+                    ...(Array.isArray(prevSeat.Seat_Permissions)
+                        ? prevSeat.Seat_Permissions
+                        : JSON.parse(prevSeat.Seat_Permissions || "[]")), // Parse JSON if it's a string
+                    permission
+                ]
+                : (
+                    (Array.isArray(prevSeat.Seat_Permissions)
+                        ? prevSeat.Seat_Permissions
+                        : JSON.parse(prevSeat.Seat_Permissions || "[]"))
+                ).filter((perm: string) => perm !== permission);
+
             return { ...prevSeat, Seat_Permissions: JSON.stringify(updatedPermissions) };
         });
     };
+
+    /**
+     * Effects
+     */
+    useEffect(() => {
+        if (teamId) {
+            readTeamById(parseInt(teamId))
+            readTeamUserSeatsByTeamId(parseInt(teamId));
+        }
+    }, [teamId]);
+
+    useEffect(() => {
+        setRenderUserSeats(teamUserSeatsById);
+        setRenderTeam(teamById)
+    }, [teamUserSeatsById, teamById]);
+
+    useEffect(() => {
+        if (urlSeatId && authUser && renderTeam?.organisation?.User_ID !== authUser.User_ID) {
+            router.push(`/team/${renderTeam?.Team_ID}/seats`)
+            return
+        }
+
+        if (urlSeatId === "new") {
+            setDisplayInviteForm(true)
+            setSelectedSeat(undefined)
+        } else if (urlSeatId && renderUserSeats.length) {
+            const seat = renderUserSeats.find(seat => seat.Seat_ID === parseInt(urlSeatId))
+            setDisplayInviteForm(false)
+            setSelectedSeat(seat)
+        }
+    }, [urlSeatId, renderUserSeats])
 
     return (
         <TeamUserSeatsView
@@ -239,16 +275,15 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                 >
                     <Card className="shadow-lg rounded-lg mb-4">
                         <CardContent>
-                            <button
-                                className="blue-link mb-3 !inline-flex gap-2 items-center"
-                                onClick={() => {
-                                    setDisplayInviteForm(true)
-                                    setSelectedSeat(undefined)
-                                }}
-                            >
-                                <FontAwesomeIcon icon={faPlus} />
-                                <Text variant="span">New Invite</Text>
-                            </button>
+                            {authUser && renderTeam?.organisation?.User_ID === authUser.User_ID && (
+                                <Link
+                                    className="blue-link mb-3 !inline-flex gap-2 items-center"
+                                    href="?seatId=new"
+                                >
+                                    <FontAwesomeIcon icon={faPlus} />
+                                    <Text variant="span">New Invite</Text>
+                                </Link>
+                            )}
                             <Typography variant="h6" gutterBottom>
                                 {t('team:seatsManager:teamUserSeats')}: {renderTeam?.Team_Name}
                             </Typography>
@@ -272,20 +307,22 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                                             {t('team:seatsManager:status')}: {seat.Seat_Status}
                                                         </Typography>
 
-                                                        <div className="flex justify-between mt-4">
-                                                            <button
-                                                                onClick={() => handleSelectSeat(seat)}
-                                                                className="blue-link w-[48%]"
-                                                            >
-                                                                {t('team:seatsManager:edit')}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
-                                                                className="blue-link w-[48%]"
-                                                            >
-                                                                {t('team:seatsManager:remove')}
-                                                            </button>
-                                                        </div>
+                                                        {authUser && renderTeam?.organisation?.User_ID === authUser.User_ID && (
+                                                            <div className="flex justify-between mt-4">
+                                                                <button
+                                                                    onClick={() => handleSelectSeat(seat)}
+                                                                    className="blue-link w-[48%]"
+                                                                >
+                                                                    {t('team:seatsManager:edit')}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
+                                                                    className="blue-link w-[48%]"
+                                                                >
+                                                                    {t('team:seatsManager:remove')}
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </Block>
                                                 </CardContent>
                                             </Card>
@@ -352,7 +389,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                                 label: `Archiving Tasks: ${project.Project_Name}`
                                             }
                                         ]
-                                        
+
                                         return permissions.map(permission => (
                                             <Grid item key={permission.key} xs={6} sm={4}>
                                                 <FormControlLabel

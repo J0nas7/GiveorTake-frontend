@@ -90,12 +90,14 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                 <FlexibleBox
                     title="Organisation Settings"
                     titleAction={<>
-                        <Block className="flex gap-3">
-                            <Link href={`/organisation/${organisation.Organisation_ID}/create-team`} className="blue-link !inline-flex gap-2 items-center">
-                                <FontAwesomeIcon icon={faUsers} />
-                                <Text variant="span">Create Team</Text>
-                            </Link>
-                        </Block>
+                        {authUser && organisation.User_ID === authUser.User_ID && (
+                            <Block className="flex gap-3">
+                                <Link href={`/organisation/${organisation.Organisation_ID}/create-team`} className="blue-link !inline-flex gap-2 items-center">
+                                    <FontAwesomeIcon icon={faUsers} />
+                                    <Text variant="span">Create Team</Text>
+                                </Link>
+                            </Block>
+                        )}
                     </>}
                     icon={faBuilding}
                     className="no-box w-auto inline-block"
