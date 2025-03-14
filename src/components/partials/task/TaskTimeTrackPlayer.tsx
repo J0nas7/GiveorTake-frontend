@@ -48,7 +48,7 @@ export const TaskTimeTrackPlayer = () => {
                                 <TimeSpentDisplay startTime={taskTimeTrack.Time_Tracking_Start_Time} />
                             ) : null}
                         </Block>
-                        <Link href={`/task/${taskTimeTrack.task?.Task_ID}`} className="blue-link-light h-12 overflow-y-hidden break-all">
+                        <Link href={`/task/${taskTimeTrack.task?.project?.Project_Key}/${taskTimeTrack.task?.Task_Key}`} className="blue-link-light h-12 overflow-y-hidden break-all">
                             {taskTimeTrack.task?.Task_Title}
                         </Link>
                         {latestUniqueTaskTimeTracksByProject && latestUniqueTaskTimeTracksByProject.length && (

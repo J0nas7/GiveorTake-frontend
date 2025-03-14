@@ -15,7 +15,7 @@ import clsx from "clsx";
 import styles from "@/core-ui/styles/modules/TimeTracks.module.scss"
 import { Block, Text } from "@/components/ui/block-text";
 import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
-import { Project, TaskTimeTrack, TeamUserSeat } from "@/types";
+import { Project, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 import { Heading } from "@/components/ui/heading";
@@ -35,7 +35,9 @@ export const TimeTracksContainer = () => {
     const [filterTimeEntries, setFilterTimeEntries] = useState<boolean>(false)
 
     const urlUserIds = searchParams.get("userIds")
+    const urlTaskIds = searchParams.get("taskIds")
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
+    const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
 
     const { projectById, readProjectById } = useProjectsContext();
     const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
@@ -95,7 +97,7 @@ export const TimeTracksContainer = () => {
     const [startDate, setStartDate] = useState(startDateParam || defaultStart);
     const [endDate, setEndDate] = useState(endDateParam || defaultEnd);
 
-    // Get user IDs from URL
+    // Get userIds from URL
     useEffect(() => {
         if (urlUserIds) {
             // If userIds exist in the URL, use them
@@ -103,13 +105,26 @@ export const TimeTracksContainer = () => {
             setSelectedUserIds(userIdsFromURL);
         } else if (teamUserSeatsById.length) {
             // If no userIds in URL, select all users by default
-            console.log("If no userIds in URL, select all users by default")
             const allUserIds = teamUserSeatsById
                 .map((userSeat: TeamUserSeat) => userSeat.user?.User_ID?.toString())
                 .filter((userId) => userId !== undefined) // Remove undefined values
             setSelectedUserIds(allUserIds)
         }
     }, [urlUserIds, teamUserSeatsById])
+
+    useEffect(() => {
+        if (urlTaskIds) {
+            // If taskIds exist in the URL, use them
+            const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : []
+            setSelectedTaskIds(taskIdsFromURL)
+        } else if (renderProject?.tasks?.length) {
+            // If no taskIds in URL, select all tasks by default
+            const allTaskIds = renderProject.tasks
+                .map((task) => task.Task_ID?.toString())
+                .filter((taskId) => taskId !== undefined) // Remove undefined values
+            setSelectedTaskIds(allTaskIds)
+        }
+    }, [urlTaskIds, renderProject])
 
     // Fetch project data
     useEffect(() => {
@@ -118,13 +133,19 @@ export const TimeTracksContainer = () => {
                 parseInt(projectId),
                 startDate,
                 endDate,
-                selectedUserIds
+                selectedUserIds,
+                selectedTaskIds
             )
-
-            await readProjectById(parseInt(projectId));
         }
         loadRenders()
-    }, [projectId, selectedUserIds, startDate, endDate])
+    }, [projectId, selectedUserIds, selectedTaskIds, startDate, endDate])
+
+    useEffect(() => {
+        const loadProject = async () => {
+            await readProjectById(parseInt(projectId))
+        }
+        loadProject()
+    }, [projectId])
 
     useEffect(() => {
         if (projectId) {
@@ -139,11 +160,7 @@ export const TimeTracksContainer = () => {
             setRenderTimeTracks(undefined);
         }
         if (taskTimeTracksByProjectId.length) {
-            if (!selectedUserIds.length && !renderTimeTracks) {
-                setRenderTimeTracks(taskTimeTracksByProjectId)
-            } else {
-                setRenderTimeTracks(taskTimeTracksByProjectId);
-            }
+            setRenderTimeTracks(taskTimeTracksByProjectId)
         }
     }, [taskTimeTracksByProjectId]);
 
@@ -158,6 +175,9 @@ export const TimeTracksContainer = () => {
             setSortedByLatest([...renderTimeTracks].sort(
                 (a, b) => (b.Time_Tracking_ID || 0) - (a.Time_Tracking_ID || 0)
             ))
+        } else {
+            setSortedByDuration([])
+            setSortedByLatest([])
         }
     }, [renderTimeTracks]);
 
@@ -171,8 +191,8 @@ export const TimeTracksContainer = () => {
 
     return (
         <Block className="page-content">
-            <Link 
-                href={`/project/${renderProject.Project_ID}`} 
+            <Link
+                href={`/project/${renderProject.Project_ID}`}
                 className="blue-link"
             >
                 &laquo; Go to Project
@@ -202,7 +222,7 @@ export const TimeTracksContainer = () => {
                     </Block>
                     <Block className="flex gap-4">
                         <Block className="w-1/4 p-4 bg-white rounded-lg shadow-md">
-                            <TimeSpentPerTask sortedByDuration={sortedByDuration} />
+                            <TimeSpentPerTask renderProject={renderProject} sortedByDuration={sortedByDuration} />
                         </Block>
 
                         {/* List of Time Tracks */}
@@ -216,10 +236,12 @@ export const TimeTracksContainer = () => {
             </FlexibleBox>
 
             <FilterTimeEntries
+                renderProject={renderProject}
                 filterTimeEntries={filterTimeEntries}
                 setFilterTimeEntries={setFilterTimeEntries}
                 teamUserSeatsById={teamUserSeatsById}
                 selectedUserIds={selectedUserIds}
+                selectedTaskIds={selectedTaskIds}
                 startDate={startDate}
                 setStartDate={setStartDate}
                 endDate={endDate}
@@ -232,10 +254,12 @@ export const TimeTracksContainer = () => {
 }
 
 interface FilterTimeEntriesProps {
+    renderProject: Project
     filterTimeEntries: boolean
     setFilterTimeEntries: React.Dispatch<React.SetStateAction<boolean>>
     teamUserSeatsById: TeamUserSeat[]
     selectedUserIds: string[]
+    selectedTaskIds: string[]
     startDate: string
     setStartDate: React.Dispatch<React.SetStateAction<string>>
     endDate: string
@@ -246,10 +270,12 @@ interface FilterTimeEntriesProps {
 
 const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
     ({
+        renderProject,
         filterTimeEntries,
         setFilterTimeEntries,
         teamUserSeatsById,
         selectedUserIds,
+        selectedTaskIds,
         startDate,
         setStartDate,
         endDate,
@@ -260,19 +286,24 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
         const router = useRouter()
         const searchParams = useSearchParams();
 
-        const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserIds?: string[] | string, returnUrl?: boolean) => {
+        const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserIds: string[] | undefined, newTaskIds: string[] | undefined | string, returnUrl?: boolean) => {
             const url = new URL(window.location.href);
 
+            // startDate
             if (newStartDate) {
                 url.searchParams.set("startDate", newStartDate);
             } else {
                 url.searchParams.delete("startDate")
             }
+
+            // endDate
             if (newEndDate) {
                 url.searchParams.set("endDate", newEndDate);
             } else {
                 url.searchParams.delete("endDate")
             }
+
+            // userIds
             if (newUserIds === undefined) {
                 url.searchParams.delete("userIds")
             } else if (Array.isArray(newUserIds)) { // Handle userIds (convert array to a comma-separated string)
@@ -284,12 +315,23 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                     }
                 } else {
                     url.searchParams.set("userIds", "");
-                    // url.searchParams.delete("userIds"); // Remove if empty
                 }
             }
-            // } else if (newUserId || userId) {
-            //     url.searchParams.set("userId", newUserId || userId!);
-            // }
+
+            // taskIds
+            if (newTaskIds === undefined) {
+                url.searchParams.delete("taskIds")
+            } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
+                if (newTaskIds.length > 0) {
+                    if (renderProject.tasks && renderProject.tasks.length > newTaskIds.length) {
+                        url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
+                    } else {
+                        url.searchParams.delete("taskIds"); // Remove if all are selected, as that is default 
+                    }
+                } else {
+                    url.searchParams.set("taskIds", "");
+                }
+            }
 
             if (returnUrl) {
                 return url.toString()
@@ -301,27 +343,27 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
         const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const newStart = `${e.target.value} 00:00:00`;
             setStartDate(newStart);
-            updateURLParams(newStart, endDate, selectedUserIds || undefined);
+            updateURLParams(newStart, endDate, selectedUserIds, selectedTaskIds);
         };
 
         const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const newEnd = `${e.target.value} 23:59:59`;
             setEndDate(newEnd);
-            updateURLParams(startDate, newEnd, selectedUserIds || undefined)
+            updateURLParams(startDate, newEnd, selectedUserIds, selectedTaskIds)
         };
 
-        const handleSelectAllChange = () => {
-            console.log(`handleSelectAllChange ${selectedUserIds.length} === ${teamUserSeatsById.length}`)
+        const handleSelectAllTeamMembersChange = () => {
+            // console.log(`handleSelectAllChange ${selectedUserIds.length} === ${teamUserSeatsById.length}`)
             if (selectedUserIds.length === teamUserSeatsById.length) {
                 // Deselect all if all are already selected
-                updateURLParams(startDateParam, endDateParam, ["0"])
+                updateURLParams(startDateParam, endDateParam, ["0"], selectedTaskIds)
             } else {
                 // Select all
-                updateURLParams(startDateParam, endDateParam, undefined)
+                updateURLParams(startDateParam, endDateParam, undefined, selectedTaskIds)
             }
         };
 
-        const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const handleCheckboxTeamMemberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             const { value, checked } = event.target;
 
             let updatedUserIds = selectedUserIds;
@@ -332,7 +374,33 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                 updatedUserIds = selectedUserIds.filter(id => id !== value); // Remove unchecked ID
             }
 
-            updateURLParams(startDate, endDate, updatedUserIds)
+            updateURLParams(startDate, endDate, updatedUserIds, selectedTaskIds)
+        };
+
+        const handleSelectAllProjectTasksChange = () => {
+            // console.log(`handleSelectAllChange ${selectedTaskIds.length} === ${renderProject.tasks?.length}`)
+            if (selectedTaskIds.length === renderProject.tasks?.length) {
+                // Deselect all if all are already selected
+                updateURLParams(startDateParam, endDateParam, selectedUserIds, ["0"])
+            } else {
+                // Select all
+                updateURLParams(startDateParam, endDateParam, selectedUserIds, undefined)
+            }
+        };
+
+        const handleCheckboxTaskChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            const { value, checked } = event.target;
+
+            let updatedTaskIds = selectedTaskIds;
+
+            if (checked) {
+                updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
+            } else {
+                updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
+            }
+            // console.log("handleCheckboxTaskChange", checked, value, selectedTaskIds, updatedTaskIds)
+
+            updateURLParams(startDate, endDate, selectedUserIds, updatedTaskIds)
         };
 
         useEffect(() => {
@@ -363,6 +431,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                         />
                     </button>
                 </Block>
+                {/* Entry period */}
                 <Block>
                     <Text className="text-sm font-semibold">Entry period</Text>
 
@@ -382,12 +451,13 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                         />
                     </Block>
                 </Block>
+                {/* Team members */}
                 <Block>
                     <Text className="text-sm font-semibold">Team members</Text>
 
                     <Text
                         variant="span"
-                        onClick={() => handleSelectAllChange()}
+                        onClick={() => handleSelectAllTeamMembersChange()}
                         className="cursor-pointer text-xs hover:underline"
                     >
                         Select/Deselect All
@@ -405,7 +475,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                                         type="checkbox"
                                         value={userDetails.User_ID}
                                         checked={userDetails.User_ID ? selectedUserIds.includes(userDetails.User_ID.toString()) : false}
-                                        onChange={handleCheckboxChange}
+                                        onChange={handleCheckboxTeamMemberChange}
                                     />
                                     <Text>{userDetails?.User_FirstName} {userDetails?.User_Surname}</Text>
                                 </Block>
@@ -413,7 +483,39 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                         })}
                     </Block>
                 </Block>
+                {/* Project tasks */}
                 <Block>
+                    <Text className="text-sm font-semibold">Project tasks</Text>
+
+                    <Text
+                        variant="span"
+                        onClick={() => handleSelectAllProjectTasksChange()}
+                        className="cursor-pointer text-xs hover:underline"
+                    >
+                        Select/Deselect All
+                    </Text>
+
+                    <Block className="flex flex-col mt-3">
+                        {renderProject.tasks?.length && renderProject.tasks.map(task => {
+                            return (
+                                <Block variant="span" className="flex gap-2 items-center" key={task.Task_ID}>
+                                    <input
+                                        type="checkbox"
+                                        value={task.Task_ID}
+                                        checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
+                                        onChange={handleCheckboxTaskChange}
+                                    />
+                                    <Text variant="small" className="text-xs">
+                                        ({renderProject.Project_Key}-{task.Task_Key})
+                                    </Text>{" "}
+                                    <Text>{task.Task_Title}</Text>
+                                </Block>
+                            )
+                        })}
+                    </Block>
+                </Block>
+                {/* Selected user ID */}
+                {/* <Block>
                     {selectedUserIds && (() => {
                         const selectedUser = teamUserSeatsById && teamUserSeatsById.length && teamUserSeatsById.find((user) => user.User_ID === parseInt(selectedUserIds[0]))?.user
                         if (!selectedUser) return null
@@ -428,7 +530,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
                             </Block>
                         )
                     })()}
-                </Block>
+                </Block> */}
             </Block>
         )
     }
@@ -604,9 +706,14 @@ export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ tim
                                         <div className={styles["day-number"]}>{isNotPlaceholder && dayNum}</div>
 
                                         {timeTracksByDate[dateKey]?.slice(0, 3).map((track, index) => (
-                                            <Link key={index} href={`/task/${track.task?.Task_ID}`} className={clsx(styles["time-entry"], "inline blue-link-light")}>
-                                                {track.task?.Task_Title}
-                                            </Link>
+                                            <>
+                                                <Text variant="small" className="text-xs">
+                                                    ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
+                                                </Text>{" "}
+                                                <Link key={index} href={`/task/${track.task?.project?.Project_Key}/${track.task?.Task_Key}`} className={clsx(styles["time-entry"], "inline blue-link-light")}>
+                                                    {track.task?.Task_Title}
+                                                </Link>
+                                            </>
                                         ))}
 
                                         {timeTracksByDate[dateKey]?.length > 3 && (
@@ -680,7 +787,10 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
                                 {data.tracks.map((track) => (
                                     <li key={track.Time_Tracking_ID} className="flex justify-between items-center bg-gray-100 p-2 rounded-md">
                                         {/* Link to Task */}
-                                        <Link href={`/task/${track.task?.Task_ID}`} className="blue-link-light inline text-gray-700">
+                                        <Text variant="small" className="text-xs">
+                                            ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
+                                        </Text>{" "}
+                                        <Link href={`/task/${track.task?.project?.Project_Key}/${track.task?.Task_Key}`} className="blue-link-light inline text-gray-700">
                                             {track.task?.Task_Title}
                                         </Link>
                                         {/* ⏳ Time Spent */}
@@ -696,28 +806,33 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
     );
 };
 
-export const TimeSpentPerTask: React.FC<{ sortedByDuration: TaskTimeTrack[] | undefined }> = ({ sortedByDuration }) => {
+interface TimeSpentPerTaskProps {
+    renderProject: Project | undefined
+    sortedByDuration: TaskTimeTrack[] | undefined
+}
+
+export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProject, sortedByDuration }) => {
     const { t } = useTranslation(["timetrack"]);
-    const [chartData, setChartData] = useState<{ labels: string[]; taskIds: string[]; datasets: any[] }>({
+    const [chartData, setChartData] = useState<{ labels: string[]; taskKeys: string[]; datasets: any[] }>({
         labels: [],
-        taskIds: [],
+        taskKeys: [],
         datasets: [],
     });
 
     useEffect(() => {
         if (!sortedByDuration) return;
 
-        const taskTimeMap = new Map<string, { Task_ID: string; Hours_Spent: number }>();
+        const taskTimeMap = new Map<string, { Task_Key: string; Hours_Spent: number }>();
 
         sortedByDuration.forEach((track) => {
             const taskName = track.task?.Task_Title || t("timetrack.timeSpentPerTask.unknownTask");
-            const taskId = track.task?.Task_ID || "unknown";
+            const taskKey = track.task?.Task_Key || 0;
             const hours = track.Time_Tracking_Duration ? track.Time_Tracking_Duration / 3600 : 0;
 
             if (taskTimeMap.has(taskName)) {
                 taskTimeMap.get(taskName)!.Hours_Spent += hours;
             } else {
-                taskTimeMap.set(taskName, { Task_ID: taskId.toString(), Hours_Spent: hours });
+                taskTimeMap.set(taskName, { Task_Key: taskKey.toString(), Hours_Spent: hours });
             }
         });
 
@@ -726,7 +841,7 @@ export const TimeSpentPerTask: React.FC<{ sortedByDuration: TaskTimeTrack[] | un
 
         setChartData({
             labels: Array.from(sortedTaskTimeMap.keys()),
-            taskIds: Array.from(sortedTaskTimeMap.values()).map((item) => item.Task_ID),
+            taskKeys: Array.from(sortedTaskTimeMap.values()).map((item) => item.Task_Key),
             datasets: [
                 {
                     label: t("timetrack.timeSpentPerTask.hoursPerTask"),
@@ -761,13 +876,16 @@ export const TimeSpentPerTask: React.FC<{ sortedByDuration: TaskTimeTrack[] | un
                             const totalHours = (chartData.datasets[0].data as number[]).reduce((acc, curr) => acc + curr, 0);
                             const taskHours = chartData.datasets[0].data[index] as number;
                             const percentage = ((taskHours / totalHours) * 100).toFixed(2);
-                            const taskId = chartData.taskIds[index];
+                            const taskKey = chartData.taskKeys[index]
 
                             return (
                                 <li key={index} className="flex flex-col">
                                     <div className="flex justify-between text-sm font-medium">
                                         <Text variant="span">
-                                            <Link href={`/task/${taskId}`} className="blue-link-light inline">
+                                            <Link href={`/task/${renderProject?.Project_Key}/${taskKey}`} className="blue-link-light inline">
+                                                <Text variant="small" className="text-xs">
+                                                    ({renderProject?.Project_Key}-{taskKey})
+                                                </Text>{" "}
                                                 {label}{" "}
                                                 <Text variant="span" className="text-gray-400 inline">
                                                     <SecondsToTimeDisplay totalSeconds={taskHours * 3600} />
@@ -869,7 +987,10 @@ export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
                                 <li key={track.Time_Tracking_ID} className="py-2">
                                     {track.user?.User_FirstName} {track.user?.User_Surname}{" "}
                                     logged work on{" "}
-                                    <Link href={`/task/${track.task?.Task_ID}`} className="inline blue-link">
+                                    <Text variant="small">
+                                        ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
+                                    </Text>{" "}
+                                    <Link href={`/task/${track.task?.project?.Project_Key}/${track.task?.Task_Key}`} className="inline blue-link">
                                         {track.task?.Task_Title}
                                     </Link>{" "}
                                     lasting{" "}

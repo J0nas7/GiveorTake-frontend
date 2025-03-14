@@ -506,7 +506,7 @@ export type TaskTimeTrackContextType = {
     latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
     taskTimeTracksByProjectId: TaskTimeTrack[]
     getLatestUniqueTaskTimeTracksByProject: (projectId: number) => Promise<any>
-    getTaskTimeTracksByProject: (projectId: number, startTime: string, endTime: string, userIds?: string[]) => Promise<void>
+    getTaskTimeTracksByProject: (projectId: number, startTime: string, endTime: string, userIds?: string[], taskIds?: string[]) => Promise<void>
     taskTimeTracksByProjectParams: { startTime: string; endTime: string; }
 };
 
@@ -571,7 +571,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         }
     }
 
-    const getTaskTimeTracksByProject = async (projectId: number, startTime: string, endTime: string, userIds?: string[]) => {
+    const getTaskTimeTracksByProject = async (projectId: number, startTime: string, endTime: string, userIds?: string[], taskIds?: string[]) => {
         try {
             // Build the URL with optional query parameters for startTime end endTime
             let url = `projects/${projectId}/task-time-tracks`
@@ -584,25 +584,25 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 setTaskTimeTracksByProjectParams({ startTime, endTime })
             }
             
-            if (userIds?.length) {
-                params.push(`userIds=${JSON.stringify(userIds)}`)
-            }
+            if (userIds?.length) params.push(`userIds=${JSON.stringify(userIds)}`)
 
+            if (taskIds?.length) params.push(`taskIds=${JSON.stringify(taskIds)}`)
+                
             if (params.length > 0) url += `?${params.join('&')}`
-            // console.log("url", url)
-
+            
             const data = await httpGetRequest(url)
             
             if (!data.message) {
-                // console.log("urlData", data)
                 setTaskTimeTracksByProjectId(data)
                 return
+            } else if (data.message == "No time tracks found for the criterias") {
+                setTaskTimeTracksByProjectId([])
+                return
             }
-
+            
             throw new Error(`Failed to getTaskTimeTracksByProject`);
         } catch (error: any) {
             console.log(error.message || `An error occurred while trying getTaskTimeTracksByProject.`);
-            setTaskTimeTracksByProjectId([])
         }
     }
 

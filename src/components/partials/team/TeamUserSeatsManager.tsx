@@ -337,9 +337,14 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                 {selectedSeat ? (
                     <Card className="shadow-lg rounded-lg mt-4">
                         <CardContent className="p-4">
-                            <Typography variant="h6" gutterBottom className="font-semibold">
-                                {t('team:seatsManager:editUserSeat')}
-                            </Typography>
+                            <Block className="mb-4">
+                                <Typography variant="h6" gutterBottom className="font-semibold">
+                                    {t('team:seatsManager:editUserSeat')}
+                                </Typography>
+                                <Text variant="span" className="font-semibold">
+                                    {selectedSeat.user?.User_FirstName} {selectedSeat.user?.User_Surname}
+                                </Text>
+                            </Block>
 
                             <Grid container spacing={3}>
                                 {/* Role Input */}

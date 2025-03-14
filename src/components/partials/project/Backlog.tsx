@@ -15,6 +15,7 @@ import { Project, Task, TaskFields } from "@/types";
 import { selectAuthUser, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
+import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
 
 const BacklogContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
@@ -193,23 +194,26 @@ const BacklogContainer = () => {
     };
 
     return (
-        <BacklogContainerView
-            renderProject={renderProject}
-            sortedTasks={sortedTasks}
-            newTask={newTask}
-            currentSort={currentSort}
-            currentOrder={currentOrder}
-            t={t}
-            selectedTaskIds={selectedTaskIds}
-            selectAll={selectAll}
-            handleSort={handleSort}
-            handleCreateTask={prepareCreateTask}
-            ifEnter={ifEnter}
-            handleChangeNewTask={handleChangeNewTask}
-            setTaskDetail={setTaskDetail}
-            handleCheckboxChange={handleCheckboxChange}
-            handleSelectAllChange={handleSelectAllChange}
-        />
+        <>
+            <TaskBulkActionMenu />
+            <BacklogContainerView
+                renderProject={renderProject}
+                sortedTasks={sortedTasks}
+                newTask={newTask}
+                currentSort={currentSort}
+                currentOrder={currentOrder}
+                t={t}
+                selectedTaskIds={selectedTaskIds}
+                selectAll={selectAll}
+                handleSort={handleSort}
+                handleCreateTask={prepareCreateTask}
+                ifEnter={ifEnter}
+                handleChangeNewTask={handleChangeNewTask}
+                setTaskDetail={setTaskDetail}
+                handleCheckboxChange={handleCheckboxChange}
+                handleSelectAllChange={handleSelectAllChange}
+            />
+        </>
     );
 }
 

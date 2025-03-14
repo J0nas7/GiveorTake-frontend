@@ -16,7 +16,7 @@ import { Task } from '@/types';
 
 const mockTask: Task = {
     Task_ID: 1,
-    Task_Key: "TEST-1",
+    Task_Key: 1,
     Project_ID: 1,
     Team_ID: 1,
     Assigned_User_ID: 2,

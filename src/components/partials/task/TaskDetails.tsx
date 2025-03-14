@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faPencil, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 import "quill-mention/dist/quill.mention.css";
@@ -251,6 +251,26 @@ export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> =
 
 const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
     const [toggleAddFile, setToggleAddFile] = useState<boolean>(false)
+    const { removeTaskMediaFile } = useTaskMediaFilesContext()
+    const { readTasksByProjectId, readTaskByKeys } = useTasksContext()
+
+    // Handle file deletion
+    const handleDelete = async (taskMediaFile: TaskMediaFile) => {
+        if (!task.Task_ID || !taskMediaFile.Media_ID) return
+
+        // Send the file ID to the API through the context function
+        if (taskMediaFile.Media_ID) {
+            await removeTaskMediaFile(taskMediaFile.Media_ID, taskMediaFile.Task_ID)
+
+            //// Task changed
+            if (task) {
+                if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true)
+                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+            }
+
+            setToggleAddFile(false);
+        }
+    };
 
     return (
         <>
@@ -258,6 +278,7 @@ const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
                 <MediaFilesAreaView
                     task={task}
                     setToggleAddFile={setToggleAddFile}
+                    handleDelete={handleDelete}
                 />
             ) : (
                 <AddTaskMediaFile
@@ -272,9 +293,10 @@ const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
 interface MediaFilesAreaViewProps {
     task: Task;
     setToggleAddFile: React.Dispatch<React.SetStateAction<boolean>>
+    handleDelete: (taskMediaFile: TaskMediaFile) => Promise<void>
 }
 
-export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, setToggleAddFile }) => {
+export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, setToggleAddFile, handleDelete }) => {
     return (
         <Card className={styles.mediaSection}>
             <Block className="flex gap-2 items-center">
@@ -297,12 +319,12 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, se
                             {media.Media_File_Name.split('-').slice(1).join('-')}
                         </Block>
                         {media.Media_File_Type === "jpeg" ? (
-                            <img 
+                            <img
                                 className={styles.mediaPlaceholder}
                                 src={`http://localhost:8000/storage/${media.Media_File_Path}`}
                             />
                         ) : (
-                            <Link 
+                            <Link
                                 className={styles.mediaPlaceholder}
                                 href={`http://localhost:8000/storage/${media.Media_File_Path}`}
                                 target="_blank"
@@ -312,10 +334,12 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, se
                         )}
                         <Block className={styles.mediaMeta}>
                             <span>Created: {new Date(media.Media_CreatedAt).toLocaleString()}</span>
-                            <Block className={styles.mediaActions}>
-                                <FontAwesomeIcon icon={faEdit} className={styles.icon} />
-                                <FontAwesomeIcon icon={faTrash} className={styles.icon} />
-                            </Block>
+                            <button
+                                className={styles.mediaActions}
+                                onClick={() => handleDelete(media)}
+                            >
+                                <FontAwesomeIcon icon={faTrashCan} className={styles.icon} />
+                            </button>
                         </Block>
                     </Block>
                 ))}
@@ -354,9 +378,9 @@ export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({ task, setTog
 
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
-        if (!task.Task_ID) return
-
         e.preventDefault();
+
+        if (!task.Task_ID) return
 
         if (!file || !mediaFileName || !mediaFileType) {
             alert("Please select a file and provide all necessary details.");
@@ -431,27 +455,29 @@ export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({ task, setTog
 };
 
 const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { addTaskComment } = useTaskCommentsContext();
+    const { addTaskComment, saveTaskCommentChanges, removeTaskComment } = useTaskCommentsContext();
     const { readTasksByProjectId, readTaskByKeys } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser)
 
-    const [newComment, setNewComment] = useState("");
-    const [isEditorVisible, setIsEditorVisible] = useState(false);
+    const [createComment, setCreateComment] = useState<string>("");
+    const [editComment, setEditComment] = useState<string>("");
+    const [isCreateCommentVisible, setIsCreateCommentVisible] = useState<boolean>(false);
+    const [isEditCommentVisible, setIsEditCommentVisible] = useState<TaskComment | undefined>(undefined);
 
     const handleAddComment = async () => {
         if (!authUser) return
 
-        if (newComment.trim() && authUser.User_ID) {
+        if (createComment.trim() && authUser.User_ID) {
             const theNewComment: TaskComment = {
                 Task_ID: task.Task_ID ?? 0,
                 User_ID: authUser.User_ID,
-                Comment_Text: newComment.trim()
+                Comment_Text: createComment.trim()
             }
             console.log("theNewComment", theNewComment)
             await addTaskComment(theNewComment.Task_ID, theNewComment)
 
-            setNewComment("");
-            setIsEditorVisible(false)
+            setCreateComment("");
+            setIsCreateCommentVisible(false)
 
             //// Task changed
             if (task) {
@@ -463,10 +489,61 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
     // Handle new comment cancel
     const handleCommentCancel = () => {
-        setNewComment("");
-        setIsEditorVisible(false); // Hide editor after cancel
+        setCreateComment("");
+        setIsCreateCommentVisible(false); // Hide editor after cancel
     };
 
+    const handleEditComment = async () => {
+        if (!authUser || !isEditCommentVisible) return
+
+        if (editComment.trim() && authUser.User_ID) {
+            const theEditedComment: TaskComment = {
+                ...isEditCommentVisible,
+                Comment_Text: editComment.trim()
+            }
+
+            await saveTaskCommentChanges(theEditedComment, theEditedComment.Task_ID)
+
+            setEditComment("");
+            setIsEditCommentVisible(undefined)
+
+            //// Task changed
+            if (task) {
+                if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
+                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+            }
+        }
+    }
+
+    // Handle new comment cancel
+    const handleEditCommentCancel = () => {
+        setEditComment("");
+        setIsEditCommentVisible(undefined); // Hide editor after cancel
+    };
+
+    // Handle comment deletion
+    const handleDeleteComment = async (taskComment: TaskComment) => {
+        if (!task.Task_ID || !taskComment.Comment_ID) return
+
+        // Send the comment ID to the API through the context function
+        if (taskComment.Comment_ID) {
+            await removeTaskComment(taskComment.Comment_ID, taskComment.Task_ID)
+            if (isEditCommentVisible && isEditCommentVisible.Comment_ID === taskComment.Comment_ID) {
+                setEditComment("")
+                setIsEditCommentVisible(undefined)
+            }
+
+            //// Task changed
+            if (task) {
+                if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true)
+                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+            }
+        }
+    };
+
+    /**
+     * Effects
+     */
     useEffect(() => {
         // Only load Quill and mention module on the client
         loadQuill().then(() => {
@@ -518,30 +595,44 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
     return (
         <CommentsAreaView
-            newComment={newComment}
-            setNewComment={setNewComment}
-            isEditorVisible={isEditorVisible}
-            setIsEditorVisible={setIsEditorVisible}
+            createComment={createComment}
+            setCreateComment={setCreateComment}
+            editComment={editComment}
+            setEditComment={setEditComment}
+            isCreateCommentVisible={isCreateCommentVisible}
+            setIsCreateCommentVisible={setIsCreateCommentVisible}
+            isEditCommentVisible={isEditCommentVisible}
+            setIsEditCommentVisible={setIsEditCommentVisible}
             task={task}
             authUser={authUser}
             addTaskComment={addTaskComment}
-            handleCommentCancel={handleCommentCancel}
             handleAddComment={handleAddComment}
+            handleCommentCancel={handleCommentCancel}
+            handleEditComment={handleEditComment}
+            handleEditCommentCancel={handleEditCommentCancel}
+            handleDeleteComment={handleDeleteComment}
             quillModule={quillModule}
         />
     );
 };
 
 interface CommentsAreaViewProps {
-    newComment: string
-    setNewComment: React.Dispatch<React.SetStateAction<string>>
-    isEditorVisible: boolean
-    setIsEditorVisible: React.Dispatch<React.SetStateAction<boolean>>
+    createComment: string
+    setCreateComment: React.Dispatch<React.SetStateAction<string>>
+    editComment: string
+    setEditComment: React.Dispatch<React.SetStateAction<string>>
+    isCreateCommentVisible: boolean
+    setIsCreateCommentVisible: React.Dispatch<React.SetStateAction<boolean>>
+    isEditCommentVisible: TaskComment | undefined
+    setIsEditCommentVisible: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
     task: Task;
     authUser: User | undefined
     addTaskComment: (taskId: number, comment: TaskComment) => Promise<void>
-    handleCommentCancel: () => void
     handleAddComment: () => Promise<void>
+    handleCommentCancel: () => void
+    handleEditComment: () => Promise<void>
+    handleEditCommentCancel: () => void
+    handleDeleteComment: (taskComment: TaskComment) => Promise<void>
     quillModule: {
         toolbar: (string[] | {
             list: string;
@@ -555,43 +646,73 @@ interface CommentsAreaViewProps {
 }
 
 export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
-    newComment,
-    setNewComment,
-    isEditorVisible,
-    setIsEditorVisible,
+    createComment,
+    setCreateComment,
+    editComment,
+    setEditComment,
+    isCreateCommentVisible,
+    setIsCreateCommentVisible,
+    isEditCommentVisible,
+    setIsEditCommentVisible,
     task,
     authUser,
     addTaskComment,
-    handleCommentCancel,
     handleAddComment,
+    handleCommentCancel,
+    handleEditComment,
+    handleEditCommentCancel,
+    handleDeleteComment,
     quillModule
 }) => {
     return (
         <Card className={styles.commentsSection}>
             <h2>Comments</h2>
-            {!isEditorVisible ? (
-                <Block className={styles.commentPlaceholder} onClick={() => setIsEditorVisible(true)}>
-                    Add a new comment...
-                </Block>
-            ) : (
+            {isEditCommentVisible ? (
                 <Block className={styles.commentEditor}>
                     <ReactQuill
-                        value={newComment}
-                        onChange={setNewComment}
+                        value={editComment}
+                        onChange={setEditComment}
                         placeholder="Write a comment..."
                         className={styles.commentInput}
                         theme="snow"
                         modules={quillModule}
                     />
                     <Block className={styles.newCommentActions}>
-                        <button className={styles.sendButton} onClick={handleAddComment}>
+                        <button className={styles.sendButton} onClick={handleEditComment}>
                             <FontAwesomeIcon icon={faPaperPlane} />
                         </button>
-                        <button className={styles.cancelButton} onClick={handleCommentCancel}>
+                        <button className={styles.cancelButton} onClick={handleEditCommentCancel}>
                             Cancel
                         </button>
                     </Block>
                 </Block>
+            ) : (
+                <>
+                    {!isCreateCommentVisible ? (
+                        <Block className={styles.commentPlaceholder} onClick={() => setIsCreateCommentVisible(true)}>
+                            Add a new comment...
+                        </Block>
+                    ) : (
+                        <Block className={styles.commentEditor}>
+                            <ReactQuill
+                                value={createComment}
+                                onChange={setCreateComment}
+                                placeholder="Write a comment..."
+                                className={styles.commentInput}
+                                theme="snow"
+                                modules={quillModule}
+                            />
+                            <Block className={styles.newCommentActions}>
+                                <button className={styles.sendButton} onClick={handleAddComment}>
+                                    <FontAwesomeIcon icon={faPaperPlane} />
+                                </button>
+                                <button className={styles.cancelButton} onClick={handleCommentCancel}>
+                                    Cancel
+                                </button>
+                            </Block>
+                        </Block>
+                    )}
+                </>
             )}
             {task.comments?.map((comment, index) => (
                 <Block key={index} className={styles.commentItem}>
@@ -609,8 +730,16 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                             )}
                         </span>
                         <Block className={styles.commentActions}>
-                            <FontAwesomeIcon icon={faEdit} className={styles.icon} />
-                            <FontAwesomeIcon icon={faTrash} className={styles.icon} />
+                            <FontAwesomeIcon icon={faPencil} className={styles.icon} onClick={() => {
+                                setEditComment(comment.Comment_Text)
+                                setIsEditCommentVisible(comment)
+                            }} />
+                            <button
+                                className={styles.mediaActions}
+                                onClick={() => handleDeleteComment(comment)}
+                            >
+                                <FontAwesomeIcon icon={faTrashCan} className={styles.icon} />
+                            </button>
                         </Block>
                     </Block>
                 </Block>
