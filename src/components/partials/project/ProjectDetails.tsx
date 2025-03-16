@@ -3,7 +3,11 @@
 // External
 import React, { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
-import { TextField, Card, CardContent, Typography, Grid, Box } from '@mui/material';
+import { TextField, Card, CardContent, Typography, Grid } from '@mui/material';
+import Link from 'next/link';
+import { faClock, faGauge, faLightbulb, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useRouter } from 'next/navigation';
 
 // Dynamically import ReactQuill with SSR disabled
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
@@ -14,15 +18,13 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import { useProjectsContext } from '@/contexts/';
 import { Project, ProjectFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
-import Link from 'next/link';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import { faClock, faGauge, faLightbulb, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const ProjectDetails: React.FC = () => {
+    const router = useRouter()
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
-    const { projectById, readProjectById, saveProjectChanges } = useProjectsContext()
+    const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
     const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
@@ -50,9 +52,18 @@ const ProjectDetails: React.FC = () => {
         }));
     }
 
-    const handleSaveChanges = () => {
-        if (renderProject) saveProjectChanges(renderProject, renderProject.Team_ID)
-    };
+    const handleSaveChanges = async () => {
+        if (renderProject) await saveProjectChanges(renderProject, renderProject.Team_ID)
+    }
+
+    const handleDeleteProject = async () => {
+        if (!renderProject || !renderProject.Project_ID) return
+
+        const removed = await removeProject(renderProject.Project_ID, renderProject.Team_ID)
+        if (!removed) return
+        
+        router.push(`/team/${renderProject.Project_ID}`)
+    }
 
     if (!renderProject) {
         return <div>Loading...</div>;
@@ -64,6 +75,7 @@ const ProjectDetails: React.FC = () => {
             authUser={authUser}
             handleProjectChange={handleProjectChange}
             handleSaveChanges={handleSaveChanges}
+            handleDeleteProject={handleDeleteProject}
         />
     );
 };
@@ -72,14 +84,16 @@ export interface ProjectDetailsViewProps {
     renderProject: Project | undefined;
     authUser: User | undefined;
     handleProjectChange: (field: ProjectFields, value: string) => void;
-    handleSaveChanges: () => void;
+    handleSaveChanges: () => Promise<void>
+    handleDeleteProject: () => Promise<void>
 }
 
 export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
     renderProject,
     authUser,
     handleProjectChange,
-    handleSaveChanges
+    handleSaveChanges,
+    handleDeleteProject
 }) => {
     return (
         <Block className="page-content">
@@ -199,11 +213,14 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                                     />
                                 </Grid>
                             </Grid>
-                            <Box mt={2}>
+                            <Block className="mt-2 flex justify-between">
                                 <button onClick={handleSaveChanges} className="button-blue">
                                     Save Changes
                                 </button>
-                            </Box>
+                                <button onClick={handleDeleteProject} className="blue-link-light red-link-light">
+                                    Delete Project
+                                </button>
+                            </Block>
                         </CardContent>
                     ) : (
                         <CardContent>

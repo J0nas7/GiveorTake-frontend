@@ -15,8 +15,8 @@ export const PrivateLayout = (
             <TaskTimeTrackPlayer />
             <Header />
             <div className="content-wrapper">
-                <LeftNav />
                 <Footer />
+                {/* <LeftNav /> */}
                 <main className="main-content">
                     {children}
                 </main>

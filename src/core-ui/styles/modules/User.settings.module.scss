@@ -60,36 +60,7 @@
 }
 
 .formActions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.saveButton,
-.deleteButton {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.saveButton {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.saveButton:hover {
-    background-color: #45a049;
-}
-
-.deleteButton {
-    background-color: #e74c3c;
-    color: white;
-}
-
-.deleteButton:hover {
-    background-color: #c0392b;
+    @apply flex justify-between;
 }
 
 .deletedMessage {

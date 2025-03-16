@@ -49,6 +49,10 @@
     @apply text-blue-400 inline-block;
     transition: transform 0.2s ease;
 
+    &.red-link-light {
+        @apply text-red-400;
+    }
+
     &:hover {
         transform: scale(1.1);
     }

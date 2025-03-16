@@ -27,8 +27,7 @@
 }
 
 .navList {
-    display: flex;
-    gap: 1rem;
+    @apply flex gap-4;
 }
 
 .navLink {

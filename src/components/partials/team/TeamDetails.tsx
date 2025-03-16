@@ -3,7 +3,7 @@
 // External
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { TextField, Card, CardContent, Typography, Grid, Box } from '@mui/material';
 
 // Dynamically import ReactQuill with SSR disabled
@@ -21,9 +21,10 @@ import { faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 
 const TeamDetails: React.FC = () => {
+    const router = useRouter()
     const pathname = usePathname(); // Get the current pathname
     const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
-    const { teamById, readTeamById, saveTeamChanges } = useTeamsContext()
+    const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
     const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined)
@@ -51,11 +52,18 @@ const TeamDetails: React.FC = () => {
         }));
     }
 
-    const handleSaveChanges = () => {
-        if (renderTeam) {
-            saveTeamChanges(renderTeam, renderTeam.Organisation_ID)
-        }
+    const handleSaveChanges = async () => {
+        if (renderTeam) await saveTeamChanges(renderTeam, renderTeam.Organisation_ID)
     };
+
+    const handleDeleteTeam = async () => {
+        if (!renderTeam || !renderTeam.Team_ID) return
+
+        const removed = await removeTeam(renderTeam.Team_ID, renderTeam.Organisation_ID)
+        if (!removed) return
+
+        router.push(`/organisation/${renderTeam.Organisation_ID}`)
+    }
 
     if (!renderTeam) {
         return <div>Loading...</div>;
@@ -65,10 +73,11 @@ const TeamDetails: React.FC = () => {
         <TeamDetailsView
             team={renderTeam}
             authUser={authUser}
+            pathname={pathname}
             handleHTMLInputChange={handleHTMLInputChange}
             handleTeamChange={handleTeamChange}
             handleSaveChanges={handleSaveChanges}
-            pathname={pathname}
+            handleDeleteTeam={handleDeleteTeam}
         />
     );
 };
@@ -76,19 +85,21 @@ const TeamDetails: React.FC = () => {
 export interface TeamDetailsViewProps {
     team: Team;
     authUser: User | undefined;
+    pathname: string;
     handleHTMLInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleTeamChange: (field: TeamFields, value: string) => void;
-    handleSaveChanges: () => void;
-    pathname: string;
+    handleSaveChanges: () => Promise<void>
+    handleDeleteTeam: () => Promise<void>
 }
 
 export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
     team,
     authUser,
+    pathname,
     handleHTMLInputChange,
     handleTeamChange,
     handleSaveChanges,
-    pathname
+    handleDeleteTeam,
 }) => {
 
     return (
@@ -164,11 +175,14 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                         />
                                     </Grid>
                                 </Grid>
-                                <Box mt={2}>
+                                <Block className="mt-2 flex justify-between">
                                     <button onClick={handleSaveChanges} className="button-blue">
                                         Save Changes
                                     </button>
-                                </Box>
+                                    <button onClick={handleDeleteTeam} className="blue-link-light red-link-light">
+                                        Delete Team
+                                    </button>
+                                </Block>
                             </CardContent>
                         ) : (
                             <CardContent>

@@ -2,7 +2,7 @@
 
 // External
 import React, { useEffect, useState } from 'react';
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { TextField, Card, CardContent, Typography, Grid, Box } from '@mui/material';
 
 // Dynamically import ReactQuill with SSR disabled
@@ -21,8 +21,9 @@ import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const OrganisationDetails: React.FC = () => {
+    const router = useRouter()
     const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
-    const { organisationById, readOrganisationById, saveOrganisationChanges } = useOrganisationsContext()
+    const { organisationById, readOrganisationById, saveOrganisationChanges, removeOrganisation } = useOrganisationsContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
     const [renderOrganisation, setRenderOrganisation] = useState<Organisation | undefined>(undefined)
@@ -50,11 +51,18 @@ const OrganisationDetails: React.FC = () => {
         }));
     }
 
-    const handleSaveChanges = () => {
-        if (renderOrganisation) {
-            saveOrganisationChanges(renderOrganisation, renderOrganisation.User_ID)
-        }
-    };
+    const handleSaveChanges = async () => {
+        if (renderOrganisation) await saveOrganisationChanges(renderOrganisation, renderOrganisation.User_ID)
+    }
+
+    const handleDeleteOrganisation = async () => {
+        if (!renderOrganisation || !renderOrganisation.Organisation_ID) return
+
+        const removed = await removeOrganisation(renderOrganisation.Organisation_ID, renderOrganisation.User_ID)
+        if (!removed) return
+
+        router.push(`/`)
+    }
 
     if (!renderOrganisation) {
         return <div>Loading...</div>; // Add loading state for when data is still fetching
@@ -64,8 +72,9 @@ const OrganisationDetails: React.FC = () => {
         <OrganisationDetailsView
             organisation={renderOrganisation}
             authUser={authUser}
-            onOrganisationChange={handleOrganisationChange}
-            onSaveChanges={handleSaveChanges}
+            handleOrganisationChange={handleOrganisationChange}
+            handleSaveChanges={handleSaveChanges}
+            handleDeleteOrganisation={handleDeleteOrganisation}
         />
     );
 };
@@ -73,15 +82,17 @@ const OrganisationDetails: React.FC = () => {
 type OrganisationDetailsViewProps = {
     organisation: Organisation;
     authUser: User | undefined;
-    onOrganisationChange: (field: OrganisationFields, value: string) => void;
-    onSaveChanges: () => void;
+    handleOrganisationChange: (field: OrganisationFields, value: string) => void;
+    handleSaveChanges: () => Promise<void>
+    handleDeleteOrganisation: () => Promise<void>
 }
 
 export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = ({
     organisation,
     authUser,
-    onOrganisationChange,
-    onSaveChanges,
+    handleOrganisationChange,
+    handleSaveChanges,
+    handleDeleteOrganisation,
 }) => {
     return (
         <Block className="page-content">
@@ -116,7 +127,7 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                                             variant="outlined"
                                             fullWidth
                                             value={organisation.Organisation_Name}
-                                            onChange={(e) => onOrganisationChange('Organisation_Name', e.target.value)}
+                                            onChange={(e) => handleOrganisationChange('Organisation_Name', e.target.value)}
                                             name="Organisation_Name"
                                         />
                                     </Grid>
@@ -126,7 +137,7 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                                             className="w-full"
                                             theme="snow"
                                             value={organisation.Organisation_Description}
-                                            onChange={(value) => onOrganisationChange('Organisation_Description', value)}
+                                            onChange={(value) => handleOrganisationChange('Organisation_Description', value)}
                                             modules={{
                                                 toolbar: [
                                                     [{ header: "1" }, { header: "2" }, { font: [] }],
@@ -140,11 +151,14 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                                         />
                                     </Grid>
                                 </Grid>
-                                <Box mt={2}>
-                                    <button onClick={onSaveChanges} className="button-blue">
+                                <Block className="mt-2 flex justify-between">
+                                    <button onClick={handleSaveChanges} className="button-blue">
                                         Save Changes
                                     </button>
-                                </Box>
+                                    <button onClick={handleDeleteOrganisation} className="blue-link-light red-link-light">
+                                        Delete Organisation
+                                    </button>
+                                </Block>
                             </CardContent>
                         ) : (
                             <CardContent>

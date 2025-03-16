@@ -193,18 +193,18 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
                             <p>This user has been deleted.</p>
                         </div>
                     ) : (
-                        <div className={styles.formActions}>
-                            <button className={styles.saveButton} onClick={handleSaveChanges}>
+                        <Block className={styles.formActions}>
+                            <button onClick={handleSaveChanges} className="button-blue">
                                 Save Changes
                             </button>
-                            <button className={styles.deleteButton} onClick={handleDeleteUser}>
+                            <button onClick={handleDeleteUser} className="blue-link-light red-link-light">
                                 Delete User
                             </button>
-                        </div>
+                        </Block>
                     )}
                 </div>
             </FlexibleBox>
-            
+
             {/* Display the teams the user is a part of */}
             <div className={styles.userTeamsContainer}>
                 <Heading variant="h3" className={styles.teamsHeading}>Organisation this user is a part of</Heading>

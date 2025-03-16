@@ -45,8 +45,9 @@ export const LeftNav: React.FC = () => {
         //     setVisibleProject(authUserSeats.team?.projects?.[0].Project_ID.toString())
         //     setRenderOrganisation(authUserSeats.team?.organisation)
         // } else 
-        if (authUserOrganisation && authUserOrganisation.teams?.[0].projects?.[0].Project_ID) {
-            setVisibleProject(authUserOrganisation.teams?.[0].projects?.[0].Project_ID.toString())
+        const projectId = authUserOrganisation?.teams?.[0]?.projects?.[0]?.Project_ID ?? null
+        if (projectId) {
+            setVisibleProject(projectId.toString())
             setRenderOrganisation(authUserOrganisation)
         }
     }, [authUserSeats, authUserOrganisation])
