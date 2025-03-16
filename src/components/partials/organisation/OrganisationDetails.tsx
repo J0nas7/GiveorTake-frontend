@@ -19,6 +19,7 @@ import { selectAuthUser, useTypedSelector } from '@/redux';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { CreatedAtToTimeSince } from '../task/TaskTimeTrackPlayer';
 
 const OrganisationDetails: React.FC = () => {
     const router = useRouter()
@@ -201,10 +202,8 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                                     </Typography>
                                     <Typography variant="body2" color="textSecondary">
                                         Created at:{" "}
-                                        {team.Team_CreatedAt ? (
-                                            new Date(team.Team_CreatedAt).toLocaleString()
-                                        ) : (
-                                            'N/A'
+                                        {team.Team_CreatedAt && (
+                                            <CreatedAtToTimeSince dateCreatedAt={team.Team_CreatedAt} />
                                         )}
                                     </Typography>
                                     <Typography variant="body2" color="textSecondary">

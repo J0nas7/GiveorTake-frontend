@@ -31,7 +31,7 @@ import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
 import clsx from "clsx";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
-import { SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
+import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
 import { Router } from "next/router";
 
 interface CardProps {
@@ -333,7 +333,15 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, se
                             </Link>
                         )}
                         <Block className={styles.mediaMeta}>
-                            <span>Created: {new Date(media.Media_CreatedAt).toLocaleString()}</span>
+                            <Block>
+                                <Block>
+                                    Created:{" "}
+                                    {media.Media_CreatedAt && (
+                                        <CreatedAtToTimeSince dateCreatedAt={media.Media_CreatedAt} />
+                                    )}
+                                    </Block>
+                                <Block>By: {media.user?.User_FirstName} {media.user?.User_Surname}</Block>
+                            </Block>
                             <button
                                 className={styles.mediaActions}
                                 onClick={() => handleDelete(media)}
@@ -721,14 +729,17 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                         dangerouslySetInnerHTML={{ __html: comment.Comment_Text }}
                     />
                     <Block className={styles.commentMeta}>
-                        <span>
-                            Created:{" "}
-                            {comment.Comment_CreatedAt ? (
-                                new Date(comment.Comment_CreatedAt).toLocaleString()
-                            ) : (
-                                "N/A"
-                            )}
-                        </span>
+                        <Block>
+                            <Block>
+                                Created:{" "}
+                                {comment.Comment_CreatedAt && (
+                                    <CreatedAtToTimeSince dateCreatedAt={comment.Comment_CreatedAt} />
+                                )}
+                            </Block>
+                            <Block>
+                                By: {comment.user?.User_FirstName} {comment.user?.User_Surname}
+                            </Block>
+                        </Block>
                         <Block className={styles.commentActions}>
                             <FontAwesomeIcon icon={faPencil} className={styles.icon} onClick={() => {
                                 setEditComment(comment.Comment_Text)
@@ -1005,10 +1016,14 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     })}
                 </select>
             </p>
-            <p><strong>Team:</strong> {task.project?.team?.Team_Name}</p>
+            <p>
+                <strong>Team:</strong>{" "}
+                {task.project?.team?.Team_Name}</p>
             <p>
                 <strong>Created At:</strong>{" "}
-                {task.Task_CreatedAt && new Date(task.Task_CreatedAt).toLocaleString()}
+                {task.Task_CreatedAt && (
+                    <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
+                )}
             </p>
             <p>
                 <strong>Due Date:</strong>{" "}

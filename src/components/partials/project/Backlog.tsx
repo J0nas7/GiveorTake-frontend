@@ -16,6 +16,7 @@ import { selectAuthUser, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
+import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 
 const BacklogContainer = () => {
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
@@ -380,10 +381,8 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                     )
                                 })()}
                                 <td>
-                                    {task.Task_CreatedAt ? (
-                                        new Date(task.Task_CreatedAt).toLocaleString()
-                                    ) : (
-                                        "N/A"
+                                    {task.Task_CreatedAt && (
+                                        <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
                                     )}
                                 </td>
                             </tr>

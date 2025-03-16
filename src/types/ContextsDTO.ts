@@ -189,7 +189,7 @@ export type TaskMediaFile = {
 
     // Relationships
     task?: Task;
-    uploadedBy?: User;
+    user?: User;
 }
 
 export type TaskMediaFileFields =

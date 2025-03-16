@@ -19,7 +19,7 @@ export const TaskTimeTrackPlayer = () => {
     const { taskDetail } = useTasksContext()
     const { fetchIsLoggedInStatus } = useAuthActions()
     const dispatch = useAppDispatch()
-    
+
     const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
 
     useEffect(() => {
@@ -71,7 +71,7 @@ export const TaskTimeTrackPlayer = () => {
                                     <option value="">Recent tasks</option>
                                     {latestUniqueTaskTimeTracksByProject.map((timetrack: TaskTimeTrack, key) => {
                                         if (timetrack.Task_ID === taskTimeTrack.Task_ID) return null
-                                        
+
                                         return (
                                             <option key={key} value={timetrack.Time_Tracking_ID}>
                                                 {timetrack.task?.Task_Title}
@@ -88,6 +88,36 @@ export const TaskTimeTrackPlayer = () => {
     )
 }
 
+export const CreatedAtToTimeSince = ({ dateCreatedAt }: { dateCreatedAt: string }) => {
+    const createdAt = new Date(dateCreatedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - createdAt.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    const formatTime = (date: Date) => {
+        return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+    };
+
+    const formatDate = (date: Date) => {
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+    };
+
+    if (diffMinutes < 60) {
+        return `${diffMinutes} minutes ago`; // "x minutes ago"
+    } else if (diffHours < 24 && createdAt.getDate() === now.getDate()) {
+        return `today, ${formatTime(createdAt)}`; // "today, HH:mm"
+    } else if (diffDays === 1 || (diffHours < 48 && createdAt.getDate() === now.getDate() - 1)) {
+        return `yesterday, ${formatTime(createdAt)}`; // "yesterday, HH:mm"
+    } else if (diffDays <= 5) {
+        const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        return `${weekdays[createdAt.getDay()]}, ${formatTime(createdAt)}`; // "Weekday, HH:mm"
+    } else {
+        return createdAt.toLocaleString()
+    }
+}
+
 export const SecondsToTimeDisplay = ({ totalSeconds }: { totalSeconds: number }) => {
     const [formattedTime, setFormattedTime] = useState<string>('')
 
@@ -96,13 +126,13 @@ export const SecondsToTimeDisplay = ({ totalSeconds }: { totalSeconds: number })
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = Math.floor(totalSeconds % 60);
-    
+
         // Format the time as hh:mm:ss
         const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
         setFormattedTime(formattedTime);
     }, [totalSeconds])
-    
+
     return <>{formattedTime}</>
 }
 
@@ -115,10 +145,10 @@ export const TimeSpentDisplay = ({ startTime }: { startTime: string }) => {
             const currentDate = new Date();
             const diffInMilliseconds = currentDate.getTime() - startDate.getTime();
             const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
-            
+
             setDiffInSeconds(diffInSeconds)
         }, 1000);
-        
+
         // Cleanup interval on component unmount
         return () => clearInterval(interval);
     }, [startTime]);
