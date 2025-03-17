@@ -14,7 +14,7 @@
             overflow-y: auto;
             background-color: #f9fafb; // Tailwind's bg-gray-50
             padding: 1.5rem;
-            @apply mt-16 mb-24;
+            @apply mt-36 md:mt-16 mb-24;
             
             .page-content {
                 @apply mx-auto overflow-x-auto;

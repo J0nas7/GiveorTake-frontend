@@ -32,9 +32,7 @@
 }
 
 .chartSection {
-    width: 100%;
-    display: flex;
-    gap: 2rem;
+    @apply w-full flex flex-col md:flex-row gap-8;
 }
 
 .chartBlock {

@@ -267,128 +267,130 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <table className={styles.taskTable}>
-                    <thead>
-                        <tr>
-                            <th>
-                                <input
-                                    type="checkbox"
-                                    checked={selectAll}
-                                    onChange={handleSelectAllChange}
-                                />
-                            </th>
-                            <th onClick={() => handleSort("2")}>
-                                <Text variant="span">Task Key</Text>
-                                {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                            </th>
-                            <th onClick={() => handleSort("1")}>
-                                <Text variant="span">Task Title</Text>
-                                {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                            </th>
-                            <th onClick={() => handleSort("3")}>
-                                <Text variant="span">Status</Text>
-                                {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                            </th>
-                            <th onClick={() => handleSort("4")}>
-                                <Text variant="span">Assignee</Text>
-                                {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                            </th>
-                            <th onClick={() => handleSort("5")}>
-                                <Text variant="span">Created At</Text>
-                                {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colSpan={2}></td>
-                            <td>
-                                <Field
-                                    type="text"
-                                    lbl="New Task"
-                                    innerLabel={true}
-                                    value={newTask?.Task_Title ?? ''}
-                                    onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
-                                    onKeyDown={
-                                        (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
-                                            ifEnter(event)
-                                    }
-                                    disabled={false}
-                                    className="w-full"
-                                />
-                            </td>
-                            <td>
-                                {/* Dropdown to change the status */}
-                                <select
-                                    value={newTask?.Task_Status}
-                                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                                        const newStatus = event.target.value as Task["Task_Status"]
-                                        handleChangeNewTask("Task_Status", newStatus)
-                                    }}
-                                    className="p-2 border rounded"
-                                >
-                                    <option value="To Do">To Do</option>
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="Waiting for Review">Waiting for Review</option>
-                                    <option value="Done">Done</option>
-                                </select>
-                            </td>
-                            <td>
-                                {/* Dropdown to change the user assignee */}
-                                <select
-                                    value={newTask?.Assigned_User_ID}
-                                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                                        const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
-                                        if (newAssigneeID) handleChangeNewTask("Assigned_User_ID", newAssigneeID.toString())
-                                    }}
-                                    className="p-2 border rounded"
-                                >
-                                    <option value="">Assignee</option>
-                                    {renderProject?.team?.user_seats?.map(userSeat => {
-                                        return (
-                                            <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
-                                        )
-                                    })}
-                                </select>
-                            </td>
-                            <td>
-                                <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
-                                    <FontAwesomeIcon icon={faPlus} /> Create
-                                </button>
-                            </td>
-                        </tr>
-                        {sortedTasks.map((task) => (
-                            <tr key={task.Task_ID}>
-                                <td>
+                <Block className="overflow-x-auto">
+                    <table className={styles.taskTable}>
+                        <thead>
+                            <tr>
+                                <th>
                                     <input
                                         type="checkbox"
-                                        value={task.Task_ID}
-                                        checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
-                                        onChange={handleCheckboxChange}
+                                        checked={selectAll}
+                                        onChange={handleSelectAllChange}
+                                    />
+                                </th>
+                                <th onClick={() => handleSort("2")}>
+                                    <Text variant="span">Task Key</Text>
+                                    {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                                </th>
+                                <th onClick={() => handleSort("1")}>
+                                    <Text variant="span">Task Title</Text>
+                                    {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                                </th>
+                                <th onClick={() => handleSort("3")}>
+                                    <Text variant="span">Status</Text>
+                                    {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                                </th>
+                                <th onClick={() => handleSort("4")}>
+                                    <Text variant="span">Assignee</Text>
+                                    {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                                </th>
+                                <th onClick={() => handleSort("5")}>
+                                    <Text variant="span">Created At</Text>
+                                    {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colSpan={2}></td>
+                                <td>
+                                    <Field
+                                        type="text"
+                                        lbl="New Task"
+                                        innerLabel={true}
+                                        value={newTask?.Task_Title ?? ''}
+                                        onChange={(e: string) => handleChangeNewTask("Task_Title", e)}
+                                        onKeyDown={
+                                            (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                                                ifEnter(event)
+                                        }
+                                        disabled={false}
+                                        className="w-full"
                                     />
                                 </td>
-                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                    {renderProject?.Project_Key}-{task.Task_Key}
-                                </td>
-                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                    {task.Task_Title}
-                                </td>
-                                <td className={styles.status}>{task.Task_Status}</td>
-                                {(() => {
-                                    const assignee = renderProject?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
-                                    return (
-                                        <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
-                                    )
-                                })()}
                                 <td>
-                                    {task.Task_CreatedAt && (
-                                        <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
-                                    )}
+                                    {/* Dropdown to change the status */}
+                                    <select
+                                        value={newTask?.Task_Status}
+                                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                                            const newStatus = event.target.value as Task["Task_Status"]
+                                            handleChangeNewTask("Task_Status", newStatus)
+                                        }}
+                                        className="p-2 border rounded"
+                                    >
+                                        <option value="To Do">To Do</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Waiting for Review">Waiting for Review</option>
+                                        <option value="Done">Done</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    {/* Dropdown to change the user assignee */}
+                                    <select
+                                        value={newTask?.Assigned_User_ID}
+                                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                                            const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
+                                            if (newAssigneeID) handleChangeNewTask("Assigned_User_ID", newAssigneeID.toString())
+                                        }}
+                                        className="p-2 border rounded"
+                                    >
+                                        <option value="">Assignee</option>
+                                        {renderProject?.team?.user_seats?.map(userSeat => {
+                                            return (
+                                                <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
+                                            )
+                                        })}
+                                    </select>
+                                </td>
+                                <td>
+                                    <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
+                                        <FontAwesomeIcon icon={faPlus} /> Create
+                                    </button>
                                 </td>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                            {sortedTasks.map((task) => (
+                                <tr key={task.Task_ID}>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            value={task.Task_ID}
+                                            checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
+                                            onChange={handleCheckboxChange}
+                                        />
+                                    </td>
+                                    <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                        {renderProject?.Project_Key}-{task.Task_Key}
+                                    </td>
+                                    <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                        {task.Task_Title}
+                                    </td>
+                                    <td className={styles.status}>{task.Task_Status}</td>
+                                    {(() => {
+                                        const assignee = renderProject?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
+                                        return (
+                                            <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
+                                        )
+                                    })()}
+                                    <td>
+                                        {task.Task_CreatedAt && (
+                                            <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </Block>
             </FlexibleBox>
         </Block >
     );

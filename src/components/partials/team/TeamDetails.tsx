@@ -117,7 +117,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                     className="no-box w-auto inline-block"
                     numberOfColumns={2}
                     titleAction={<>
-                        <Block className="flex gap-2">
+                        <Block className="flex flex-col sm:flex-row gap-2">
                             <Link
                                 href={`${pathname}/seats`}
                                 className="blue-link !inline-flex gap-2 items-center"

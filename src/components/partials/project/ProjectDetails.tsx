@@ -107,7 +107,7 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
             <FlexibleBox
                 title={`Project Info`}
                 titleAction={<>
-                    <Block className="flex gap-2 items-center">
+                    <Block className="flex flex-col sm:flex-row gap-2 items-center">
                         <Link
                             href={`/project/dashboard/${renderProject?.Project_ID}`}
                             className="blue-link !inline-flex gap-2 items-center"

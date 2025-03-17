@@ -33,10 +33,10 @@ export const Header: React.FC = () => {
                             height={36}
                         />
                         <Text variant="span">
-                            <Text variant="span" className="font-sans text-lg font-extrabold text-white h-5">
+                            <Text variant="span" className={styles.title}>
                                 Give or Take
                             </Text>
-                            <Text variant="span" className="text-xs text-black">
+                            <Text variant="span" className={styles.subTitle}>
                                 Project Management & Time Tracking
                             </Text>
                         </Text>

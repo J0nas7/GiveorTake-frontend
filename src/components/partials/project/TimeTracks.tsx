@@ -220,13 +220,13 @@ export const TimeTracksContainer = () => {
                     <Block className="w-full p-4 bg-white rounded-lg shadow-md">
                         <TimeTracksPeriodSum timeTracks={sortedByLatest} />
                     </Block>
-                    <Block className="flex gap-4">
-                        <Block className="w-1/4 p-4 bg-white rounded-lg shadow-md">
+                    <Block className="flex flex-col lg:flex-row gap-4">
+                        <Block className="w-full lg:w-1/4 p-4 bg-white rounded-lg shadow-md">
                             <TimeSpentPerTask renderProject={renderProject} sortedByDuration={sortedByDuration} />
                         </Block>
 
                         {/* List of Time Tracks */}
-                        <Block className="w-3/4 p-4 bg-white rounded-lg shadow-md">
+                        <Block className="w-full lg:w-3/4 p-4 bg-white rounded-lg shadow-md">
                             <LatestTimeLogs
                                 sortedByLatest={sortedByLatest}
                             />
@@ -560,7 +560,7 @@ export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks
     }, [timeTracks, totalTimeTracked]);
 
     return (
-        <Block className="w-full flex gap-4 p-4">
+        <Block className="w-full flex flex-col items-center sm:flex-row gap-4 p-4">
             <Block className="w-1/2 flex flex-col items-center">
                 <FontAwesomeIcon icon={faClock} className="text-blue-500 text-2xl mb-2" />
                 <Heading variant="h3" className="text-sm font-medium">
@@ -760,7 +760,7 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
             <Heading variant="h3" className="text-lg font-semibold mb-2">
                 {t("timetrack.timeTracksPeriodSum.title")}
             </Heading>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {Object.entries(sortedGroupedByDay).map(([date, data]) => {
                     // Format date with weekday name
                     const dateObj = new Date(data.tracks[0].Time_Tracking_Start_Time);
@@ -785,7 +785,10 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
                             {/* 📝 List of Tasks for that Day */}
                             <ul className="mt-3 space-y-2">
                                 {data.tracks.map((track) => (
-                                    <li key={track.Time_Tracking_ID} className="flex justify-between items-center bg-gray-100 p-2 rounded-md">
+                                    <li 
+                                        key={track.Time_Tracking_ID} 
+                                        className="flex flex-col lg:flex-row justify-between items-center bg-gray-100 p-2 rounded-md"
+                                    >
                                         {/* Link to Task */}
                                         <Text variant="small" className="text-xs">
                                             ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
