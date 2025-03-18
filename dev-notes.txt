@@ -27,6 +27,7 @@ npm i:
     react-chartjs-2 chart.js
     react-merge-providers
     cookies-next@4.0
+    react-dnd react-dnd-html5-backend
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
