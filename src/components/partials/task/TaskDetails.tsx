@@ -759,11 +759,7 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
     );
 };
 
-interface CtaButtonsProps {
-    task: Task
-}
-
-const CtaButtons: React.FC<CtaButtonsProps> = ({ task }) => {
+const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
     const router = useRouter()
     const { taskDetail, setTaskDetail, removeTask, readTasksByProjectId } = useTasksContext()
 

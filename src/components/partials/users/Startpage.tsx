@@ -4,12 +4,12 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { faBuilding, faPlus, faUser } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Internal
 import { Block, FlexibleBox, Text } from "@/components";
 import { selectAuthUser, useTypedSelector } from "@/redux";
 import { useOrganisationsContext } from "@/contexts";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const Startpage = () => {
     const authUser = useTypedSelector(selectAuthUser);
@@ -17,7 +17,7 @@ export const Startpage = () => {
 
     useEffect(() => {
         if (authUser && authUser.User_ID) readOrganisationsByUserId(authUser.User_ID);
-        document.title = "Startside - GiveOrTake";
+        document.title = "Welcome - GiveOrTake";
     }, [authUser]);
 
     return (

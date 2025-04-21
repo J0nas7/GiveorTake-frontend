@@ -19,7 +19,7 @@ const mockProps: BacklogContainerViewProps = {
     sortedTasks: [
         {
             Task_ID: 1,
-            Task_Key: "TEST-101",
+            Task_Key: 1,
             Project_ID: 1,
             Team_ID: 1,
             Task_Title: "Task 1",
@@ -29,7 +29,7 @@ const mockProps: BacklogContainerViewProps = {
         },
         {
             Task_ID: 2,
-            Task_Key: "TEST-102",
+            Task_Key: 2,
             Project_ID: 1,
             Team_ID: 1,
             Task_Title: "Task 2",
@@ -40,7 +40,7 @@ const mockProps: BacklogContainerViewProps = {
     ],
     newTask: {
         Task_ID: 3,
-        Task_Key: "TEST-103",
+        Task_Key: 3,
         Project_ID: 1,
         Team_ID: 1,
         Task_Title: "New Task",
@@ -50,13 +50,18 @@ const mockProps: BacklogContainerViewProps = {
     },
     currentSort: "1",
     currentOrder: "asc",
-    showActionMenu: null,
+    // showActionMenu: null,
     t: ((key: string) => key) as unknown as TFunction,
     handleSort: jest.fn(),
     handleCreateTask: jest.fn(),
     handleChangeNewTask: jest.fn(),
     setTaskDetail: jest.fn(),
-    setActionMenu: jest.fn(),
+    selectedTaskIds: [] as string[],
+    selectAll: false,
+    ifEnter: jest.fn(),
+    handleCheckboxChange: jest.fn(),
+    handleSelectAllChange: jest.fn()
+    // setActionMenu: jest.fn(),
 };
 
 describe("BacklogContainerView Component", () => {
@@ -112,14 +117,6 @@ describe("BacklogContainerView Component", () => {
         render(<BacklogContainerView {...mockProps} newTask={undefined} />);
         expect(screen.getByLabelText(/New Task/i)).toHaveValue("");
     });
-
-    it("handles opening and closing the action menu", () => {
-        render(<BacklogContainerView {...mockProps} />);
-        fireEvent.click(screen.getAllByRole("button")[0]); // Click first action menu button
-        expect(mockProps.setActionMenu).toHaveBeenCalledWith(1); // Check task ID passed to the action menu
-        fireEvent.click(screen.getAllByRole("button")[0]); // Click again to close
-        expect(mockProps.setActionMenu).toHaveBeenCalledWith(null); // Action menu should be closed
-    });
 });
 
 // Edge cases testing
@@ -150,15 +147,5 @@ describe("Edge Cases for BacklogContainerView", () => {
     it("displays 'Unassigned' if the task has no assigned user", () => {
         render(<BacklogContainerView {...mockPropsEdge} sortedTasks={[{ ...mockPropsEdge.sortedTasks[0], Assigned_User_ID: undefined }]} />);
         expect(screen.getByText(/Unassigned/i)).toBeInTheDocument(); // Task without assignee should show "Unassigned"
-    });
-
-    // Edge Case 5: Action menu open/close behavior
-    it("correctly toggles the action menu for a task", () => {
-        render(<BacklogContainerView {...mockPropsEdge} />);
-        const actionButton = screen.getAllByRole("button")[0];
-        fireEvent.click(actionButton); // Open
-        expect(mockPropsEdge.setActionMenu).toHaveBeenCalledWith(1);
-        fireEvent.click(actionButton); // Close
-        expect(mockPropsEdge.setActionMenu).toHaveBeenCalledWith(null);
     });
 });
