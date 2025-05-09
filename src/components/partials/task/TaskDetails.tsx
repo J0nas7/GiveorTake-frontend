@@ -842,11 +842,7 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail
     )
 }
 
-interface TaskDetailsAreaProps {
-    task: Task
-}
-
-const TaskDetailsArea: React.FC<TaskDetailsAreaProps> = ({ task }) => {
+const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
     const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
     const { readTasksByProjectId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
@@ -935,41 +931,6 @@ interface TaskDetailsViewProps {
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
 }
 
-interface TimeSpentDisplayViewProps {
-    task: Task
-    handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
-}
-
-const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({
-    task,
-    handleTaskTimeTrack
-}) => {
-    const authUser = useTypedSelector(selectAuthUser)
-    const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
-
-    return (
-        <>
-            {(taskTimeTrack && taskTimeTrack.Task_ID === task.Task_ID) ? (
-                <Block variant="span" className="flex gap-2 items-center">
-                    <button className={clsx("timetrack-button", "timetrack-stopbutton")} onClick={() => handleTaskTimeTrack("Stop", task)}>
-                        <FontAwesomeIcon icon={faStop} />
-                    </button>
-                    <Block variant="span">
-                        {/* Calculate and display time spent since start */}
-                        {taskTimeTrack.Time_Tracking_Start_Time ? (
-                            <TimeSpentDisplay startTime={taskTimeTrack.Time_Tracking_Start_Time} />
-                        ) : null}
-                    </Block>
-                </Block>
-            ) : (
-                <button className={clsx("timetrack-button", "timetrack-playbutton")} onClick={() => handleTaskTimeTrack("Play", task)}>
-                    <FontAwesomeIcon icon={faPlay} />
-                </button>
-            )}
-        </>
-    )
-}
-
 export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     task,
     taskDetail,
@@ -1041,6 +1002,41 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                 </Block>
             </p>
         </Card>
+    )
+}
+
+interface TimeSpentDisplayViewProps {
+    task: Task
+    handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
+}
+
+const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({
+    task,
+    handleTaskTimeTrack
+}) => {
+    const authUser = useTypedSelector(selectAuthUser)
+    const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
+
+    return (
+        <>
+            {(taskTimeTrack && taskTimeTrack.Task_ID === task.Task_ID) ? (
+                <Block variant="span" className="flex gap-2 items-center">
+                    <button className={clsx("timetrack-button", "timetrack-stopbutton")} onClick={() => handleTaskTimeTrack("Stop", task)}>
+                        <FontAwesomeIcon icon={faStop} />
+                    </button>
+                    <Block variant="span">
+                        {/* Calculate and display time spent since start */}
+                        {taskTimeTrack.Time_Tracking_Start_Time ? (
+                            <TimeSpentDisplay startTime={taskTimeTrack.Time_Tracking_Start_Time} />
+                        ) : null}
+                    </Block>
+                </Block>
+            ) : (
+                <button className={clsx("timetrack-button", "timetrack-playbutton")} onClick={() => handleTaskTimeTrack("Play", task)}>
+                    <FontAwesomeIcon icon={faPlay} />
+                </button>
+            )}
+        </>
     )
 }
 

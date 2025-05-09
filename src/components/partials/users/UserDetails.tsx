@@ -1,15 +1,20 @@
 "use client";
 
+// External
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { useQRCode } from 'next-qrcode';
+
+// Internal
 import { useUsersContext } from '@/contexts';
 import { selectAuthUser, selectAuthUserOrganisation, selectAuthUserSeat, useTypedSelector } from '@/redux';
 import { Organisation, TeamUserSeat, User } from '@/types';
 import { Heading } from '@/components/ui/heading';
 import styles from "@/core-ui/styles/modules/User.settings.module.scss";
-import Link from 'next/link';
 import { Block } from '@/components/ui/block-text';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { useCookies } from '@/hooks';
 
 const UserDetails: React.FC = () => {
     // Get user data and the save function from context
@@ -113,6 +118,9 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
     handleSaveChanges,
     handleDeleteUser,
 }) => {
+    const { Canvas } = useQRCode();
+    const { getTheCookie } = useCookies()
+    const accessToken = getTheCookie("accessToken")
     if (!user) return <p>Loading user details...</p>
 
     return (
@@ -186,6 +194,10 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
                                 accept="image/*"
                             />
                         </div>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <Canvas text={accessToken!.toString()} />
                     </div>
 
                     {user.User_DeletedAt ? (
