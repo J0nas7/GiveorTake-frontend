@@ -33,6 +33,7 @@ import clsx from "clsx";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
 import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
 import { Router } from "next/router";
+import { env } from "@/env.urls";
 
 interface CardProps {
     children: React.ReactNode;
@@ -318,15 +319,15 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, se
                             {/* Split the Media_File_Name by hyphen (-) and get the part after the first hyphen */}
                             {media.Media_File_Name.split('-').slice(1).join('-')}
                         </Block>
-                        {media.Media_File_Type === "jpeg" ? (
+                        {(media.Media_File_Type === "jpeg" || media.Media_File_Type === "jpg") ? (
                             <img
                                 className={styles.mediaPlaceholder}
-                                src={`http://localhost:8000/storage/${media.Media_File_Path}`}
+                                src={`${env.url.API_URL}/storage/${media.Media_File_Path}`}
                             />
                         ) : (
                             <Link
                                 className={styles.mediaPlaceholder}
-                                href={`http://localhost:8000/storage/${media.Media_File_Path}`}
+                                href={`${env.url.API_URL}/storage/${media.Media_File_Path}`}
                                 target="_blank"
                             >
                                 <Text variant="span" className="text-sm font-semibold">PDF</Text>
