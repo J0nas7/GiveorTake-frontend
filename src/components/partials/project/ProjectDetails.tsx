@@ -3,7 +3,7 @@
 // External
 import React, { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
-import { TextField, Card, CardContent, Typography, Grid } from '@mui/material';
+import { TextField, Card, CardContent, Typography, Box, Grid } from '@mui/material';
 import Link from 'next/link';
 import { faClock, faGauge, faLightbulb, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -32,6 +32,7 @@ const ProjectDetails: React.FC = () => {
     useEffect(() => { readProjectById(parseInt(projectId)); }, [projectId]);
     useEffect(() => {
         if (projectId) {
+            console.log("projectById", projectById)
             setRenderProject(projectById)
             document.title = `Project: ${projectById?.Project_Name} - GiveOrTake`
         }
@@ -61,7 +62,7 @@ const ProjectDetails: React.FC = () => {
 
         const removed = await removeProject(renderProject.Project_ID, renderProject.Team_ID)
         if (!removed) return
-        
+
         router.push(`/team/${renderProject.Project_ID}`)
     }
 
@@ -108,27 +109,6 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                 title={`Project Info`}
                 titleAction={<>
                     <Block className="flex flex-col sm:flex-row gap-2 items-center">
-                        <Link
-                            href={`/project/dashboard/${renderProject?.Project_ID}`}
-                            className="blue-link !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faGauge} />
-                            <Text variant="span">Dashboard</Text>
-                        </Link>
-                        <Link
-                            href={`/backlog/${renderProject?.Project_ID}`}
-                            className="blue-link !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faList} />
-                            <Text variant="span">Backlog</Text>
-                        </Link>
-                        <Link
-                            href={`/kanban/${renderProject?.Project_ID}`}
-                            className="blue-link !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faWindowRestore} />
-                            <Text variant="span">Kanban Board</Text>
-                        </Link>
                         <Link
                             href={`/time-tracks/project/${renderProject?.Project_ID}`}
                             className="blue-link !inline-flex gap-2 items-center"
@@ -230,7 +210,7 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                             <Grid container spacing={3}>
                                 <Grid item xs={12} sm={6}>
                                     <strong>Project Name:</strong><br />
-                                    {renderProject?.Project_Name}
+                                    {renderProject?.Project_Name || 'No name available'}
                                 </Grid>
                                 <Grid item xs={12} sm={3}>
                                     <strong>Project Status:</strong><br />
@@ -259,6 +239,77 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                     )}
                 </Card>
             </FlexibleBox>
+
+            {/* Projects Overview Section */}
+            <Box mb={4}>
+                <Typography variant="h5" gutterBottom>
+                    Backlogs Overview
+                </Typography>
+                <Grid container spacing={3}>
+                    {renderProject?.backlogs?.map((backlog) => (
+                        <Grid item xs={12} sm={6} md={4} key={backlog.Backlog_ID}>
+                            <Card>
+                                <CardContent>
+                                    <p className="font-semibold">
+                                        {backlog.Backlog_Name}
+                                    </p>
+
+                                    <Block className="flex gap-3 my-2">
+                                        <Link 
+                                            href={`/backlog/${backlog.Backlog_ID}`} 
+                                            className="blue-link !inline-flex gap-2 items-center"
+                                        >
+                                            <FontAwesomeIcon icon={faList} />
+                                            Backlog
+                                        </Link>
+                                        <Link 
+                                            href={`/kanban/${backlog.Backlog_ID}`} 
+                                            className="blue-link !inline-flex gap-2 items-center"
+                                        >
+                                            <FontAwesomeIcon icon={faWindowRestore} />
+                                            Kanban Board
+                                        </Link>
+                                        <Link
+                                            href={`/dashboard/${backlog.Backlog_ID}`}
+                                            className="blue-link !inline-flex gap-2 items-center"
+                                        >
+                                            <FontAwesomeIcon icon={faGauge} />
+                                            <Text variant="span">Dashboard</Text>
+                                        </Link>
+                                    </Block>
+
+                                    <Typography variant="body2" color="textSecondary" paragraph>
+                                        <div dangerouslySetInnerHTML={{
+                                            __html: backlog.Backlog_Description || 'No description available'
+                                        }} />
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        Number of Tasks: {backlog.tasks?.length || 0}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        Start Date: {backlog.Backlog_StartDate ? new Date(backlog.Backlog_StartDate).toLocaleString() : 'N/A'}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        End Date: {backlog.Backlog_EndDate ? new Date(backlog.Backlog_EndDate).toLocaleString() : 'N/A'}
+                                    </Typography>
+
+                                    {backlog.Backlog_IsPrimary ? (
+                                        <Block className="mt-2 text-gray-400">
+                                            Primary Backlog
+                                        </Block>
+                                    ) : (
+                                        <Block className="mt-2">
+                                            <Link href={`/finish-backlog/${backlog.Backlog_ID}`} className="blue-link-light red-link-light">
+                                                Finish Backlog
+                                            </Link>
+                                        </Block>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
         </Block>
     );
 };

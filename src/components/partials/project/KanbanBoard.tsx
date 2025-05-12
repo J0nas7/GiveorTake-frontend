@@ -11,8 +11,8 @@ import { faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
 // Internal
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
 import { Block, Text, Heading } from "@/components"
-import { useProjectsContext, useTasksContext } from "@/contexts"
-import { Project, Task } from "@/types"
+import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
+import { Backlog, Project, Task } from "@/types"
 import { selectAuthUser, useTypedSelector } from "@/redux"
 import Link from "next/link"
 import { FlexibleBox } from "@/components/ui/flexible-box"
@@ -100,12 +100,12 @@ const Column: React.FC<ColumnProps> = ({
 };
 
 const KanbanBoardContainer = () => {
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
-    const { projectById, readProjectById } = useProjectsContext()
-    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask, saveTaskChanges } = useTasksContext()
+    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
+    const { backlogById, readBacklogById } = useBacklogsContext()
+    const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask, saveTaskChanges } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
-    const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
+    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     useEffect(() => {
@@ -113,21 +113,21 @@ const KanbanBoardContainer = () => {
         if (tasksById.length == 0 && renderTasks) {
             setRenderTasks(undefined)
         }
-        if (tasksById.length && !renderTasks) {
+        if (tasksById.length) {
             console.log("renderTasks", renderTasks)
             setRenderTasks(tasksById)
         }
     }, [tasksById])
     useEffect(() => {
-        readTasksByProjectId(parseInt(projectId))
-        readProjectById(parseInt(projectId))
-    }, [projectId])
+        readTasksByBacklogId(parseInt(backlogId))
+        readBacklogById(parseInt(backlogId))
+    }, [backlogId])
     useEffect(() => {
-        if (projectId) {
-            setRenderProject(projectById)
-            document.title = `Kanban: ${projectById?.Project_Name} - GiveOrTake`
+        if (backlogId) {
+            setRenderBacklog(backlogById)
+            document.title = `Kanban: ${backlogById?.Backlog_Name} - GiveOrTake`
         }
-    }, [projectById])
+    }, [backlogById])
 
     const columns: {
         [key: string]: "To Do" | "In Progress" | "Waiting for Review" | "Done"
@@ -141,24 +141,24 @@ const KanbanBoardContainer = () => {
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
 
-        await removeTask(task.Task_ID, task.Project_ID)
+        await removeTask(task.Task_ID, task.Backlog_ID)
 
-        await readTasksByProjectId(parseInt(projectId), true)
+        await readTasksByBacklogId(parseInt(backlogId), true)
     }
 
     const moveTask = async (task: Task, newStatus: "To Do" | "In Progress" | "Waiting for Review" | "Done") => {
         await saveTaskChanges(
             { ...task, Task_Status: newStatus },
-            task.Project_ID
+            task.Backlog_ID
         )
 
-        await readTasksByProjectId(parseInt(projectId), true)
+        await readTasksByBacklogId(parseInt(backlogId), true)
     };
 
     return (
         <DndProvider backend={HTML5Backend}>
             <KanbanBoardView
-                project={renderProject}
+                backlog={renderBacklog}
                 tasks={renderTasks}
                 columns={columns}
                 archiveTask={archiveTask}
@@ -170,7 +170,7 @@ const KanbanBoardContainer = () => {
 }
 
 export interface KanbanBoardViewProps {
-    project: Project | undefined
+    backlog: Backlog | undefined
     tasks: Task[] | undefined
     columns: {
         [key: string]: "To Do" | "In Progress" | "Waiting for Review" | "Done"
@@ -181,7 +181,7 @@ export interface KanbanBoardViewProps {
 }
 
 export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
-    project,
+    backlog,
     tasks,
     columns,
     archiveTask,
@@ -191,13 +191,13 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
     return (
         <Block className="page-content">
             <Link
-                href={`/project/${project?.Project_ID}`}
+                href={`/project/${backlog?.project?.Project_ID}`}
                 className="blue-link"
             >
                 &laquo; Go to Project
             </Link>
             <FlexibleBox
-                title={`Kanban: ${project?.Project_Name}`}
+                title={`Kanban: ${backlog?.Backlog_Name}`}
                 icon={faWindowRestore}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}

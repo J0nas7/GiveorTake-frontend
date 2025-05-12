@@ -2,10 +2,10 @@
 import React from "react"
 
 // Internal
-import { Backlog } from "@/components"
+import { BacklogContainer } from "@/components"
 
 export default function BacklogPage() {
     return (
-        <Backlog />
+        <BacklogContainer />
     )
 }

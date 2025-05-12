@@ -45,7 +45,7 @@ export const Card: React.FC<CardProps> = ({ children, className = "" }) => {
 };
 
 const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { readTasksByProjectId, readTaskByKeys, saveTaskChanges } = useTasksContext();
+    const { readTasksByBacklogId, readTaskByKeys, saveTaskChanges } = useTasksContext();
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [isEditing, setIsEditing] = useState(false);
@@ -62,13 +62,13 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
 
         await saveTaskChanges(
             { ...task, Task_Title: title },
-            task.Project_ID
+            task.Backlog_ID
         );
 
         //// Task changed
         if (task) {
-            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
-            if (task.project?.Project_Key && task.Task_Key) readTaskByKeys(task.project.Project_Key, task.Task_Key.toString())
+            if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true)
+            if (task.backlog?.project?.Project_Key && task.Task_Key) readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
         }
     };
 
@@ -122,7 +122,7 @@ export const TitleAreaView: React.FC<TitleAreaViewProps> = ({
 };
 
 const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { readTaskByKeys, readTasksByProjectId, saveTaskChanges } = useTasksContext();
+    const { readTaskByKeys, readTasksByBacklogId, saveTaskChanges } = useTasksContext();
     const [isEditing, setIsEditing] = useState(false);
     const [description, setDescription] = useState(task.Task_Description || "");
 
@@ -130,13 +130,13 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
         setIsEditing(false);
         saveTaskChanges(
             { ...task, Task_Description: description },
-            task.Project_ID
+            task.Backlog_ID
         )
 
         //// Task changed
         if (task) {
-            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
-            if (task.project?.Project_Key && task.Task_Key) readTaskByKeys(task.project.Project_Key, task.Task_Key.toString())
+            if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true)
+            if (task.backlog?.project?.Project_Key && task.Task_Key) readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
         }
     };
 
@@ -147,7 +147,7 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
     // Quill Editor Modules (Mention plugin added)
     const [mentionUsers, setMentionUsers] = useState<any[]>([])
     useEffect(() => {
-        const restructureUsers = task.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
+        const restructureUsers = task.backlog?.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
             id: seat.user?.User_ID, // Ensure the id field is used for mentions
             value: `${seat.user?.User_FirstName || ''} ${seat.user?.User_Surname || ''}`, // Concatenating first & last name
         })) || [];
@@ -253,7 +253,7 @@ export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> =
 const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
     const [toggleAddFile, setToggleAddFile] = useState<boolean>(false)
     const { removeTaskMediaFile } = useTaskMediaFilesContext()
-    const { readTasksByProjectId, readTaskByKeys } = useTasksContext()
+    const { readTasksByBacklogId, readTaskByKeys } = useTasksContext()
 
     // Handle file deletion
     const handleDelete = async (taskMediaFile: TaskMediaFile) => {
@@ -265,8 +265,8 @@ const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
 
             //// Task changed
             if (task) {
-                if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true)
-                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+                if (task.Backlog_ID) await readTasksByBacklogId(task.Backlog_ID, true)
+                if (task.Task_Key && task.backlog?.project?.Project_Key) await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
             }
 
             setToggleAddFile(false);
@@ -365,7 +365,7 @@ type AddTaskMediaFileProps = {
 export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({ task, setToggleAddFile }) => {
     // Hooks
     const { addTaskMediaFile } = useTaskMediaFilesContext()
-    const { readTasksByProjectId, readTaskByKeys } = useTasksContext()
+    const { readTasksByBacklogId, readTaskByKeys } = useTasksContext()
 
     // Internal variables
     const [file, setFile] = useState<File | null>(null);
@@ -419,8 +419,8 @@ export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({ task, setTog
 
             //// Task changed
             if (task) {
-                if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true)
-                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+                if (task.Backlog_ID) await readTasksByBacklogId(task.Backlog_ID, true)
+                if (task.Task_Key && task.backlog?.project?.Project_Key) await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
             }
 
             setToggleAddFile(false);
@@ -465,7 +465,7 @@ export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({ task, setTog
 
 const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     const { addTaskComment, saveTaskCommentChanges, removeTaskComment } = useTaskCommentsContext();
-    const { readTasksByProjectId, readTaskByKeys } = useTasksContext()
+    const { readTasksByBacklogId, readTaskByKeys } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser)
 
     const [createComment, setCreateComment] = useState<string>("");
@@ -490,8 +490,8 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
             //// Task changed
             if (task) {
-                if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
-                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+                if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true)
+                if (task.Task_Key && task.backlog?.project?.Project_Key) await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
             }
         }
     }
@@ -518,8 +518,8 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
             //// Task changed
             if (task) {
-                if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
-                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+                if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true)
+                if (task.Task_Key && task.backlog?.project?.Project_Key) await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
             }
         }
     }
@@ -544,8 +544,8 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
             //// Task changed
             if (task) {
-                if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true)
-                if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+                if (task.Backlog_ID) await readTasksByBacklogId(task.Backlog_ID, true)
+                if (task.Task_Key && task.backlog?.project?.Project_Key) await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
             }
         }
     };
@@ -573,7 +573,7 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     // Quill Editor Modules (Mention plugin added)
     const [mentionUsers, setMentionUsers] = useState<any[]>([])
     useEffect(() => {
-        const restructureUsers = task.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
+        const restructureUsers = task.backlog?.project?.team?.user_seats?.map((seat: TeamUserSeat) => ({
             id: seat.user?.User_ID, // Ensure the id field is used for mentions
             value: `${seat.user?.User_FirstName || ''} ${seat.user?.User_Surname || ''}`, // Concatenating first & last name
         })) || [];
@@ -762,20 +762,20 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
 
 const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
     const router = useRouter()
-    const { taskDetail, setTaskDetail, removeTask, readTasksByProjectId } = useTasksContext()
+    const { taskDetail, setTaskDetail, removeTask, readTasksByBacklogId } = useTasksContext()
 
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
 
-        const removed = await removeTask(task.Task_ID, task.Project_ID)
+        const removed = await removeTask(task.Task_ID, task.Backlog_ID)
         if (!removed) return
 
-        await readTasksByProjectId(task.Project_ID, true)
+        await readTasksByBacklogId(task.Backlog_ID, true)
 
         if (taskDetail) {
             setTaskDetail(undefined)
         } else {
-            router.push(`/project/${task.Project_ID}`, { scroll: false })
+            router.push(`/project/${task.Backlog_ID}`, { scroll: false })
         }
     }
 
@@ -831,7 +831,7 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail
                 <Text variant="span">Share</Text>
             </button>
             {taskDetail !== undefined && (
-                <Link href={`/task/${taskDetail.project?.Project_Key}/${taskDetail.Task_Key}`} className={clsx(
+                <Link href={`/task/${taskDetail.backlog?.project?.Project_Key}/${taskDetail.Task_Key}`} className={clsx(
                     "blue-link",
                     styles.ctaButton
                 )}>
@@ -845,7 +845,7 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail
 
 const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
     const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
-    const { readTasksByProjectId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
+    const { readTasksByBacklogId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
 
     const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0) // Total amount of seconds spend
@@ -886,13 +886,13 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
         // Update the task change (this will update it in the database)
         await saveTaskChanges(
             { ...task, [field]: value },
-            task.Project_ID
+            task.Backlog_ID
         )
 
         //// Task changed
         if (task) {
-            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true)
-            if (task.Task_Key && task.project?.Project_Key) await readTaskByKeys(task.project?.Project_Key, task.Task_Key.toString())
+            if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true)
+            if (task.Task_Key && task.backlog?.project?.Project_Key) await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
         }
 
         if (taskDetail) {
@@ -967,7 +967,7 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     className="p-2 border rounded"
                 >
                     <option value="">Unassigned</option>
-                    {task.project?.team?.user_seats?.map(userSeat => {
+                    {task.backlog?.project?.team?.user_seats?.map(userSeat => {
                         return (
                             <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
                         )
@@ -976,7 +976,16 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
             </p>
             <p>
                 <strong>Team:</strong>{" "}
-                {task.project?.team?.Team_Name}</p>
+                {task.backlog?.project?.team?.Team_Name}
+            </p>
+            <p>
+                <strong>Project:</strong>{" "}
+                {task.backlog?.project?.Project_Name}
+            </p>
+            <p>
+                <strong>Backlog:</strong>{" "}
+                {task.backlog?.Backlog_Name}
+            </p>
             <p>
                 <strong>Created At:</strong>{" "}
                 {task.Task_CreatedAt && (
@@ -1055,7 +1064,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ theTask }) => {
             <Block className="flex justify-between">
                 <Link
                     onClick={() => setTaskDetail(undefined)}
-                    href={`/project/${theTask.project?.Project_ID}`}
+                    href={`/project/${theTask.backlog?.project?.Project_ID}`}
                     className="blue-link"
                 >
                     &laquo; Go to Project

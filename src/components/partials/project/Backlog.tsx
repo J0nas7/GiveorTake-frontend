@@ -10,25 +10,25 @@ import { faEllipsisV, faList, faPlus, faSortDown, faSortUp } from "@fortawesome/
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field, Heading } from "@/components"
-import { useProjectsContext, useTasksContext } from "@/contexts"
-import { Project, Task, TaskFields } from "@/types";
+import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
+import { Backlog, Project, Task, TaskFields } from "@/types";
 import { selectAuthUser, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
 import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 
-const BacklogContainer = () => {
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+export const BacklogContainer = () => {
+    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(['backlog'])
 
-    const { projectById, readProjectById } = useProjectsContext()
-    const { tasksById, readTasksByProjectId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
+    const { backlogById, readBacklogById } = useBacklogsContext()
+    const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
-    const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
+    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     const urlTaskIds = searchParams.get("taskIds")
@@ -38,25 +38,26 @@ const BacklogContainer = () => {
 
     useEffect(() => {
         // console.log("tasksByID changed")
+        console.log("tasksById changed", tasksById, renderTasks)
         if (tasksById.length == 0 && renderTasks) {
             setRenderTasks(undefined)
         }
-        if (tasksById.length && !renderTasks) {
+        if (tasksById.length) {
             console.log("renderTasks", renderTasks, "tasksById", tasksById)
             setRenderTasks(tasksById)
         }
     }, [tasksById])
     useEffect(() => {
-        readTasksByProjectId(parseInt(projectId))
-        readProjectById(parseInt(projectId))
-    }, [projectId])
+        readTasksByBacklogId(parseInt(backlogId))
+        readBacklogById(parseInt(backlogId))
+    }, [backlogId])
     useEffect(() => {
-        if (projectId) {
-            setRenderProject(projectById)
+        if (backlogId) {
+            setRenderBacklog(backlogById)
             handleChangeNewTask("Task_Status", "To Do")
-            document.title = `Backlog: ${projectById?.Project_Name} - GiveOrTake`
+            document.title = `Backlog: ${backlogById?.Backlog_Name} - GiveOrTake`
         }
-    }, [projectById])
+    }, [backlogById])
 
     // Get user IDs from URL
     useEffect(() => {
@@ -120,24 +121,24 @@ const BacklogContainer = () => {
 
     const prepareCreateTask = async () => {
         const newTaskPlaceholder: Task = {
-            Project_ID: parseInt(projectId),
-            Team_ID: renderProject?.team?.Team_ID ? renderProject?.team?.Team_ID : 0,
+            Backlog_ID: parseInt(backlogId),
+            Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
             Task_Title: newTask?.Task_Title || "",
             Task_Status: newTask?.Task_Status || "To Do",
             Assigned_User_ID: newTask?.Assigned_User_ID
         }
 
-        await addTask(parseInt(projectId), newTaskPlaceholder)
+        await addTask(parseInt(backlogId), newTaskPlaceholder)
 
-        await readTasksByProjectId(parseInt(projectId), true)
+        await readTasksByBacklogId(parseInt(backlogId), true)
     }
 
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
 
-        await removeTask(task.Task_ID, task.Project_ID)
+        await removeTask(task.Task_ID, task.Backlog_ID)
 
-        await readTasksByProjectId(parseInt(projectId), true)
+        await readTasksByBacklogId(parseInt(backlogId), true)
     }
 
     const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,7 +199,7 @@ const BacklogContainer = () => {
         <>
             <TaskBulkActionMenu />
             <BacklogContainerView
-                renderProject={renderProject}
+                renderBacklog={renderBacklog}
                 sortedTasks={sortedTasks}
                 newTask={newTask}
                 currentSort={currentSort}
@@ -219,7 +220,7 @@ const BacklogContainer = () => {
 }
 
 export interface BacklogContainerViewProps {
-    renderProject?: Project | undefined;
+    renderBacklog?: Backlog | undefined;
     sortedTasks: Task[];
     newTask: Task | undefined;
     currentSort: string;
@@ -237,7 +238,7 @@ export interface BacklogContainerViewProps {
 }
 
 export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
-    renderProject,
+    renderBacklog,
     sortedTasks,
     currentSort,
     currentOrder,
@@ -255,14 +256,14 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     return (
         <Block className="page-content">
             <Link
-                href={`/project/${renderProject?.Project_ID}`}
+                href={`/project/${renderBacklog?.Project_ID}`}
                 className="blue-link"
             >
                 &laquo; Go to Project
             </Link>
-            {/* <Heading variant="h1">{`Backlog: ${renderProject?.Project_Name}`}</Heading> */}
+            {/* <Heading variant="h1">{`Backlog: ${renderBacklog?.Project_Name}`}</Heading> */}
             <FlexibleBox
-                title={`Backlog: ${renderProject?.Project_Name}`}
+                title={`Backlog: ${renderBacklog?.Backlog_Name}`}
                 icon={faList}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
@@ -345,7 +346,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                         className="p-2 border rounded"
                                     >
                                         <option value="">Assignee</option>
-                                        {renderProject?.team?.user_seats?.map(userSeat => {
+                                        {renderBacklog?.project?.team?.user_seats?.map(userSeat => {
                                             return (
                                                 <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
                                             )
@@ -369,14 +370,14 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                         />
                                     </td>
                                     <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                        {renderProject?.Project_Key}-{task.Task_Key}
+                                        {renderBacklog?.project?.Project_Key}-{task.Task_Key}
                                     </td>
                                     <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
                                         {task.Task_Title}
                                     </td>
                                     <td className={styles.status}>{task.Task_Status}</td>
                                     {(() => {
-                                        const assignee = renderProject?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
+                                        const assignee = renderBacklog?.project?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
                                         return (
                                             <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
                                         )
@@ -395,7 +396,3 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
         </Block >
     );
 };
-
-export const Backlog = () => (
-    <BacklogContainer />
-)

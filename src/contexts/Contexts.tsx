@@ -23,7 +23,9 @@ import {
     UserFields,
     OrganisationFields,
     TaskTimeTrack,
-    TaskTimeTrackFields
+    TaskTimeTrackFields,
+    Backlog,
+    BacklogFields
 } from "@/types"
 import { useAxios } from "@/hooks";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
@@ -350,6 +352,89 @@ export const useProjectsContext = () => {
     return context;
 };
 
+// Context for Backlogs
+export type BacklogsContextType = {
+    backlogsById: Backlog[];
+    backlogById: Backlog | undefined;
+    backlogDetail: Backlog | undefined;
+    newBacklog: Backlog | undefined;
+    readBacklogsByProjectId: (parentId: number) => Promise<void>;
+    readBacklogById: (itemId: number) => Promise<void>;
+    setBacklogDetail: React.Dispatch<React.SetStateAction<Backlog | undefined>>;
+    handleChangeNewBacklog: (field: BacklogFields, value: string) => Promise<void>;
+    addBacklog: (parentId: number, object?: Backlog) => Promise<void>;
+    saveBacklogChanges: (backlogChanges: Backlog, parentId: number) => Promise<void>;
+    removeBacklog: (itemId: number, parentId: number) => Promise<boolean>;
+    finishBacklog: (backlogId: string, moveAction: string, newBacklog: Backlog) => Promise<false|string>;
+};
+
+const BacklogsContext = createContext<BacklogsContextType | undefined>(undefined);
+
+export const BacklogsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const {
+        itemsById: backlogsById,
+        itemById: backlogById,
+        newItem: newBacklog,
+        itemDetail: backlogDetail,
+        readItemsById: readBacklogsByProjectId,
+        readItemById: readBacklogById,
+        setItemDetail: setBacklogDetail,
+        handleChangeNewItem: handleChangeNewBacklog,
+        addItem: addBacklog,
+        saveItemChanges: saveBacklogChanges,
+        removeItem: removeBacklog,
+        // loading, error could go here
+    } = useResourceContext<Backlog, "Backlog_ID">(
+        "backlogs",
+        "Backlog_ID",
+        "projects"
+    );
+
+    const { httpPostWithData } = useAxios()
+
+    const finishBacklog = async (backlogId: string, moveAction: string, newBacklog: Backlog) => {
+        try {
+            const postData = { moveAction, ...newBacklog }
+            console.log("finishBacklog", postData)
+            const data = await httpPostWithData(`finish-backlog/${backlogId}`, postData)
+
+            if (data.target_backlog_id) return data.target_backlog_id
+
+            throw new Error(`Failed to finishBacklog`);
+        } catch (error: any) {
+            console.log(error.message || `An error occurred while trying finishBacklog.`);
+            return false
+        }
+    }
+
+    return (
+        <BacklogsContext.Provider value={{
+            backlogsById,
+            backlogById,
+            backlogDetail,
+            newBacklog,
+            readBacklogsByProjectId,
+            readBacklogById,
+            setBacklogDetail,
+            handleChangeNewBacklog,
+            addBacklog,
+            saveBacklogChanges,
+            removeBacklog,
+            finishBacklog
+        }}>
+            {children}
+        </BacklogsContext.Provider>
+    );
+};
+
+export const useBacklogsContext = () => {
+    const context = useContext(BacklogsContext);
+    if (!context) {
+        throw new Error("useBacklogsContext must be used within a BacklogsProvider");
+    }
+    return context;
+};
+
 // Tasks Context (DEPRECATED)
 /*export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
@@ -369,7 +454,7 @@ export type TasksContextType = {
     taskById: Task | undefined
     taskDetail: Task | undefined
     newTask: Task | undefined
-    readTasksByProjectId: (parentId: number, refresh?: boolean) => Promise<void>
+    readTasksByBacklogId: (parentId: number, refresh?: boolean) => Promise<void>
     // readTaskById: (itemId: number) => Promise<void>
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     handleChangeNewTask: (field: TaskFields, value: string, object?: Task) => Promise<void>
@@ -392,7 +477,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         itemById: taskById,
         newItem: newTask,
         itemDetail: taskDetail,
-        readItemsById: readTasksByProjectId,
+        readItemsById: readTasksByBacklogId,
         readItemById: readTaskById,
         setItemDetail: setTaskDetail,
         handleChangeNewItem: handleChangeNewTask,
@@ -404,7 +489,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } = useResourceContext<Task, "Task_ID">(
         "tasks",
         "Task_ID",
-        "projects"
+        "backlogs"
     );
 
     const [taskByKeys, setTaskByKeys] = useState<Task|undefined>(undefined)
@@ -433,7 +518,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 taskById,
                 taskDetail,
                 newTask,
-                readTasksByProjectId,
+                readTasksByBacklogId,
                 // readTaskById,
                 setTaskDetail,
                 handleChangeNewTask,
@@ -516,7 +601,7 @@ const TaskTimeTrackContext = createContext<TaskTimeTrackContextType | undefined>
 // TaskTimeTrackProvider using useResourceContext
 export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { httpGetRequest } = useAxios()
-    const { readTasksByProjectId, taskDetail, setTaskDetail } = useTasksContext()
+    const { readTasksByBacklogId, taskDetail, setTaskDetail } = useTasksContext()
     const { fetchIsLoggedInStatus } = useAuthActions()
     const dispatch = useAppDispatch()
 
@@ -613,7 +698,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
             // Prepare the task time track object
             const theNewTimeTrack: TaskTimeTrack = {
                 Task_ID: task.Task_ID || 0,
-                Project_ID: task.Project_ID,
+                Backlog_ID: task.Backlog_ID,
                 User_ID: authUser.User_ID,
                 Time_Tracking_Start_Time: "", // We'll set this conditionally
                 Time_Tracking_End_Time: null,
@@ -644,8 +729,8 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
             }
 
             /// Task changed
-            if (task.Project_ID) {
-                await readTasksByProjectId(task.Project_ID, true)
+            if (task.Backlog_ID) {
+                await readTasksByBacklogId(task.Backlog_ID, true)
             }
 
             let existingTimeTracks = task.time_tracks || [];
@@ -671,7 +756,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
             }
             
             await getTaskTimeTracksByProject(
-                task.Project_ID, 
+                task.backlog?.Project_ID || 0, 
                 taskTimeTracksByProjectParams.startTime, 
                 taskTimeTracksByProjectParams.endTime
             )

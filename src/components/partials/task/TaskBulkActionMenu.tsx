@@ -8,7 +8,7 @@ import Link from 'next/link';
 // Internal
 import { Block, Field, Heading, Text } from '@/components'
 import { useAxios } from '@/hooks';
-import { useProjectsContext, useTasksContext } from '@/contexts';
+import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/contexts';
 import { Router } from 'next/router';
 import clsx from 'clsx';
 import { Project, Task } from '@/types';
@@ -16,12 +16,12 @@ import { Project, Task } from '@/types';
 export const TaskBulkActionMenu = () => {
     // Hooks
     const router = useRouter()
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
     const searchParams = useSearchParams()
     const { httpPostWithData } = useAxios()
-    const { readTasksByProjectId } = useTasksContext()
+    const { readTasksByBacklogId } = useTasksContext()
 
-    // Internal variables
+    // State
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [copySuccess, setCopySuccess] = useState(false)
     const [taskBulkEditing, setTaskBulkEditing] = useState(false)
@@ -67,7 +67,7 @@ export const TaskBulkActionMenu = () => {
         })
 
         if (result.success) {
-            await readTasksByProjectId(parseInt(projectId), true)
+            await readTasksByBacklogId(parseInt(backlogId), true)
 
             updateURLParams()
         }
@@ -80,7 +80,7 @@ export const TaskBulkActionMenu = () => {
         } else {
             url.searchParams.delete("taskBulkFocus")
         }
-        
+
         return url.toString()
     }
 
@@ -114,7 +114,7 @@ export const TaskBulkActionMenu = () => {
             </Block>
             <Block className="taskplayer-container flex items-center justify-between">
                 <Block className="flex gap-2 items-center">
-                    <Link href={`/backlog/${projectId}`}>
+                    <Link href={`/backlog/${backlogId}`}>
                         <FontAwesomeIcon icon={faXmark} />
                     </Link>
                     <strong>{selectedTaskIds.length} tasks selected</strong>
@@ -172,16 +172,16 @@ const BulkEdit: React.FC<BulkEditProps> =
         setTaskBulkEditing
     }) => {
         // Hooks
-        const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+        const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
         const { httpPostWithData } = useAxios()
-        const { projectById } = useProjectsContext()
-        const { readTasksByProjectId } = useTasksContext()
+        const { backlogById, backlogsById, readBacklogById, readBacklogsByProjectId } = useBacklogsContext()
+        const { readTasksByBacklogId } = useTasksContext()
 
-        // Internal variables
-        const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
+        // State
         const [newUserId, setNewUserId] = useState<number | undefined>(undefined)
         const [newDueDate, setNewDueDate] = useState<string>("")
         const [newStatus, setNewStatus] = useState<string>("")
+        const [newBacklog, setNewBacklog] = useState<number>(parseInt(backlogId))
 
         /**
          * Methods
@@ -191,15 +191,16 @@ const BulkEdit: React.FC<BulkEditProps> =
 
             const updatedTasks = selectedTaskIds.map((taskId) => ({
                 Task_ID: taskId,
-                Task_Status: newStatus, // Assuming newStatus is set somewhere in the UI
-                Task_Due_Date: newDueDate, // Assuming newDueDate is set in the UI
-                Assigned_User_ID: newUserId, // Assuming newUserId is set in the UI
+                Backlog_ID: newBacklog, 
+                Task_Status: newStatus, 
+                Task_Due_Date: newDueDate, 
+                Assigned_User_ID: newUserId, 
             }))
 
             const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks });
 
             if (result.updated_tasks) {
-                await readTasksByProjectId(parseInt(projectId), true);
+                await readTasksByBacklogId(parseInt(backlogId), true);
                 setTaskBulkEditing(false)
             }
         };
@@ -207,16 +208,18 @@ const BulkEdit: React.FC<BulkEditProps> =
         /**
          * Effects
          */
+        useEffect(() => { readBacklogById(parseInt(backlogId)) }, [backlogId])
         useEffect(() => {
-            if (projectById) {
-                setRenderProject(projectById)
+            if (backlogById) {
+                readBacklogsByProjectId(backlogById.Project_ID)
             }
-        }, [projectById])
+        }, [backlogById])
 
-        if (!renderProject) return null
+        if (!backlogById) return null
 
         return (
             <Block className="flex flex-col gap-3">
+                dskosl
                 <Block className="flex justify-between">
                     <Heading variant="h3" className="font-bold text-xl">Bulk edit</Heading>
                     <Text className="text-xl">{selectedTaskIds.length} tasks</Text>
@@ -233,7 +236,7 @@ const BulkEdit: React.FC<BulkEditProps> =
                         className="p-2 border rounded bg-gray-200 w-60 h-14"
                     >
                         <option value="">Assignee</option>
-                        {renderProject?.team?.user_seats?.map(userSeat => {
+                        {backlogById.project?.team?.user_seats?.map(userSeat => {
                             return (
                                 <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
                             )
@@ -267,6 +270,25 @@ const BulkEdit: React.FC<BulkEditProps> =
                         <option value="In Progress">In Progress</option>
                         <option value="Waiting for Review">Waiting for Review</option>
                         <option value="Done">Done</option>
+                    </select>
+                </Block>
+                <Block>
+                    <Text variant="span" className="font-semibold">Backlog</Text>
+                    {/* Dropdown to change the backlog */}
+                    <select
+                        value={newBacklog}
+                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                            const newBacklog = parseInt(event.target.value) as Task["Backlog_ID"]
+                            setNewBacklog(newBacklog)
+                        }}
+                        className="p-2 border rounded bg-gray-200 w-60 h-14"
+                    >
+                        <option value="" disabled>Backlog</option>
+                        {Object.values(backlogsById).map(backlog => (
+                            <option key={backlog.Backlog_ID} value={backlog.Backlog_ID}>
+                                {backlog.Backlog_Name}
+                            </option>
+                        ))}
                     </select>
                 </Block>
                 <Block className="flex gap-2 ml-auto">

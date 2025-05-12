@@ -69,14 +69,38 @@ export type Project = {
     Project_UpdatedAt?: string;
 
     // Relationships
-    team?: Team
-    tasks?: Task[]
+    team?: Team;
+    backlogs?: Backlog[];
 };
 
 export type ProjectFields =
     "Project_ID" | "Team_ID" | "Project_Name" | "Project_Key" | 
     "Project_Description" | "Project_Status" | "Project_Start_Date" |
     "Project_End_Date" | "Project_CreatedAt" | "Project_UpdatedAt";
+
+// Backlog Type
+export type Backlog = {
+    Backlog_ID?: number;
+    Project_ID: number;
+    Team_ID?: number; // Nullable
+    Backlog_Name: string;
+    Backlog_Description?: string;
+    Backlog_IsPrimary: boolean;
+    Backlog_StartDate?: string;
+    Backlog_EndDate?: string;
+    Backlog_CreatedAt?: string;
+    Backlog_UpdatedAt?: string;
+
+    // Relationships
+    project?: Project;
+    team?: Team;
+    tasks?: Task[];
+};
+
+export type BacklogFields =
+    "Backlog_ID" | "Project_ID" | "Team_ID" | "Backlog_Name" |
+    "Backlog_Description" | "Backlog_IsPrimary" | "Backlog_StartDate" |
+    "Backlog_EndDate" | "Backlog_CreatedAt" | "Backlog_UpdatedAt";
 
 // Team User Seat Type
 export type TeamUserSeat = {
@@ -104,32 +128,32 @@ export type TeamUserSeatFields =
 export type Task = {
     Task_ID?: number;
     Task_Key?: number;
-    Project_ID: number;
-    Team_ID: number; // Nullable if not assigned to a team
-    Assigned_User_ID?: number; // Nullable if unassigned
+    Backlog_ID: number;
+    Team_ID?: number;
+    Assigned_User_ID?: number;
     Task_Title: string;
     Task_Description?: string;
-    Task_Status: 'To Do' | 'In Progress' | 'Waiting for Review' | 'Done'
-    Task_Due_Date?: string; // YYYY-MM-DD format
+    Task_Status: 'To Do' | 'In Progress' | 'Waiting for Review' | 'Done';
+    Task_Due_Date?: string;
     Task_CreatedAt?: string;
     Task_UpdatedAt?: string;
 
     // Relationships
-    project?: Project
-    comments?: TaskComment[]
-    time_tracks?: TaskTimeTrack[]
-    media_files?: TaskMediaFile[]
-}
+    backlog?: Backlog;
+    comments?: TaskComment[];
+    time_tracks?: TaskTimeTrack[];
+    media_files?: TaskMediaFile[];
+};
 
 export type TaskFields =
-    "Task_ID" | "Task_Key" | "Project_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
+    "Task_ID" | "Task_Key" | "Backlog_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
     "Task_Description" | "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
 
 // Task Time Track Type
 export type TaskTimeTrack = {
     Time_Tracking_ID?: number;
     Task_ID: number;
-    Project_ID: number;
+    Backlog_ID: number;
     User_ID: number;
     Comment_ID?: number | null;
     Time_Tracking_Start_Time: string; // ISO 8601 format (e.g., "YYYY-MM-DDTHH:mm:ssZ")
@@ -148,7 +172,7 @@ export type TaskTimeTrack = {
 }
 
 export type TaskTimeTrackFields =
-    "Time_Tracking_ID" | "Task_ID" | "User_ID" | "Comment_ID" |
+    "Time_Tracking_ID" | "Task_ID" | "Backlog_ID" | "User_ID" | "Comment_ID" |
     "Time_Tracking_Start_Time" | "Time_Tracking_End_Time" | 
     "Time_Tracking_Duration" | "Time_Tracking_Notes" |
     "Time_Tracking_CreatedAt" | "Time_Tracking_UpdatedAt" | "Time_Tracking_DeletedAt";

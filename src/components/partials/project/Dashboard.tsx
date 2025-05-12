@@ -11,8 +11,8 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScal
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
 import { Block, Text, Heading } from "@/components"
-import { useProjectsContext, useTasksContext } from "@/contexts"
-import { Project, Task } from "@/types"
+import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
+import { Backlog, Project, Task } from "@/types"
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { faGauge } from "@fortawesome/free-solid-svg-icons";
@@ -21,12 +21,12 @@ import { faGauge } from "@fortawesome/free-solid-svg-icons";
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const DashboardContainer = () => {
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
     const { t } = useTranslation(['dashboard']);
-    const { tasksById, readTasksByProjectId } = useTasksContext();
-    const { projectById, readProjectById } = useProjectsContext();
+    const { tasksById, readTasksByBacklogId } = useTasksContext();
+    const { backlogById, readBacklogById } = useBacklogsContext();
 
-    const [renderProject, setRenderProject] = useState<Project | undefined>(undefined)
+    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     useEffect(() => {
@@ -34,21 +34,21 @@ const DashboardContainer = () => {
         if (tasksById.length == 0 && renderTasks) {
             setRenderTasks(undefined)
         }
-        if (tasksById.length && !renderTasks) {
+        if (tasksById.length) {
             console.log("renderTasks", renderTasks)
             setRenderTasks(tasksById)
         }
     }, [tasksById])
     useEffect(() => {
-        readTasksByProjectId(parseInt(projectId))
-        readProjectById(parseInt(projectId))
-    }, [projectId])
+        readTasksByBacklogId(parseInt(backlogId))
+        readBacklogById(parseInt(backlogId))
+    }, [backlogId])
     useEffect(() => {
-        if (projectId) {
-            setRenderProject(projectById)
-            document.title = `Backlog: ${projectById?.Project_Name} - GiveOrTake`
+        if (backlogId) {
+            setRenderBacklog(backlogById)
+            document.title = `Dashboard: ${backlogById?.Backlog_Name} - GiveOrTake`
         }
-    }, [projectById])
+    }, [backlogById])
 
     // Ensure tasks is always an array
     const safeTasks = Array.isArray(renderTasks) ? renderTasks : [];
@@ -130,14 +130,14 @@ const DashboardContainer = () => {
     return (
         <Block className="page-content">
             <Link
-                href={`/project/${renderProject?.Project_ID}`}
+                href={`/project/${renderBacklog?.Project_ID}`}
                 className="blue-link"
             >
                 &laquo; Go to Project
             </Link>
             {/* <Heading variant="h1">{t('dashboard.title')}: {renderProject?.Project_Name}</Heading> */}
             <FlexibleBox
-                title={`${t('dashboard.title')}: ${renderProject?.Project_Name}`}
+                title={`${t('dashboard.title')}: ${renderBacklog?.Backlog_Name}`}
                 icon={faGauge}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
