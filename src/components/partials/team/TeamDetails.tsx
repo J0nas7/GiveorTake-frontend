@@ -13,12 +13,13 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal
 import { useTeamsContext } from '@/contexts/';
-import { Team, TeamFields, User } from '@/types';
+import { Team, TeamFields, TeamStates, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
+import Image from 'next/image';
 
 const TeamDetails: React.FC = () => {
     // Hooks
@@ -27,17 +28,17 @@ const TeamDetails: React.FC = () => {
     const pathname = usePathname(); // Get the current pathname
     const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext()
-    
+
     // State
     const authUser = useTypedSelector(selectAuthUser)
-    const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined)
+    const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
 
     // Effects
     useEffect(() => { readTeamById(parseInt(teamId)); }, [teamId]);
     useEffect(() => {
-        if (teamById) {
+        if (teamId) {
             setRenderTeam(teamById)
-            document.title = `Team: ${teamById.Team_Name} - GiveOrTake`
+            if (teamById) document.title = `Team: ${teamById.Team_Name} - GiveOrTake`
         }
     }, [teamById]);
 
@@ -50,10 +51,10 @@ const TeamDetails: React.FC = () => {
     const handleTeamChange = (field: TeamFields, value: string) => {
         if (!renderTeam) return
 
-        setRenderTeam((prev) => ({
-            ...prev!,
+        setRenderTeam({
+            ...renderTeam,
             [field]: value
-        }));
+        });
     }
 
     const handleSaveChanges = async () => {
@@ -69,17 +70,15 @@ const TeamDetails: React.FC = () => {
     const handleDeleteTeam = async () => {
         if (!renderTeam || !renderTeam.Team_ID) return
         const removed = await removeTeam(
-            renderTeam.Team_ID, 
-            renderTeam.Organisation_ID, 
+            renderTeam.Team_ID,
+            renderTeam.Organisation_ID,
             `/organisation/${renderTeam.Organisation_ID}`
         )
     }
 
-    if (!renderTeam) return null
-
     return (
         <TeamDetailsView
-            team={renderTeam}
+            renderTeam={renderTeam}
             authUser={authUser}
             pathname={pathname}
             handleHTMLInputChange={handleHTMLInputChange}
@@ -91,7 +90,7 @@ const TeamDetails: React.FC = () => {
 };
 
 export interface TeamDetailsViewProps {
-    team: Team;
+    renderTeam: TeamStates;
     authUser: User | undefined;
     pathname: string;
     handleHTMLInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -101,7 +100,7 @@ export interface TeamDetailsViewProps {
 }
 
 export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
-    team,
+    renderTeam,
     authUser,
     pathname,
     handleHTMLInputChange,
@@ -112,19 +111,21 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
 
     return (
         <Block className="page-content">
-            <Box mb={4}>
+            {renderTeam && (
                 <Link
-                    href={`/organisation/${team.organisation?.Organisation_ID}`}
+                    href={`/organisation/${renderTeam.organisation?.Organisation_ID}`}
                     className="blue-link"
                 >
                     &laquo; Go to Organisation
                 </Link>
-                <FlexibleBox
-                    title="Team Settings"
-                    icon={faUsers}
-                    className="no-box w-auto inline-block"
-                    numberOfColumns={2}
-                    titleAction={<>
+            )}
+            <FlexibleBox
+                title="Team Settings"
+                icon={faUsers}
+                className="no-box w-auto inline-block"
+                numberOfColumns={2}
+                titleAction={
+                    renderTeam && (
                         <Block className="flex flex-col sm:flex-row gap-2">
                             <Link
                                 href={`${pathname}/seats`}
@@ -133,7 +134,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                 <FontAwesomeIcon icon={faUsers} />
                                 <Text variant="span">Seats</Text>
                             </Link>
-                            {authUser && team.organisation?.User_ID === authUser.User_ID && (
+                            {authUser && renderTeam.organisation?.User_ID === authUser.User_ID && (
                                 <Link
                                     href={`${pathname}/create-project`}
                                     className="blue-link !inline-flex gap-2 items-center"
@@ -143,11 +144,27 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                 </Link>
                             )}
                         </Block>
-                    </>
-                    }
-                >
+                    )
+                }
+            >
+                {renderTeam === false ? (
+                    <Block className="text-center">
+                        <Text className="text-gray-400">
+                            Team not found
+                        </Text>
+                    </Block>
+                ) : renderTeam === undefined ? (
+                    <Block className="flex justify-center">
+                        <Image
+                            src="/spinner-loader.gif"
+                            alt="Loading..."
+                            width={45}
+                            height={45}
+                        />
+                    </Block>
+                ) : (
                     <Card>
-                        {authUser && team.organisation?.User_ID === authUser.User_ID ? (
+                        {authUser && renderTeam.organisation?.User_ID === authUser.User_ID ? (
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
                                     Edit Team Details
@@ -158,7 +175,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                             label="Team Name"
                                             variant="outlined"
                                             fullWidth
-                                            value={team.Team_Name}
+                                            value={renderTeam.Team_Name}
                                             onChange={handleHTMLInputChange}
                                             name="Team_Name"
                                         />
@@ -168,7 +185,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                         <ReactQuill
                                             className="w-full"
                                             theme="snow"
-                                            value={team.Team_Description}
+                                            value={renderTeam.Team_Description}
                                             onChange={(e: string) => handleTeamChange("Team_Description", e)}
                                             modules={{
                                                 toolbar: [
@@ -200,55 +217,56 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                 <Grid container spacing={3}>
                                     <Grid item xs={12} sm={6}>
                                         <strong>Team Name:</strong><br />
-                                        {team.Team_Name}
+                                        {renderTeam.Team_Name}
                                     </Grid>
                                     <Grid item xs={12}>
                                         <strong>Team Description:</strong><br />
                                         <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
-                                            __html: team.Team_Description || "No description available"
+                                            __html: renderTeam.Team_Description || "No description available"
                                         }} />
                                     </Grid>
                                 </Grid>
                             </CardContent>
                         )}
                     </Card>
-                </FlexibleBox>
-                {/* <Heading variant="h1">Team Settings</Heading> */}
-            </Box>
+                )}
+            </FlexibleBox>
 
             {/* Projects Overview Section */}
-            <Box mb={4}>
-                <Typography variant="h5" gutterBottom>
-                    Projects Overview
-                </Typography>
-                <Grid container spacing={3}>
-                    {team.projects?.map((project) => (
-                        <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
-                            <Card>
-                                <CardContent>
-                                    <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
-                                        {project.Project_Name}
-                                    </Link>
-                                    <Typography variant="body2" color="textSecondary" paragraph>
-                                        <div dangerouslySetInnerHTML={{
-                                            __html: project.Project_Description || 'No description available'
-                                        }} />
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        Status: {project.Project_Status}
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        Start Date: {project.Project_Start_Date || 'N/A'}
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        End Date: {project.Project_End_Date || 'N/A'}
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
+            {renderTeam && (
+                <Box mb={4}>
+                    <Typography variant="h5" gutterBottom>
+                        Projects Overview
+                    </Typography>
+                    <Grid container spacing={3}>
+                        {renderTeam.projects?.map((project) => (
+                            <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
+                                <Card>
+                                    <CardContent>
+                                        <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
+                                            {project.Project_Name}
+                                        </Link>
+                                        <Typography variant="body2" color="textSecondary" paragraph>
+                                            <div dangerouslySetInnerHTML={{
+                                                __html: project.Project_Description || 'No description available'
+                                            }} />
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary">
+                                            Status: {project.Project_Status}
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary">
+                                            Start Date: {project.Project_Start_Date || 'N/A'}
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary">
+                                            End Date: {project.Project_End_Date || 'N/A'}
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            )}
         </Block>
     );
 };

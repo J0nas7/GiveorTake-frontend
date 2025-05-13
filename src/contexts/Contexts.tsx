@@ -25,7 +25,11 @@ import {
     TaskTimeTrack,
     TaskTimeTrackFields,
     Backlog,
-    BacklogFields
+    BacklogFields,
+    ProjectStates,
+    TeamStates,
+    OrganisationStates,
+    BacklogStates
 } from "@/types"
 import { useAxios } from "@/hooks";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
@@ -93,7 +97,7 @@ export const useUsersContext = () => {
 // Context for Organisations
 export type OrganisationsContextType = {
     organisationsById: Organisation[];
-    organisationById: Organisation | undefined
+    organisationById: OrganisationStates
     organisationDetail: Organisation | undefined;
     newOrganisation: Organisation | undefined;
     readOrganisationsByUserId: (parentId: number) => Promise<void>
@@ -160,7 +164,7 @@ export const useOrganisationsContext = () => {
 // Context for Teams
 export type TeamsContextType = {
     teamsById: Team[];
-    teamById: Team | undefined;
+    teamById: TeamStates;
     teamDetail: Team | undefined;
     newTeam: Team | undefined;
     readTeamsByOrganisationId: (parentId: number) => Promise<void>
@@ -288,7 +292,7 @@ export const useTeamUserSeatsContext = () => {
 // Context for Projects
 export type ProjectsContextType = {
     projectsById: Project[]
-    projectById: Project | undefined;
+    projectById: ProjectStates;
     projectDetail: Project | undefined
     newProject: Project | undefined;
     readProjectsByTeamId: (parentId: number) => Promise<void>
@@ -355,7 +359,7 @@ export const useProjectsContext = () => {
 // Context for Backlogs
 export type BacklogsContextType = {
     backlogsById: Backlog[];
-    backlogById: Backlog | undefined;
+    backlogById: BacklogStates;
     backlogDetail: Backlog | undefined;
     newBacklog: Backlog | undefined;
     readBacklogsByProjectId: (parentId: number) => Promise<void>;
@@ -451,7 +455,7 @@ export const useBacklogsContext = () => {
 // Context API for Tasks
 export type TasksContextType = {
     tasksById: Task[]
-    taskById: Task | undefined
+    taskById: Task | undefined | false
     taskDetail: Task | undefined
     newTask: Task | undefined
     readTasksByBacklogId: (parentId: number, refresh?: boolean) => Promise<void>

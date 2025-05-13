@@ -12,11 +12,12 @@ import { faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
 import { Block, Text, Heading } from "@/components"
 import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, Project, Task } from "@/types"
+import { Backlog, BacklogStates, Project, Task } from "@/types"
 import { selectAuthUser, useTypedSelector } from "@/redux"
 import Link from "next/link"
 import { FlexibleBox } from "@/components/ui/flexible-box"
 import clsx from "clsx"
+import Image from "next/image"
 
 const ItemType = { TASK: "task" }
 
@@ -105,7 +106,7 @@ const KanbanBoardContainer = () => {
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask, saveTaskChanges } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser) // Redux
 
-    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>(undefined)
+    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     useEffect(() => {
@@ -125,7 +126,7 @@ const KanbanBoardContainer = () => {
     useEffect(() => {
         if (backlogId) {
             setRenderBacklog(backlogById)
-            document.title = `Kanban: ${backlogById?.Backlog_Name} - GiveOrTake`
+            if (backlogById) document.title = `Kanban: ${backlogById?.Backlog_Name} - GiveOrTake`
         }
     }, [backlogById])
 
@@ -141,7 +142,7 @@ const KanbanBoardContainer = () => {
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
 
-        await removeTask(task.Task_ID, task.Backlog_ID)
+        await removeTask(task.Task_ID, task.Backlog_ID, undefined)
 
         await readTasksByBacklogId(parseInt(backlogId), true)
     }
@@ -158,7 +159,7 @@ const KanbanBoardContainer = () => {
     return (
         <DndProvider backend={HTML5Backend}>
             <KanbanBoardView
-                backlog={renderBacklog}
+                renderBacklog={renderBacklog}
                 tasks={renderTasks}
                 columns={columns}
                 archiveTask={archiveTask}
@@ -170,7 +171,7 @@ const KanbanBoardContainer = () => {
 }
 
 export interface KanbanBoardViewProps {
-    backlog: Backlog | undefined
+    renderBacklog: BacklogStates
     tasks: Task[] | undefined
     columns: {
         [key: string]: "To Do" | "In Progress" | "Waiting for Review" | "Done"
@@ -181,7 +182,7 @@ export interface KanbanBoardViewProps {
 }
 
 export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
-    backlog,
+    renderBacklog,
     tasks,
     columns,
     archiveTask,
@@ -190,31 +191,50 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
 }) => {
     return (
         <Block className="page-content">
-            <Link
-                href={`/project/${backlog?.project?.Project_ID}`}
-                className="blue-link"
-            >
-                &laquo; Go to Project
-            </Link>
+            {renderBacklog && (
+                <Link
+                    href={`/project/${renderBacklog?.project?.Project_ID}`}
+                    className="blue-link"
+                >
+                    &laquo; Go to Project
+                </Link>
+            )}
             <FlexibleBox
-                title={`Kanban: ${backlog?.Backlog_Name}`}
+                title={`Kanban: ${renderBacklog ? renderBacklog.Backlog_Name : ''}`}
                 icon={faWindowRestore}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <Block className={styles.board}>
-                    {Object.entries(columns).map(([key, label]) => (
-                        <Column
-                            key={key}
-                            status={label}
-                            label={label}
-                            tasks={tasks ? tasks.filter(task => task.Task_Status === label) : undefined}
-                            archiveTask={archiveTask}
-                            setTaskDetail={setTaskDetail}
-                            moveTask={moveTask}
+                {renderBacklog === false ? (
+                    <Block className="text-center">
+                        <Text className="text-gray-400">
+                            Backlog not found
+                        </Text>
+                    </Block>
+                ) : renderBacklog === undefined ? (
+                    <Block className="flex justify-center">
+                        <Image
+                            src="/spinner-loader.gif"
+                            alt="Loading..."
+                            width={45}
+                            height={45}
                         />
-                    ))}
-                </Block>
+                    </Block>
+                ) : (
+                    <Block className={styles.board}>
+                        {Object.entries(columns).map(([key, label]) => (
+                            <Column
+                                key={key}
+                                status={label}
+                                label={label}
+                                tasks={tasks ? tasks.filter(task => task.Task_Status === label) : undefined}
+                                archiveTask={archiveTask}
+                                setTaskDetail={setTaskDetail}
+                                moveTask={moveTask}
+                            />
+                        ))}
+                    </Block>
+                )}
             </FlexibleBox>
         </Block>
     )

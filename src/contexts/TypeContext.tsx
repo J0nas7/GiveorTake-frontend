@@ -14,7 +14,7 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     const { fetchItemsByParent, fetchItem, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName, parentResource)
 
     const [itemsById, setItemsById] = useState<T[]>([])
-    const [itemById, setItemById] = useState<T | undefined>(undefined)
+    const [itemById, setItemById] = useState<T | undefined | false>(undefined)
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
 
@@ -27,7 +27,11 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
 
     const readItemById = async (itemId: number) => {
         const data = await fetchItem(itemId) // Fetch item by id
-        if (data) setItemById(data)
+        if (data.code == "ERR_BAD_REQUEST" && data.name == "AxiosError") {
+            setItemById(false)
+        } else {
+            setItemById(data)
+        }
     }
 
     const addItem = async (parentId: number, object?: T) => {

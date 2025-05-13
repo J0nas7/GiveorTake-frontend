@@ -35,6 +35,8 @@ export type OrganisationFields =
     "Organisation_ID" | "User_ID" | "Organisation_Name" |
     "Organisation_Description" | "Organisation_CreatedAt" | "Organisation_UpdatedAt";
 
+export type OrganisationStates = Organisation | undefined | false
+
 // Team Type
 export type Team = {
     Team_ID?: number;
@@ -55,6 +57,8 @@ export type TeamFields =
     "Team_ID" | "Organisation_ID" | "Team_Name" |
     "Team_Description" | "Team_CreatedAt" | "Team_UpdatedAt";
 
+export type TeamStates = Team | undefined | false
+
 // Project Type
 export type Project = {
     Project_ID?: number;
@@ -74,9 +78,11 @@ export type Project = {
 };
 
 export type ProjectFields =
-    "Project_ID" | "Team_ID" | "Project_Name" | "Project_Key" | 
+    "Project_ID" | "Team_ID" | "Project_Name" | "Project_Key" |
     "Project_Description" | "Project_Status" | "Project_Start_Date" |
     "Project_End_Date" | "Project_CreatedAt" | "Project_UpdatedAt";
+
+export type ProjectStates = Project | undefined | false
 
 // Backlog Type
 export type Backlog = {
@@ -101,6 +107,8 @@ export type BacklogFields =
     "Backlog_ID" | "Project_ID" | "Team_ID" | "Backlog_Name" |
     "Backlog_Description" | "Backlog_IsPrimary" | "Backlog_StartDate" |
     "Backlog_EndDate" | "Backlog_CreatedAt" | "Backlog_UpdatedAt";
+
+export type BacklogStates = Backlog | undefined | false
 
 // Team User Seat Type
 export type TeamUserSeat = {
@@ -173,7 +181,7 @@ export type TaskTimeTrack = {
 
 export type TaskTimeTrackFields =
     "Time_Tracking_ID" | "Task_ID" | "Backlog_ID" | "User_ID" | "Comment_ID" |
-    "Time_Tracking_Start_Time" | "Time_Tracking_End_Time" | 
+    "Time_Tracking_Start_Time" | "Time_Tracking_End_Time" |
     "Time_Tracking_Duration" | "Time_Tracking_Notes" |
     "Time_Tracking_CreatedAt" | "Time_Tracking_UpdatedAt" | "Time_Tracking_DeletedAt";
 

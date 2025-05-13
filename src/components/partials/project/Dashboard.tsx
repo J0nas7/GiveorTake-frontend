@@ -12,10 +12,11 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScal
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
 import { Block, Text, Heading } from "@/components"
 import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, Project, Task } from "@/types"
+import { Backlog, BacklogStates, Project, Task } from "@/types"
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { faGauge } from "@fortawesome/free-solid-svg-icons";
+import Image from "next/image";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
@@ -26,7 +27,7 @@ const DashboardContainer = () => {
     const { tasksById, readTasksByBacklogId } = useTasksContext();
     const { backlogById, readBacklogById } = useBacklogsContext();
 
-    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>(undefined)
+    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     useEffect(() => {
@@ -46,7 +47,7 @@ const DashboardContainer = () => {
     useEffect(() => {
         if (backlogId) {
             setRenderBacklog(backlogById)
-            document.title = `Dashboard: ${backlogById?.Backlog_Name} - GiveOrTake`
+            if (backlogById) document.title = `Dashboard: ${backlogById?.Backlog_Name} - GiveOrTake`
         }
     }, [backlogById])
 
@@ -129,77 +130,98 @@ const DashboardContainer = () => {
 
     return (
         <Block className="page-content">
-            <Link
-                href={`/project/${renderBacklog?.Project_ID}`}
-                className="blue-link"
-            >
-                &laquo; Go to Project
-            </Link>
-            {/* <Heading variant="h1">{t('dashboard.title')}: {renderProject?.Project_Name}</Heading> */}
+            {renderBacklog && (
+                <Link
+                    href={`/project/${renderBacklog?.Project_ID}`}
+                    className="blue-link"
+                >
+                    &laquo; Go to Project
+                </Link>
+            )}
+
             <FlexibleBox
-                title={`${t('dashboard.title')}: ${renderBacklog?.Backlog_Name}`}
+                title={`${t('dashboard.title')}: ${renderBacklog ? renderBacklog.Backlog_Name : ''}`}
                 icon={faGauge}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                {/* KPI Metrics */}
-                <div className={styles.kpiSection}>
-                    <Block className={styles.kpiCard}>
-                        <Heading variant="h3">{t('dashboard.totalTasks')}</Heading>
-                        <Text>{totalTasks}</Text>
+                {renderBacklog === false ? (
+                    <Block className="text-center">
+                        <Text className="text-gray-400">
+                            Backlog not found
+                        </Text>
                     </Block>
-                    <Block className={styles.kpiCard}>
-                        <Heading variant="h3">{t('dashboard.completedTasks')}</Heading>
-                        <Text>{completedTasks} ({completionRate}%)</Text>
+                ) : renderBacklog === undefined ? (
+                    <Block className="flex justify-center">
+                        <Image
+                            src="/spinner-loader.gif"
+                            alt="Loading..."
+                            width={45}
+                            height={45}
+                        />
                     </Block>
-                    <Block className={styles.kpiCard}>
-                        <Heading variant="h3">{t('dashboard.overdueTasks')}</Heading>
-                        <Text>{overdueTasks}</Text>
-                    </Block>
-                    <Block className={styles.kpiCard}>
-                        <Heading variant="h3">{t('dashboard.tasksInProgress')}</Heading>
-                        <Text>{inProgressTasks}</Text>
-                    </Block>
-                </div>
+                ) : (
+                    <>
+                        {/* KPI Metrics */}
+                        <div className={styles.kpiSection}>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.totalTasks')}</Heading>
+                                <Text>{totalTasks}</Text>
+                            </Block>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.completedTasks')}</Heading>
+                                <Text>{completedTasks} ({completionRate}%)</Text>
+                            </Block>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.overdueTasks')}</Heading>
+                                <Text>{overdueTasks}</Text>
+                            </Block>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.tasksInProgress')}</Heading>
+                                <Text>{inProgressTasks}</Text>
+                            </Block>
+                        </div>
 
-                {/* Progress Bar for Completed vs. In Progress */}
-                <div className={styles.progressSection}>
-                    <Heading variant="h3">{t('dashboard.progress')}</Heading>
-                    <ProgressBar completed={completionRate} />
-                </div>
+                        {/* Progress Bar for Completed vs. In Progress */}
+                        <div className={styles.progressSection}>
+                            <Heading variant="h3">{t('dashboard.progress')}</Heading>
+                            <ProgressBar completed={completionRate} />
+                        </div>
 
-                <div className={styles.chartSection}>
-                    {/* Task Distribution (Pie Chart) */}
-                    <Block className={styles.chartBlock}>
-                        <Heading variant="h2">{t('dashboard.analytics')}</Heading>
-                        <Pie data={chartData} />
-                    </Block>
+                        <div className={styles.chartSection}>
+                            {/* Task Distribution (Pie Chart) */}
+                            <Block className={styles.chartBlock}>
+                                <Heading variant="h2">{t('dashboard.analytics')}</Heading>
+                                <Pie data={chartData} />
+                            </Block>
 
-                    {/* Task Completion Over Time (Bar Chart) */}
-                    <Block className={styles.chartBlock}>
-                        <Heading variant="h2">{t('dashboard.taskCompletionOverTime')}</Heading>
-                        <Bar data={barChartData} options={{
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                },
-                            },
-                            scales: {
-                                x: {
-                                    stacked: true,
-                                },
-                                y: {
-                                    stacked: true,
-                                }
-                            }
-                        }} />
-                    </Block>
-                </div>
+                            {/* Task Completion Over Time (Bar Chart) */}
+                            <Block className={styles.chartBlock}>
+                                <Heading variant="h2">{t('dashboard.taskCompletionOverTime')}</Heading>
+                                <Bar data={barChartData} options={{
+                                    responsive: true,
+                                    plugins: {
+                                        legend: {
+                                            position: 'top',
+                                        },
+                                        tooltip: {
+                                            mode: 'index',
+                                            intersect: false,
+                                        },
+                                    },
+                                    scales: {
+                                        x: {
+                                            stacked: true,
+                                        },
+                                        y: {
+                                            stacked: true,
+                                        }
+                                    }
+                                }} />
+                            </Block>
+                        </div>
+                    </>
+                )}
             </FlexibleBox>
         </Block>
     );
