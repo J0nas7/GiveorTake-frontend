@@ -38,8 +38,8 @@ export type UsersContextType = {
     setUserDetail: React.Dispatch<React.SetStateAction<User | undefined>>;
     handleChangeNewUser: (field: UserFields, value: string) => Promise<void>
     addUser: (parentId: number, object?: User) => Promise<void>
-    saveUserChanges: (itemChanges: User, parentId: number) => Promise<void>
-    removeUser: (itemId: number, parentId: number) => Promise<boolean>
+    saveUserChanges: (itemChanges: User, parentId: number) => Promise<boolean>
+    removeUser: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     // userLoading: boolean;
     // userError: string | null;
 };
@@ -101,8 +101,8 @@ export type OrganisationsContextType = {
     setOrganisationDetail: React.Dispatch<React.SetStateAction<Organisation | undefined>>;
     handleChangeNewOrganisation: (field: OrganisationFields, value: string) => Promise<void>
     addOrganisation: (parentId: number, object?: Organisation) => Promise<void>
-    saveOrganisationChanges: (organisationChanges: Organisation, parentId: number) => Promise<void>
-    removeOrganisation: (itemId: number, parentId: number) => Promise<boolean>
+    saveOrganisationChanges: (organisationChanges: Organisation, parentId: number) => Promise<boolean>
+    removeOrganisation: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 };
 
 const OrganisationsContext = createContext<OrganisationsContextType | undefined>(undefined);
@@ -168,8 +168,8 @@ export type TeamsContextType = {
     setTeamDetail: React.Dispatch<React.SetStateAction<Team | undefined>>;
     handleChangeNewTeam: (field: TeamFields, value: string) => Promise<void>
     addTeam: (parentId: number, object?: Team) => Promise<void>
-    saveTeamChanges: (teamChanges: Team, parentId: number) => Promise<void>
-    removeTeam: (itemId: number, parentId: number) => Promise<boolean>
+    saveTeamChanges: (teamChanges: Team, parentId: number) => Promise<boolean>
+    removeTeam: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 };
 
 const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
@@ -233,8 +233,8 @@ export type TeamUserSeatsContextType = {
     setTeamUserSeatDetail: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
     handleChangeNewTeamUserSeat: (field: TeamUserSeatFields, value: string) => Promise<void>
     addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
-    saveTeamUserSeatChanges: (teamUserSeatChanges: TeamUserSeat, parentId: number) => Promise<void>
-    removeTeamUserSeat: (itemId: number, parentId: number) => Promise<boolean>
+    saveTeamUserSeatChanges: (teamUserSeatChanges: TeamUserSeat, parentId: number) => Promise<boolean>
+    removeTeamUserSeat: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 };
 
 const TeamUserSeatsContext = createContext<TeamUserSeatsContextType | undefined>(undefined);
@@ -296,8 +296,8 @@ export type ProjectsContextType = {
     setProjectDetail: React.Dispatch<React.SetStateAction<Project | undefined>>
     handleChangeNewProject: (field: ProjectFields, value: string) => Promise<void>
     addProject: (parentId: number, object?: Project) => Promise<void>
-    saveProjectChanges: (projectChanges: Project, parentId: number) => Promise<void>
-    removeProject: (itemId: number, parentId: number) => Promise<boolean>
+    saveProjectChanges: (projectChanges: Project, parentId: number) => Promise<boolean>
+    removeProject: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 };
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -363,9 +363,9 @@ export type BacklogsContextType = {
     setBacklogDetail: React.Dispatch<React.SetStateAction<Backlog | undefined>>;
     handleChangeNewBacklog: (field: BacklogFields, value: string) => Promise<void>;
     addBacklog: (parentId: number, object?: Backlog) => Promise<void>;
-    saveBacklogChanges: (backlogChanges: Backlog, parentId: number) => Promise<void>;
-    removeBacklog: (itemId: number, parentId: number) => Promise<boolean>;
-    finishBacklog: (backlogId: string, moveAction: string, newBacklog: Backlog) => Promise<false|string>;
+    saveBacklogChanges: (backlogChanges: Backlog, parentId: number) => Promise<boolean>
+    removeBacklog: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
+    finishBacklog: (backlogId: string, moveAction: string, newBacklog: Backlog) => Promise<false | string>;
 };
 
 const BacklogsContext = createContext<BacklogsContextType | undefined>(undefined);
@@ -459,8 +459,8 @@ export type TasksContextType = {
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     handleChangeNewTask: (field: TaskFields, value: string, object?: Task) => Promise<void>
     addTask: (parentId: number, object?: Task) => Promise<void>
-    saveTaskChanges: (taskChanges: Task, parentId: number) => Promise<void>
-    removeTask: (itemId: number, parentId: number) => Promise<boolean>
+    saveTaskChanges: (taskChanges: Task, parentId: number) => Promise<boolean>
+    removeTask: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     taskByKeys: Task | undefined
     readTaskByKeys: (projectKey: string, taskKey: string) => Promise<boolean>
 }
@@ -492,7 +492,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         "backlogs"
     );
 
-    const [taskByKeys, setTaskByKeys] = useState<Task|undefined>(undefined)
+    const [taskByKeys, setTaskByKeys] = useState<Task | undefined>(undefined)
 
     const readTaskByKeys = async (projectKey: string, taskKey: string) => {
         try {
@@ -585,8 +585,8 @@ export type TaskTimeTrackContextType = {
     setTaskTimeTrackDetail: React.Dispatch<React.SetStateAction<TaskTimeTrack | undefined>>;
     handleChangeNewTaskTimeTrack: (field: keyof TaskTimeTrack, value: string, object?: TaskTimeTrack | undefined) => Promise<void>;
     addTaskTimeTrack: (taskId: number, object?: TaskTimeTrack | undefined) => Promise<void>;
-    saveTaskTimeTrackChanges: (taskTimeTrackChanges: TaskTimeTrack, taskId: number) => Promise<void>;
-    removeTaskTimeTrack: (itemId: number, parentId: number) => Promise<boolean>
+    saveTaskTimeTrackChanges: (taskTimeTrackChanges: TaskTimeTrack, taskId: number) => Promise<boolean>;
+    removeTaskTimeTrack: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
     latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
     taskTimeTracksByProjectId: TaskTimeTrack[]
@@ -645,7 +645,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
 
                 // Now you can safely set the state
                 setLatestUniqueTaskTimeTracksByProject(entriesArray);
-                
+
                 return
             }
 
@@ -660,7 +660,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         try {
             // Build the URL with optional query parameters for startTime end endTime
             let url = `projects/${projectId}/task-time-tracks`
-            
+
             // Append query parameters if provided
             const params: string[] = []
             if (startTime && endTime) {
@@ -668,15 +668,15 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 params.push(`endTime=${encodeURIComponent(endTime)}`)
                 setTaskTimeTracksByProjectParams({ startTime, endTime })
             }
-            
+
             if (userIds?.length) params.push(`userIds=${JSON.stringify(userIds)}`)
 
             if (taskIds?.length) params.push(`taskIds=${JSON.stringify(taskIds)}`)
-                
+
             if (params.length > 0) url += `?${params.join('&')}`
-            
+
             const data = await httpGetRequest(url)
-            
+
             if (!data.message) {
                 setTaskTimeTracksByProjectId(data)
                 return
@@ -684,7 +684,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 setTaskTimeTracksByProjectId([])
                 return
             }
-            
+
             throw new Error(`Failed to getTaskTimeTracksByProject`);
         } catch (error: any) {
             console.log(error.message || `An error occurred while trying getTaskTimeTracksByProject.`);
@@ -754,10 +754,10 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 }
                 dispatch(setAuthUserTaskTimeTrack(undefined))
             }
-            
+
             await getTaskTimeTracksByProject(
-                task.backlog?.Project_ID || 0, 
-                taskTimeTracksByProjectParams.startTime, 
+                task.backlog?.Project_ID || 0,
+                taskTimeTracksByProjectParams.startTime,
                 taskTimeTracksByProjectParams.endTime
             )
 
@@ -822,8 +822,8 @@ export type TaskCommentsContextType = {
     setTaskCommentDetail: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
     handleChangeNewTaskComment: (field: TaskCommentFields, value: string, object?: TaskComment | undefined) => Promise<void>
     addTaskComment: (parentId: number, object?: TaskComment | undefined) => Promise<void>
-    saveTaskCommentChanges: (taskCommentChanges: TaskComment, parentId: number) => Promise<void>
-    removeTaskComment: (itemId: number, parentId: number) => Promise<boolean>
+    saveTaskCommentChanges: (taskCommentChanges: TaskComment, parentId: number) => Promise<boolean>
+    removeTaskComment: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }
 
 const TaskCommentsContext = createContext<TaskCommentsContextType | undefined>(undefined);
@@ -888,8 +888,8 @@ export type TaskMediaFilesContextType = {
     setTaskMediaFileDetail: React.Dispatch<React.SetStateAction<TaskMediaFile | undefined>>
     handleChangeNewTaskMediaFile: (field: TaskMediaFileFields, value: string) => Promise<void>
     addTaskMediaFile: (parentId: number, object?: TaskMediaFile | undefined) => Promise<void>
-    saveTaskMediaFileChanges: (taskMediaFileChanges: TaskMediaFile, parentId: number) => Promise<void>
-    removeTaskMediaFile: (itemId: number, parentId: number) => Promise<boolean>
+    saveTaskMediaFileChanges: (taskMediaFileChanges: TaskMediaFile, parentId: number) => Promise<boolean>
+    removeTaskMediaFile: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }
 
 const TaskMediaFilesContext = createContext<TaskMediaFilesContextType | undefined>(undefined);

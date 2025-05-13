@@ -7,28 +7,31 @@ import { faStop } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
 import { Block } from '@/components/ui/block-text'
-import { selectAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from '@/redux';
+import { selectAuthUserTaskTimeTrack, selectSnackMessage, useAppDispatch, useAuthActions, useTypedSelector } from '@/redux';
 import { useTasksContext, useTaskTimeTrackContext } from '@/contexts';
 import { TaskTimeTrack } from '@/types';
 
 export const TaskTimeTrackPlayer = () => {
-    const searchParams = useSearchParams();
-    const urlTaskIds = searchParams.get("taskIds")
-
+    // Hooks
     const { latestUniqueTaskTimeTracksByProject, getLatestUniqueTaskTimeTracksByProject, handleTaskTimeTrack } = useTaskTimeTrackContext()
     const { taskDetail } = useTasksContext()
     const { fetchIsLoggedInStatus } = useAuthActions()
     const dispatch = useAppDispatch()
-
+    
+    // State
     const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
+    const snackMessage = useTypedSelector(selectSnackMessage)
+    const searchParams = useSearchParams();
+    const urlTaskIds = searchParams.get("taskIds")
 
+    // Effects
     useEffect(() => {
         if (!taskTimeTrack) dispatch(fetchIsLoggedInStatus())
 
         if (taskTimeTrack) getLatestUniqueTaskTimeTracksByProject(taskTimeTrack.Backlog_ID)
     }, [taskTimeTrack])
 
-    if (!taskTimeTrack || taskDetail || urlTaskIds) return null
+    if (!taskTimeTrack || taskDetail || urlTaskIds || snackMessage) return null
 
     return (
         <Block className="taskplayer-container">

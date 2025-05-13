@@ -12,12 +12,12 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     parentResource: string
 ) => {
     const { fetchItemsByParent, fetchItem, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName, parentResource)
-    
+
     const [itemsById, setItemsById] = useState<T[]>([])
-    const [itemById, setItemById] = useState<T|undefined>(undefined)
+    const [itemById, setItemById] = useState<T | undefined>(undefined)
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
-    
+
     const readItemsById = async (parentId: number, refresh?: boolean) => {
         if (refresh) setItemsById([])
 
@@ -42,7 +42,7 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
             }
         }
     }
-    
+
     const handleChangeNewItem = async (field: keyof T, value: string, object?: T) => {
         if (object) {
             setNewItem((prevState) => ({
@@ -61,19 +61,17 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
         const updatedItem = await updateItem(itemChanges)
         if (updatedItem) {
             const data = await fetchItemsByParent(parentId) // Refresh items from API
-            if (data) {
-                setItemsById(data)
-            }
-        }
-    }
 
-    const removeItem = async (itemId: number, parentId: number) => {
-        const success = await deleteItem(itemId)
-        if (success) {
-            const data = await fetchItemsByParent(parentId) // Refresh items after deletion
             if (data) setItemsById(data)
         }
-        return success
+        return updatedItem
+    }
+
+    const removeItem = async (itemId: number, parentId: number, redirect: string | undefined) => {
+        const success = await deleteItem(itemId, redirect)
+
+        const data = await fetchItemsByParent(parentId) // Refresh items after deletion
+        if (data) setItemsById(data)
     }
 
     return {

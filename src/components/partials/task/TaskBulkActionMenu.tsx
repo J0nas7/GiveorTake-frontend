@@ -12,6 +12,7 @@ import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/conte
 import { Router } from 'next/router';
 import clsx from 'clsx';
 import { Project, Task } from '@/types';
+import { selectSnackMessage, useTypedSelector } from '@/redux';
 
 export const TaskBulkActionMenu = () => {
     // Hooks
@@ -22,6 +23,7 @@ export const TaskBulkActionMenu = () => {
     const { readTasksByBacklogId } = useTasksContext()
 
     // State
+    const snackMessage = useTypedSelector(selectSnackMessage)
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [copySuccess, setCopySuccess] = useState(false)
     const [taskBulkEditing, setTaskBulkEditing] = useState(false)
@@ -100,7 +102,7 @@ export const TaskBulkActionMenu = () => {
         setTaskBulkFocus(urlTaskBulkFocus ? true : false)
     }, [urlTaskBulkFocus])
 
-    if (!urlTaskIds) return null
+    if (!urlTaskIds || snackMessage) return null
 
     return (
         <>

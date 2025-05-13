@@ -59,11 +59,11 @@ const ProjectDetails: React.FC = () => {
 
     const handleDeleteProject = async () => {
         if (!renderProject || !renderProject.Project_ID) return
-
-        const removed = await removeProject(renderProject.Project_ID, renderProject.Team_ID)
-        if (!removed) return
-
-        router.push(`/team/${renderProject.Project_ID}`)
+        const removed = await removeProject(
+            renderProject.Project_ID, 
+            renderProject.Team_ID, 
+            `/team/${renderProject.Team_ID}`
+        )
     }
 
     if (!renderProject) {

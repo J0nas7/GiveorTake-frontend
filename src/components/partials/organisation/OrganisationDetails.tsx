@@ -58,11 +58,11 @@ const OrganisationDetails: React.FC = () => {
 
     const handleDeleteOrganisation = async () => {
         if (!renderOrganisation || !renderOrganisation.Organisation_ID) return
-
-        const removed = await removeOrganisation(renderOrganisation.Organisation_ID, renderOrganisation.User_ID)
-        if (!removed) return
-
-        router.push(`/`)
+        const removed = await removeOrganisation(
+            renderOrganisation.Organisation_ID, 
+            renderOrganisation.User_ID, 
+            `/`
+        )
     }
 
     if (!renderOrganisation) {

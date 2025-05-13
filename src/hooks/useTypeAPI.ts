@@ -1,8 +1,10 @@
 // External
-import React from "react";
+import React, { useEffect } from "react";
 
 // Internal
 import { useAxios } from "."; // Assuming you have a custom hook for Axios requests
+import { selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from "@/redux";
+import { useRouter } from "next/navigation";
 
 interface APIResponse<T> {
     data: T;
@@ -21,7 +23,12 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     parentResource: string
 ) => {
     // Hooks
+    const router = useRouter()
+    const dispatch = useAppDispatch()
     const { httpGetRequest, httpPostWithData, httpPutWithData, httpDeleteRequest } = useAxios()
+
+    // State
+    const deleteConfirm = useTypedSelector(selectDeleteConfirm)
 
     // Fetch items by parent ID (R in CRUD)
     const fetchItemsByParent = async (parentId: number) => {
@@ -86,24 +93,56 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     };
 
     // Delete an item (D in CRUD)
-    const deleteItem = async (itemId: number) => {
+    const deleteItem = async (itemId: number, redirect: string | undefined) => {
         let singular = resource
         if (resource.endsWith("s")) singular = resource.slice(0, -1)
         
-        if (!confirm(`Are you sure you want to delete this ${singular}?`)) return false;
+        dispatch(setDeleteConfirm({ singular, resource, itemId, confirm: undefined, redirect }))
+    }
 
-        try {
-            const response = await httpDeleteRequest(`${resource}/${itemId}`);
-            if (!response.message) {
-                throw new Error(`Failed to delete ${resource}`);
+    const doDelete = async () => {
+        if (
+            deleteConfirm && 
+            deleteConfirm.confirm && 
+            deleteConfirm.resource === resource &&
+            deleteConfirm.itemId
+        ) {
+            try {
+                const response = await httpDeleteRequest(`${deleteConfirm.resource}/${deleteConfirm.itemId}`);
+                
+                if (!response.message) {
+                    throw new Error(`Failed to delete ${deleteConfirm.resource}`);
+                }
+                
+                // Show success message
+                dispatch(setSnackMessage(`
+                    ${deleteConfirm.singular.charAt(0).toUpperCase()}${deleteConfirm.singular.slice(1)} 
+                    deleted successfully
+                `));
+                
+                // Redirect if specified
+                if (deleteConfirm.redirect) router.push(deleteConfirm.redirect)
+            } catch (error: any) {
+                console.log(error.message || `An error occurred while deleting the ${resource}.`);
+                // Show error message
+                dispatch(setSnackMessage(`Failed to delete ${deleteConfirm.singular}`));
             }
-
-            return true;
-        } catch (error: any) {
-            console.log(error.message || `An error occurred while deleting the ${resource}.`);
-            return false;
+            
+            dispatch(setDeleteConfirm(undefined))
+        } else if (
+            deleteConfirm && 
+            deleteConfirm.confirm === false
+        ) {
+            // User cancelled the delete action
+            dispatch(setDeleteConfirm(undefined))
         }
-    };
+    }
+
+    // Effects
+    useEffect(() => {
+        console.log("deleteConfirm", deleteConfirm)
+        doDelete()
+    }, [deleteConfirm]);
 
     return {
         fetchItemsByParent,

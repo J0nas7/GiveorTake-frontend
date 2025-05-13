@@ -15,20 +15,24 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import { useTeamsContext } from '@/contexts/';
 import { Team, TeamFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
-import { selectAuthUser, useTypedSelector } from '@/redux';
+import { selectAuthUser, selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 
 const TeamDetails: React.FC = () => {
+    // Hooks
+    const dispatch = useAppDispatch()
     const router = useRouter()
     const pathname = usePathname(); // Get the current pathname
     const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext()
-    const authUser = useTypedSelector(selectAuthUser) // Redux
-
+    
+    // State
+    const authUser = useTypedSelector(selectAuthUser)
     const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined)
 
+    // Effects
     useEffect(() => { readTeamById(parseInt(teamId)); }, [teamId]);
     useEffect(() => {
         if (teamById) {
@@ -53,21 +57,25 @@ const TeamDetails: React.FC = () => {
     }
 
     const handleSaveChanges = async () => {
-        if (renderTeam) await saveTeamChanges(renderTeam, renderTeam.Organisation_ID)
+        if (renderTeam) {
+            const saveChanges = await saveTeamChanges(renderTeam, renderTeam.Organisation_ID)
+
+            dispatch(setSnackMessage(
+                saveChanges ? "Team changes saved successfully!" : "Failed to save team changes."
+            ))
+        }
     };
 
     const handleDeleteTeam = async () => {
         if (!renderTeam || !renderTeam.Team_ID) return
-
-        const removed = await removeTeam(renderTeam.Team_ID, renderTeam.Organisation_ID)
-        if (!removed) return
-
-        router.push(`/organisation/${renderTeam.Organisation_ID}`)
+        const removed = await removeTeam(
+            renderTeam.Team_ID, 
+            renderTeam.Organisation_ID, 
+            `/organisation/${renderTeam.Organisation_ID}`
+        )
     }
 
-    if (!renderTeam) {
-        return <div>Loading...</div>;
-    }
+    if (!renderTeam) return null
 
     return (
         <TeamDetailsView

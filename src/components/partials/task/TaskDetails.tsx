@@ -261,7 +261,7 @@ const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
 
         // Send the file ID to the API through the context function
         if (taskMediaFile.Media_ID) {
-            await removeTaskMediaFile(taskMediaFile.Media_ID, taskMediaFile.Task_ID)
+            await removeTaskMediaFile(taskMediaFile.Media_ID, taskMediaFile.Task_ID, undefined)
 
             //// Task changed
             if (task) {
@@ -536,7 +536,7 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
 
         // Send the comment ID to the API through the context function
         if (taskComment.Comment_ID) {
-            await removeTaskComment(taskComment.Comment_ID, taskComment.Task_ID)
+            await removeTaskComment(taskComment.Comment_ID, taskComment.Task_ID, undefined)
             if (isEditCommentVisible && isEditCommentVisible.Comment_ID === taskComment.Comment_ID) {
                 setEditComment("")
                 setIsEditCommentVisible(undefined)
@@ -767,8 +767,11 @@ const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
 
-        const removed = await removeTask(task.Task_ID, task.Backlog_ID)
-        if (!removed) return
+        const removed = await removeTask(
+            task.Task_ID, 
+            task.Backlog_ID,
+            undefined
+        )
 
         await readTasksByBacklogId(task.Backlog_ID, true)
 
