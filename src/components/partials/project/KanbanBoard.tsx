@@ -6,7 +6,7 @@ import { useParams } from "next/navigation"
 import { useDrag, useDrop, DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
+import { faLightbulb, faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
@@ -191,16 +191,20 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
 }) => {
     return (
         <Block className="page-content">
-            {renderBacklog && (
-                <Link
-                    href={`/project/${renderBacklog?.project?.Project_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Project
-                </Link>
-            )}
             <FlexibleBox
-                title={`Kanban: ${renderBacklog ? renderBacklog.Backlog_Name : ''}`}
+                title={`Kanban Board`}
+                subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
+                titleAction={
+                    renderBacklog && (
+                        <Link
+                            href={`/project/${renderBacklog?.Project_ID}`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faLightbulb} />
+                            <Text variant="span">Go to Project</Text>
+                        </Link>
+                    )
+                }
                 icon={faWindowRestore}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}

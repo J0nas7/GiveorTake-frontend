@@ -3,7 +3,7 @@
 // External
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faHouseChimney, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useQRCode } from 'next-qrcode';
 
 // Internal
@@ -12,9 +12,10 @@ import { selectAuthUser, selectAuthUserOrganisation, selectAuthUserSeat, useType
 import { Organisation, TeamUserSeat, User } from '@/types';
 import { Heading } from '@/components/ui/heading';
 import styles from "@/core-ui/styles/modules/User.settings.module.scss";
-import { Block } from '@/components/ui/block-text';
+import { Block, Text } from '@/components/ui/block-text';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import { useCookies } from '@/hooks';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const UserDetails: React.FC = () => {
     // Get user data and the save function from context
@@ -82,7 +83,7 @@ const UserDetails: React.FC = () => {
     // Handle user deletion
     const handleDeleteUser = () => {
         if (renderUser && renderUser.User_ID) {
-            removeUser(renderUser.User_ID, 0);
+            removeUser(renderUser.User_ID, 0, "/");
         }
     }
 
@@ -125,15 +126,21 @@ export const UserDetailsView: React.FC<UserDetailsViewProps> = ({
 
     return (
         <Block className="page-content">
-            <Link
-                href={`/`}
-                className="blue-link"
-            >
-                &laquo; Go to Start Page
-            </Link>
-            {/* <Heading variant="h1">Edit User Details</Heading> */}
             <FlexibleBox
-                title={`Edit User Details`}
+                title={`Profile Settings`}
+                subtitle={`${user.User_FirstName} ${user.User_Surname}`}
+                titleAction={
+                    <Block className="flex gap-3 w-full">
+                        {/* Home Link */}
+                        <Link
+                            href={`/`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faHouseChimney} />
+                            <Text variant="span">Go to Home</Text>
+                        </Link>
+                    </Block>
+                }
                 icon={faUser}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}

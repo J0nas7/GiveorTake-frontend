@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { Block, Text } from '@/components/ui/block-text';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faHouseChimney, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CreatedAtToTimeSince } from '../task/TaskTimeTrackPlayer';
 import Image from 'next/image';
@@ -97,15 +97,22 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
         <Block className="page-content">
             <FlexibleBox
                 title="Organisation Settings"
+                subtitle={renderOrganisation ? renderOrganisation.Organisation_Name : undefined}
                 titleAction={
-                    renderOrganisation && authUser && renderOrganisation.User_ID === authUser.User_ID && (
-                        <Block className="flex gap-3">
+                    <Block className="flex gap-3 w-full">
+                        {renderOrganisation && authUser && renderOrganisation.User_ID === authUser.User_ID && (
                             <Link href={`/organisation/${renderOrganisation.Organisation_ID}/create-team`} className="blue-link !inline-flex gap-2 items-center">
                                 <FontAwesomeIcon icon={faUsers} />
                                 <Text variant="span">Create Team</Text>
                             </Link>
-                        </Block>
-                    )
+                        )}
+
+                        {/* Home Link */}
+                        <Link href={`/`} className="blue-link sm:ml-auto !inline-flex gap-2 items-center">
+                            <FontAwesomeIcon icon={faHouseChimney} />
+                            <Text variant="span">Go to Home</Text>
+                        </Link>
+                    </Block>
                 }
                 icon={faBuilding}
                 className="no-box w-auto inline-block"
@@ -196,41 +203,43 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                 )}
             </FlexibleBox>
 
-            {renderOrganisation && (
-                <Box mb={4}>
-                    <Typography variant="h5" gutterBottom>
-                        Teams Overview
-                    </Typography>
-                    <Grid container spacing={3}>
-                        {renderOrganisation.teams?.map((team) => (
-                            <Grid item xs={12} sm={6} md={4} key={team.Team_ID}>
-                                <Card>
-                                    <CardContent>
-                                        <Link href={`/team/${team.Team_ID}`} className="blue-link-light">
-                                            {team.Team_Name}
-                                        </Link>
-                                        <Typography variant="body2" color="textSecondary" paragraph>
-                                            <div dangerouslySetInnerHTML={{
-                                                __html: team.Team_Description || 'No description available'
-                                            }} />
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Created at:{" "}
-                                            {team.Team_CreatedAt && (
-                                                <CreatedAtToTimeSince dateCreatedAt={team.Team_CreatedAt} />
-                                            )}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Team Members: {team.user_seats?.length || 0}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Box>
-            )}
-        </Block>
+            {
+                renderOrganisation && (
+                    <Box mb={4}>
+                        <Typography variant="h5" gutterBottom>
+                            Teams Overview
+                        </Typography>
+                        <Grid container spacing={3}>
+                            {renderOrganisation.teams?.map((team) => (
+                                <Grid item xs={12} sm={6} md={4} key={team.Team_ID}>
+                                    <Card>
+                                        <CardContent>
+                                            <Link href={`/team/${team.Team_ID}`} className="blue-link-light">
+                                                {team.Team_Name}
+                                            </Link>
+                                            <Typography variant="body2" color="textSecondary" paragraph>
+                                                <div dangerouslySetInnerHTML={{
+                                                    __html: team.Team_Description || 'No description available'
+                                                }} />
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Created at:{" "}
+                                                {team.Team_CreatedAt && (
+                                                    <CreatedAtToTimeSince dateCreatedAt={team.Team_CreatedAt} />
+                                                )}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Team Members: {team.user_seats?.length || 0}
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                )
+            }
+        </Block >
     );
 }
 

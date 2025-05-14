@@ -8,15 +8,16 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'next-i18next';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChair, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faChair, faPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
 import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
-import { Team, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
+import { Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { useAxios } from '@/hooks';
 import { FlexibleBox } from '@/components/ui/flexible-box';
+import Image from 'next/image';
 
 const TeamUserSeatsManager: React.FC = () => {
     const { t } = useTranslation(['team'])
@@ -38,7 +39,7 @@ const TeamUserSeatsManager: React.FC = () => {
     const authUser = useTypedSelector(selectAuthUser); // Redux
 
     const [renderUserSeats, setRenderUserSeats] = useState<TeamUserSeat[]>([]);
-    const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined);
+    const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
     const [selectedSeat, setSelectedSeat] = useState<TeamUserSeat | undefined>(undefined);
     const [displayInviteForm, setDisplayInviteForm] = useState<boolean>(false);
     // New User Form State
@@ -49,7 +50,7 @@ const TeamUserSeatsManager: React.FC = () => {
         role: 'user', // default role
         status: 'active', // default status
     });
-    
+
     /** 
      * Methods
      */
@@ -60,7 +61,7 @@ const TeamUserSeatsManager: React.FC = () => {
         }
     };
 
-    const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(seatId, parseInt(teamId))
+    const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(seatId, parseInt(teamId), "/team/" + teamId + "/seats");
 
     const handleSeatChange = (field: TeamUserSeatFields, value: string) => {
         if (selectedSeat) {
@@ -122,7 +123,7 @@ const TeamUserSeatsManager: React.FC = () => {
     const togglePermission = (permission: string, isChecked: boolean) => {
         setSelectedSeat((prevSeat) => {
             if (!prevSeat) return prevSeat;
-            
+
             const updatedPermissions = isChecked
                 ? [
                     ...(Array.isArray(prevSeat.Seat_Permissions)
@@ -156,6 +157,8 @@ const TeamUserSeatsManager: React.FC = () => {
     }, [teamUserSeatsById, teamById]);
 
     useEffect(() => {
+        if (!renderTeam) return
+
         if (urlSeatId && authUser && renderTeam?.organisation?.User_ID !== authUser.User_ID) {
             router.push(`/team/${renderTeam?.Team_ID}/seats`)
             return
@@ -200,7 +203,7 @@ const TeamUserSeatsManager: React.FC = () => {
 
 export interface TeamUserSeatsViewProps {
     renderUserSeats: TeamUserSeat[];
-    renderTeam: Team | undefined;
+    renderTeam: TeamStates;
     authUser: User | undefined;
     selectedSeat: TeamUserSeat | undefined;
     displayInviteForm: boolean | undefined
@@ -259,35 +262,55 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
 }) => {
     return (
         <Block className="page-content">
-            <Box mb={6}>
-                <Link
-                    href={`/team/${renderTeam?.Team_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Team
-                </Link>
-                {/* <Heading variant="h1">{t('team:seatsManager:manageTeamUserSeats')}</Heading> */}
-                <FlexibleBox
-                    title={t('team:seatsManager:manageTeamUserSeats')}
-                    icon={faChair}
-                    className="no-box w-auto inline-block"
-                    numberOfColumns={2}
-                >
-                    <Card className="shadow-lg rounded-lg mb-4">
-                        <CardContent>
+            <FlexibleBox
+                title={t('team:seatsManager:manageTeamUserSeats')}
+                subtitle={renderTeam ? renderTeam.Team_Name : undefined}
+                titleAction={
+                    renderTeam && (
+                        <Block className="flex gap-2 items-center w-full">
+                            {/* New Invite Link */}
                             {authUser && renderTeam?.organisation?.User_ID === authUser.User_ID && (
                                 <Link
-                                    className="blue-link mb-3 !inline-flex gap-2 items-center"
+                                    className="blue-link !inline-flex gap-2 items-center"
                                     href="?seatId=new"
                                 >
                                     <FontAwesomeIcon icon={faPlus} />
                                     <Text variant="span">New Invite</Text>
                                 </Link>
                             )}
-                            <Typography variant="h6" gutterBottom>
-                                {t('team:seatsManager:teamUserSeats')}: {renderTeam?.Team_Name}
-                            </Typography>
 
+                            <Link
+                                href={`/team/${renderTeam.Team_ID}`}
+                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faUsers} />
+                                <Text variant="span">Go to Team</Text>
+                            </Link>
+                        </Block>
+                    )
+                }
+                icon={faChair}
+                className="no-box w-auto inline-block"
+                numberOfColumns={2}
+            >
+                {renderTeam === false ? (
+                    <Block className="text-center">
+                        <Text className="text-gray-400">
+                            Team not found
+                        </Text>
+                    </Block>
+                ) : renderTeam === undefined ? (
+                    <Block className="flex justify-center">
+                        <Image
+                            src="/spinner-loader.gif"
+                            alt="Loading..."
+                            width={45}
+                            height={45}
+                        />
+                    </Block>
+                ) : (
+                    <Card className="shadow-lg rounded-lg mb-4">
+                        <CardContent>
                             {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
                                 <Block>{t('team:seatsManager:length0_iamowner')}</Block>
                             ) : (
@@ -332,135 +355,135 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                             )}
                         </CardContent>
                     </Card>
-                </FlexibleBox>
+                )}
+            </FlexibleBox>
 
-                {selectedSeat ? (
-                    <Card className="shadow-lg rounded-lg mt-4">
-                        <CardContent className="p-4">
-                            <Block className="mb-4">
-                                <Typography variant="h6" gutterBottom className="font-semibold">
-                                    {t('team:seatsManager:editUserSeat')}
-                                </Typography>
-                                <Text variant="span" className="font-semibold">
-                                    {selectedSeat.user?.User_FirstName} {selectedSeat.user?.User_Surname}
-                                </Text>
-                            </Block>
+            {renderTeam && selectedSeat ? (
+                <Card className="shadow-lg rounded-lg mt-4">
+                    <CardContent className="p-4">
+                        <Block className="mb-4">
+                            <Typography variant="h6" gutterBottom className="font-semibold">
+                                {t('team:seatsManager:editUserSeat')}
+                            </Typography>
+                            <Text variant="span" className="font-semibold">
+                                {selectedSeat.user?.User_FirstName} {selectedSeat.user?.User_Surname}
+                            </Text>
+                        </Block>
 
-                            <Grid container spacing={3}>
-                                {/* Role Input */}
-                                <Grid item xs={12} sm={6}>
-                                    <TextField
-                                        label={t('team:seatsManager:userRole')}
-                                        variant="outlined"
-                                        fullWidth
-                                        value={selectedSeat.Seat_Role}
-                                        onChange={(e) => handleSeatChange('Seat_Role', e.target.value)}
-                                        className="bg-white"
-                                    />
-                                </Grid>
-
-                                {/* Status Dropdown */}
-                                <Grid item xs={12} sm={6}>
-                                    <FormControl fullWidth>
-                                        <InputLabel>{t('team:seatsManager:status')}</InputLabel>
-                                        <Select
-                                            value={selectedSeat.Seat_Status}
-                                            onChange={(e) => handleSeatChange('Seat_Status', e.target.value)}
-                                            className="bg-white"
-                                        >
-                                            <MenuItem value="Active">{t('team:seatsManager:active')}</MenuItem>
-                                            <MenuItem value="Inactive">{t('team:seatsManager:inactive')}</MenuItem>
-                                            <MenuItem value="Pending">{t('team:seatsManager:pending')}</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
+                        <Grid container spacing={3}>
+                            {/* Role Input */}
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label={t('team:seatsManager:userRole')}
+                                    variant="outlined"
+                                    fullWidth
+                                    value={selectedSeat.Seat_Role}
+                                    onChange={(e) => handleSeatChange('Seat_Role', e.target.value)}
+                                    className="bg-white"
+                                />
                             </Grid>
 
-                            {/* Permissions Section */}
-                            <Box mt={4}>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    {t('team:seatsManager:permissions')}
-                                </Typography>
+                            {/* Status Dropdown */}
+                            <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel>{t('team:seatsManager:status')}</InputLabel>
+                                    <Select
+                                        value={selectedSeat.Seat_Status}
+                                        onChange={(e) => handleSeatChange('Seat_Status', e.target.value)}
+                                        className="bg-white"
+                                    >
+                                        <MenuItem value="Active">{t('team:seatsManager:active')}</MenuItem>
+                                        <MenuItem value="Inactive">{t('team:seatsManager:inactive')}</MenuItem>
+                                        <MenuItem value="Pending">{t('team:seatsManager:pending')}</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        </Grid>
 
-                                <Grid container spacing={2}>
-                                    {renderTeam?.projects?.map(project => {
-                                        const permissions = [
-                                            {
-                                                key: `editProject.${project.Project_ID}`,
-                                                label: `Manage Project: ${project.Project_Name}`
-                                            },
-                                            {
-                                                key: `archivingTasks.${project.Project_ID}`,
-                                                label: `Archiving Tasks: ${project.Project_Name}`
-                                            }
-                                        ]
+                        {/* Permissions Section */}
+                        <Box mt={4}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                {t('team:seatsManager:permissions')}
+                            </Typography>
 
-                                        return permissions.map(permission => (
-                                            <Grid item key={permission.key} xs={6} sm={4}>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={selectedSeat.Seat_Permissions?.includes(permission.key) || false}
-                                                            onChange={(e) => togglePermission(permission.key, e.target.checked)}
-                                                        />
-                                                    }
-                                                    label={permission.label}
-                                                />
-                                            </Grid>
-                                        ))
-                                    })}
+                            <Grid container spacing={2}>
+                                {renderTeam?.projects?.map(project => {
+                                    const permissions = [
+                                        {
+                                            key: `editProject.${project.Project_ID}`,
+                                            label: `Manage Project: ${project.Project_Name}`
+                                        },
+                                        {
+                                            key: `archivingTasks.${project.Project_ID}`,
+                                            label: `Archiving Tasks: ${project.Project_Name}`
+                                        }
+                                    ]
 
-                                    {availablePermissions.map((permission) => (
-                                        <Grid item key={permission} xs={6} sm={4}>
+                                    return permissions.map(permission => (
+                                        <Grid item key={permission.key} xs={6} sm={4}>
                                             <FormControlLabel
                                                 control={
                                                     <Checkbox
-                                                        checked={selectedSeat.Seat_Permissions?.includes(permission) || false}
-                                                        onChange={(e) => togglePermission(permission, e.target.checked)}
+                                                        checked={selectedSeat.Seat_Permissions?.includes(permission.key) || false}
+                                                        onChange={(e) => togglePermission(permission.key, e.target.checked)}
                                                     />
                                                 }
-                                                label={permission}
+                                                label={permission.label}
                                             />
                                         </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
+                                    ))
+                                })}
 
-                            {/* Actions */}
-                            <Box mt={4} className="flex gap-4 justify-end">
-                                <button
-                                    className="blue-link-light"
-                                    onClick={() => {
-                                        setSelectedSeat(undefined)
-                                        setDisplayInviteForm(false)
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="button-blue px-6 py-2"
-                                    onClick={handleSaveChanges}
-                                >
-                                    {t('team:seatsManager:saveChanges')}
-                                </button>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                ) : displayInviteForm ? (
-                    <Card className="shadow-lg rounded-lg mt-6">
-                        <InviteUserForm
-                            teamId={teamId}
-                            t={t}
-                            addTeamUserSeat={addTeamUserSeat}
-                            readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
-                            setSelectedSeat={setSelectedSeat}
-                            setDisplayInviteForm={setDisplayInviteForm}
-                        />
-                    </Card>
-                ) : (
-                    <></>
-                )}
-            </Box>
+                                {availablePermissions.map((permission) => (
+                                    <Grid item key={permission} xs={6} sm={4}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={selectedSeat.Seat_Permissions?.includes(permission) || false}
+                                                    onChange={(e) => togglePermission(permission, e.target.checked)}
+                                                />
+                                            }
+                                            label={permission}
+                                        />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Box>
+
+                        {/* Actions */}
+                        <Box mt={4} className="flex gap-4 justify-end">
+                            <button
+                                className="blue-link-light"
+                                onClick={() => {
+                                    setSelectedSeat(undefined)
+                                    setDisplayInviteForm(false)
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="button-blue px-6 py-2"
+                                onClick={handleSaveChanges}
+                            >
+                                {t('team:seatsManager:saveChanges')}
+                            </button>
+                        </Box>
+                    </CardContent>
+                </Card>
+            ) : displayInviteForm ? (
+                <Card className="shadow-lg rounded-lg mt-6">
+                    <InviteUserForm
+                        teamId={teamId}
+                        t={t}
+                        addTeamUserSeat={addTeamUserSeat}
+                        readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
+                        setSelectedSeat={setSelectedSeat}
+                        setDisplayInviteForm={setDisplayInviteForm}
+                    />
+                </Card>
+            ) : (
+                <></>
+            )}
         </Block>
     );
 };

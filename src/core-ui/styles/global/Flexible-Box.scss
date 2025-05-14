@@ -53,10 +53,21 @@
 
     // Children
     .box-title-with-icon {
-        margin-bottom: 16px;
-        @apply w-full flex items-center justify-center flex-col;
+        @apply w-full mb-4 flex items-center justify-center flex-col;
         @apply sm:justify-start;
         @apply sm:flex-row;
+
+        &.has-subtitle {
+            margin-bottom: 0 !important;
+        }
+    }
+
+    .box-subtitle:has(+ .box-title-with-icon) {
+        @apply hidden;
+    }
+
+    .box-subtitle {
+        @apply -mt-4 mb-4 block clear-both;
     }
 
     .box-title {

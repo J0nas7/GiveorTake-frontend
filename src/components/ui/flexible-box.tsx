@@ -5,7 +5,7 @@ import { clsx } from 'clsx'
 import { CSSProperties, forwardRef, LegacyRef } from "react"
 
 // Internal
-import { Block, Heading } from '..'
+import { Block, Text, Heading } from '..'
 
 type Variant = 'h1' | 'h2' | 'h3'
 /**
@@ -19,6 +19,7 @@ type Variant = 'h1' | 'h2' | 'h3'
 
 type Props = {
     title?: string,
+    subtitle?: string,
     icon?: IconDefinition,
     titleAction?: React.ReactNode,
     className?: string,
@@ -31,6 +32,7 @@ const FlexibleBox = forwardRef<any, Props>(
     (
         {
             title,
+            subtitle,
             icon = undefined,
             titleAction,
             className = '',
@@ -56,13 +58,23 @@ const FlexibleBox = forwardRef<any, Props>(
                 ref={ref ? ref : undefined}
             >
                 {title && (
-                    <Block className="box-title-with-icon flex items-center">
-                        <Heading title={title} variant="h1" className="box-title" />
-                        {icon && (<FontAwesomeIcon icon={icon} className="box-title-icon" />)}
-                        {titleAction && (
-                            <>&nbsp;{titleAction}</>
-                        )}
-                    </Block>
+                    <>
+                        <Block 
+                            className={
+                                clsx(
+                                    "box-title-with-icon flex items-center",
+                                    { "has-subtitle": subtitle }
+                                )
+                            }
+                        >
+                            <Heading title={title} variant="h1" className="box-title whitespace-nowrap" />
+                            {icon && (<FontAwesomeIcon icon={icon} className="box-title-icon" />)}
+                            {titleAction && (
+                                <>&nbsp;{titleAction}</>
+                            )}    
+                        </Block>
+                        {subtitle && <Text variant="span" className="box-subtitle">{subtitle}</Text>}
+                    </>
                 )}
                 <Block className="flexible-box-content">
                     {children}

@@ -7,9 +7,10 @@ import Link from 'next/link';
 import { Block, Field, FlexibleBox, Heading, Text } from '@/components';
 import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/contexts';
 import { Backlog, BacklogStates, Project } from '@/types';
-import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 import { Card, CardContent } from '@mui/material';
 import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export const FinishBacklog = () => {
     // Hooks
@@ -66,17 +67,20 @@ export const FinishBacklog = () => {
 
     return (
         <Block className="page-content">
-            {renderBacklog && (
-                <Link
-                    href={`/project/${renderBacklog.Project_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Project
-                </Link>
-            )}
-
             <FlexibleBox
-                title={`Finishing Backlog: ${renderBacklog ? renderBacklog.Backlog_Name : ''}`}
+                title={`Finishing Backlog`}
+                subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
+                titleAction={
+                    renderBacklog && (
+                        <Link
+                            href={`/project/${renderBacklog?.Project_ID}`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faLightbulb} />
+                            <Text variant="span">Go to Project</Text>
+                        </Link>
+                    )
+                }
                 icon={faCheckCircle}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}

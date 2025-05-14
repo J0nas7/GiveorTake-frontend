@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
 import { TextField, Card, CardContent, Typography, Box, Grid } from '@mui/material';
 import Link from 'next/link';
-import { faClock, faGauge, faLightbulb, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faGauge, faLightbulb, faList, faUsers, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/navigation';
 
@@ -98,26 +98,25 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
 }) => {
     return (
         <Block className="page-content">
-            {renderProject && (
-                <Link
-                    href={`/team/${renderProject?.team?.Team_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Team
-                </Link>
-            )}
-            
             <FlexibleBox
-                title={`Project: ${renderProject ? renderProject.Project_Name : ''}`}
+                title={`Project Details`}
+                subtitle={renderProject ? renderProject.Project_Name : undefined}
                 titleAction={
                     renderProject && (
-                        <Block className="flex flex-col sm:flex-row gap-2 items-center">
+                        <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
                             <Link
                                 href={`/time-tracks/project/${renderProject?.Project_ID}`}
                                 className="blue-link !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faClock} />
                                 <Text variant="span">Time Entries</Text>
+                            </Link>
+                            <Link
+                                href={`/team/${renderProject?.team?.Team_ID}`}
+                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faUsers} />
+                                <Text variant="span">Go to Team</Text>
                             </Link>
                         </Block>
                     )
@@ -260,7 +259,7 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                     </Card>
                 )}
             </FlexibleBox>
-            
+
             {/* Projects Overview Section */}
             {renderProject && (
                 <Box mb={4}>

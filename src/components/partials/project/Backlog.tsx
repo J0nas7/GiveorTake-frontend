@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { TFunction, useTranslation } from "next-i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisV, faList, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
+import { faEllipsisV, faLightbulb, faList, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
@@ -258,17 +258,20 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
 }) => {
     return (
         <Block className="page-content">
-            {renderBacklog && (
-                <Link
-                    href={`/project/${renderBacklog?.Project_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Project
-                </Link>
-            )}
-            
             <FlexibleBox
-                title={`Backlog: ${renderBacklog ? renderBacklog.Backlog_Name : ''}`}
+                title={`Backlog`}
+                subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
+                titleAction={
+                    renderBacklog && (
+                        <Link
+                            href={`/project/${renderBacklog?.Project_ID}`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faLightbulb} />
+                            <Text variant="span">Go to Project</Text>
+                        </Link>
+                    )
+                }
                 icon={faList}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}

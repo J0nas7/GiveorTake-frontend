@@ -17,7 +17,7 @@ import { Team, TeamFields, TeamStates, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import Image from 'next/image';
 
@@ -111,22 +111,15 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
 
     return (
         <Block className="page-content">
-            {renderTeam && (
-                <Link
-                    href={`/organisation/${renderTeam.organisation?.Organisation_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Organisation
-                </Link>
-            )}
             <FlexibleBox
                 title="Team Settings"
+                subtitle={renderTeam ? renderTeam.Team_Name : undefined}
                 icon={faUsers}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
                 titleAction={
                     renderTeam && (
-                        <Block className="flex flex-col sm:flex-row gap-2">
+                        <Block className="flex flex-col sm:flex-row gap-2 w-full">
                             <Link
                                 href={`${pathname}/seats`}
                                 className="blue-link !inline-flex gap-2 items-center"
@@ -143,6 +136,14 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                     <Text variant="span">Create Project</Text>
                                 </Link>
                             )}
+
+                            <Link
+                                href={`/organisation/${renderTeam.organisation?.Organisation_ID}`}
+                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faBuilding} />
+                                <Text variant="span">Go to Organisation</Text>
+                            </Link>
                         </Block>
                     )
                 }

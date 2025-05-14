@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { faLightbulb } from "@fortawesome/free-solid-svg-icons";
+import { faLightbulb, faUsers } from "@fortawesome/free-solid-svg-icons";
 
 // Internal
 import { useProjectsContext, useTeamsContext } from "@/contexts";
@@ -18,6 +18,8 @@ import { Field } from "@/components/ui/input-field";
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import { selectAuthUser, useTypedSelector } from "@/redux";
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const CreateProject: React.FC = () => {
     // Hooks
@@ -80,6 +82,19 @@ const CreateProject: React.FC = () => {
             <div className="mb-8">
                 <FlexibleBox
                     title="Create New Project"
+                    titleAction={
+                        teamById && (
+                            <Block className="flex gap-2 w-full">
+                                <Link
+                                    href={`/team/${teamById.Team_ID}`}
+                                    className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                                >
+                                    <FontAwesomeIcon icon={faUsers} />
+                                    <Text variant="span">Go to Team</Text>
+                                </Link>
+                            </Block>
+                        )
+                    }
                     icon={faLightbulb}
                     className="no-box w-auto inline-block"
                     numberOfColumns={2}

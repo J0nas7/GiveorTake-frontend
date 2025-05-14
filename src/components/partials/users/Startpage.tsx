@@ -3,7 +3,7 @@
 // External
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { faBuilding, faPlus, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faBuilding, faHouseChimney, faPlus, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Internal
@@ -22,23 +22,23 @@ export const Startpage = () => {
 
     return (
         <Block className="page-content">
-            {/* Profile Link */}
-            <Link href={`/profile`} className="blue-link">
-                &laquo; Go to Profile Settings
-            </Link>
-
-            {/* Welcome Section */}
             <FlexibleBox
                 title={`Hej ${authUser?.User_FirstName}`}
                 titleAction={<>
-                    <Block className="flex gap-3">
+                    <Block className="flex gap-3 w-full">
                         <Link href={`/organisation/create`} className="blue-link !inline-flex gap-2 items-center">
                             <FontAwesomeIcon icon={faBuilding} />
                             <Text variant="span">Create Organisation</Text>
                         </Link>
+
+                        {/* Profile Link */}
+                        <Link href={`/profile`} className="blue-link sm:ml-auto !inline-flex gap-2 items-center">
+                            <FontAwesomeIcon icon={faUser} />
+                            <Text variant="span">Go to Profile Settings</Text>
+                        </Link>
                     </Block>
                 </>}
-                icon={faUser}
+                icon={faHouseChimney}
                 className="no-box w-auto"
             >
                 <Block className="flex flex-col gap-3">
@@ -78,7 +78,7 @@ export const Startpage = () => {
                                                         }} />
 
                                                         <Text className="mt-3 text-sm text-gray-600">{team.user_seats?.length} team members</Text>
-                                                        
+
                                                         {/* Projects under the Team */}
                                                         {team.projects?.length ? (
                                                             <Block className="mt-2">

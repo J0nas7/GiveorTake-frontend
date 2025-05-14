@@ -15,8 +15,9 @@ import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/conte
 import { Backlog, BacklogStates, Project, Task } from "@/types"
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
-import { faGauge } from "@fortawesome/free-solid-svg-icons";
+import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
@@ -130,17 +131,20 @@ const DashboardContainer = () => {
 
     return (
         <Block className="page-content">
-            {renderBacklog && (
-                <Link
-                    href={`/project/${renderBacklog?.Project_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Project
-                </Link>
-            )}
-
             <FlexibleBox
-                title={`${t('dashboard.title')}: ${renderBacklog ? renderBacklog.Backlog_Name : ''}`}
+                title={`${t('dashboard.title')}`}
+                subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
+                titleAction={
+                    renderBacklog && (
+                        <Link
+                            href={`/project/${renderBacklog?.Project_ID}`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faLightbulb} />
+                            <Text variant="span">Go to Project</Text>
+                        </Link>
+                    )
+                }
                 icon={faGauge}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
