@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBuilding, faLightbulb, faList, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import Image from 'next/image';
+import { LoadingState } from '@/core-ui/components/LoadingState';
 
 const TeamDetails: React.FC = () => {
     // Hooks
@@ -148,89 +149,76 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                     )
                 }
             >
-                {renderTeam === false ? (
-                    <Block className="text-center">
-                        <Text className="text-gray-400">
-                            Team not found
-                        </Text>
-                    </Block>
-                ) : renderTeam === undefined ? (
-                    <Block className="flex justify-center">
-                        <Image
-                            src="/spinner-loader.gif"
-                            alt="Loading..."
-                            width={45}
-                            height={45}
-                        />
-                    </Block>
-                ) : (
-                    <Card>
-                        {authUser && renderTeam.organisation?.User_ID === authUser.User_ID ? (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Edit Team Details
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Team Name"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={renderTeam.Team_Name}
-                                            onChange={handleHTMLInputChange}
-                                            name="Team_Name"
-                                        />
+                <LoadingState singular="Team" renderItem={renderTeam}>
+                    {renderTeam && (
+                        <Card>
+                            {authUser && renderTeam.organisation?.User_ID === authUser.User_ID ? (
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Edit Team Details
+                                    </Typography>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Team Name"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={renderTeam.Team_Name}
+                                                onChange={handleHTMLInputChange}
+                                                name="Team_Name"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography>Team Description</Typography>
+                                            <ReactQuill
+                                                className="w-full"
+                                                theme="snow"
+                                                value={renderTeam.Team_Description}
+                                                onChange={(e: string) => handleTeamChange("Team_Description", e)}
+                                                modules={{
+                                                    toolbar: [
+                                                        [{ header: "1" }, { header: "2" }, { font: [] }],
+                                                        [{ list: "ordered" }, { list: "bullet" }],
+                                                        ["bold", "italic", "underline", "strike"],
+                                                        [{ align: [] }],
+                                                        ["link"],
+                                                        ["blockquote"],
+                                                    ],
+                                                }}
+                                            />
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs={12}>
-                                        <Typography>Team Description</Typography>
-                                        <ReactQuill
-                                            className="w-full"
-                                            theme="snow"
-                                            value={renderTeam.Team_Description}
-                                            onChange={(e: string) => handleTeamChange("Team_Description", e)}
-                                            modules={{
-                                                toolbar: [
-                                                    [{ header: "1" }, { header: "2" }, { font: [] }],
-                                                    [{ list: "ordered" }, { list: "bullet" }],
-                                                    ["bold", "italic", "underline", "strike"],
-                                                    [{ align: [] }],
-                                                    ["link"],
-                                                    ["blockquote"],
-                                                ],
-                                            }}
-                                        />
+                                    <Block className="mt-2 flex justify-between">
+                                        <button onClick={handleSaveChanges} className="button-blue">
+                                            Save Changes
+                                        </button>
+                                        <button onClick={handleDeleteTeam} className="blue-link-light red-link-light">
+                                            Delete Team
+                                        </button>
+                                    </Block>
+                                </CardContent>
+                            ) : (
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Team Details
+                                    </Typography>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} sm={6}>
+                                            <strong>Team Name:</strong><br />
+                                            {renderTeam.Team_Name}
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <strong>Team Description:</strong><br />
+                                            <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
+                                                __html: renderTeam.Team_Description || "No description available"
+                                            }} />
+                                        </Grid>
                                     </Grid>
-                                </Grid>
-                                <Block className="mt-2 flex justify-between">
-                                    <button onClick={handleSaveChanges} className="button-blue">
-                                        Save Changes
-                                    </button>
-                                    <button onClick={handleDeleteTeam} className="blue-link-light red-link-light">
-                                        Delete Team
-                                    </button>
-                                </Block>
-                            </CardContent>
-                        ) : (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Team Details
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
-                                        <strong>Team Name:</strong><br />
-                                        {renderTeam.Team_Name}
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <strong>Team Description:</strong><br />
-                                        <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
-                                            __html: renderTeam.Team_Description || "No description available"
-                                        }} />
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        )}
-                    </Card>
-                )}
+                                </CardContent>
+                            )}
+                        </Card>
+                    )}
+                </LoadingState>
             </FlexibleBox>
 
             {/* Projects Overview Section */}

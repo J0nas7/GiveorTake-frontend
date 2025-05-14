@@ -21,6 +21,7 @@ import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import Image from 'next/image';
+import { LoadingState } from '@/core-ui/components/LoadingState';
 
 const ProjectDetails: React.FC = () => {
     // Hooks
@@ -120,139 +121,126 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                {renderProject === false ? (
-                    <Block className="text-center">
-                        <Text className="text-gray-400">
-                            Project not found
-                        </Text>
-                    </Block>
-                ) : renderProject === undefined ? (
-                    <Block className="flex justify-center">
-                        <Image
-                            src="/spinner-loader.gif"
-                            alt="Loading..."
-                            width={45}
-                            height={45}
-                        />
-                    </Block>
-                ) : (
-                    <Card>
-                        {authUser && renderProject.team?.organisation?.User_ID === authUser.User_ID ? (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Edit Project Details
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Project Name"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={renderProject.Project_Name}
-                                            onChange={(e) => handleProjectChange("Project_Name", e.target.value)}
-                                            name="Project_Name"
-                                        />
+                <LoadingState singular="Project" renderItem={renderProject}>
+                    {renderProject && (
+                        <Card>
+                            {authUser && renderProject.team?.organisation?.User_ID === authUser.User_ID ? (
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Edit Project Details
+                                    </Typography>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Project Name"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={renderProject.Project_Name}
+                                                onChange={(e) => handleProjectChange("Project_Name", e.target.value)}
+                                                name="Project_Name"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Project Key"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={renderProject.Project_Key}
+                                                onChange={(e) => handleProjectChange("Project_Key", e.target.value)}
+                                                name="Project_Key"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Text>Project Description</Text>
+                                            <ReactQuill
+                                                className="w-full"
+                                                theme="snow"
+                                                value={renderProject.Project_Description}
+                                                onChange={(e: string) => handleProjectChange("Project_Description", e)}
+                                                modules={{
+                                                    toolbar: [
+                                                        [{ header: "1" }, { header: "2" }, { font: [] }],
+                                                        [{ list: "ordered" }, { list: "bullet" }],
+                                                        ["bold", "italic", "underline", "strike"],
+                                                        [{ align: [] }],
+                                                        ["link"],
+                                                        ["blockquote"],
+                                                    ],
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Start Date"
+                                                variant="outlined"
+                                                fullWidth
+                                                type="date"
+                                                value={renderProject.Project_Start_Date || ''}
+                                                onChange={(e) => handleProjectChange("Project_Start_Date", e.target.value)}
+                                                name="Project_Start_Date"
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="End Date"
+                                                variant="outlined"
+                                                fullWidth
+                                                type="date"
+                                                value={renderProject.Project_End_Date || ''}
+                                                onChange={(e) => handleProjectChange("Project_End_Date", e.target.value)}
+                                                name="Project_End_Date"
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Project Key"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={renderProject.Project_Key}
-                                            onChange={(e) => handleProjectChange("Project_Key", e.target.value)}
-                                            name="Project_Key"
-                                        />
+                                    <Block className="mt-2 flex justify-between">
+                                        <button onClick={handleSaveChanges} className="button-blue">
+                                            Save Changes
+                                        </button>
+                                        <button onClick={handleDeleteProject} className="blue-link-light red-link-light">
+                                            Delete Project
+                                        </button>
+                                    </Block>
+                                </CardContent>
+                            ) : (
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Project Details
+                                    </Typography>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} sm={6}>
+                                            <strong>Project Name:</strong><br />
+                                            {renderProject.Project_Name || 'No name available'}
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <strong>Project Status:</strong><br />
+                                            {renderProject.Project_Status}
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <strong>Project Key:</strong><br />
+                                            {renderProject.Project_Key}-0
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <strong>Project Description:</strong><br />
+                                            <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
+                                                __html: renderProject.Project_Description || 'No description available'
+                                            }} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <strong>Start Date:</strong><br />
+                                            {renderProject.Project_Start_Date}
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <strong>End Date</strong><br />
+                                            {renderProject.Project_End_Date}
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs={12}>
-                                        <Text>Project Description</Text>
-                                        <ReactQuill
-                                            className="w-full"
-                                            theme="snow"
-                                            value={renderProject.Project_Description}
-                                            onChange={(e: string) => handleProjectChange("Project_Description", e)}
-                                            modules={{
-                                                toolbar: [
-                                                    [{ header: "1" }, { header: "2" }, { font: [] }],
-                                                    [{ list: "ordered" }, { list: "bullet" }],
-                                                    ["bold", "italic", "underline", "strike"],
-                                                    [{ align: [] }],
-                                                    ["link"],
-                                                    ["blockquote"],
-                                                ],
-                                            }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Start Date"
-                                            variant="outlined"
-                                            fullWidth
-                                            type="date"
-                                            value={renderProject.Project_Start_Date || ''}
-                                            onChange={(e) => handleProjectChange("Project_Start_Date", e.target.value)}
-                                            name="Project_Start_Date"
-                                            InputLabelProps={{ shrink: true }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="End Date"
-                                            variant="outlined"
-                                            fullWidth
-                                            type="date"
-                                            value={renderProject.Project_End_Date || ''}
-                                            onChange={(e) => handleProjectChange("Project_End_Date", e.target.value)}
-                                            name="Project_End_Date"
-                                            InputLabelProps={{ shrink: true }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                                <Block className="mt-2 flex justify-between">
-                                    <button onClick={handleSaveChanges} className="button-blue">
-                                        Save Changes
-                                    </button>
-                                    <button onClick={handleDeleteProject} className="blue-link-light red-link-light">
-                                        Delete Project
-                                    </button>
-                                </Block>
-                            </CardContent>
-                        ) : (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Project Details
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
-                                        <strong>Project Name:</strong><br />
-                                        {renderProject.Project_Name || 'No name available'}
-                                    </Grid>
-                                    <Grid item xs={12} sm={3}>
-                                        <strong>Project Status:</strong><br />
-                                        {renderProject.Project_Status}
-                                    </Grid>
-                                    <Grid item xs={12} sm={3}>
-                                        <strong>Project Key:</strong><br />
-                                        {renderProject.Project_Key}-0
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <strong>Project Description:</strong><br />
-                                        <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
-                                            __html: renderProject.Project_Description || 'No description available'
-                                        }} />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <strong>Start Date:</strong><br />
-                                        {renderProject.Project_Start_Date}
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <strong>End Date</strong><br />
-                                        {renderProject.Project_End_Date}
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        )}
-                    </Card>
-                )}
+                                </CardContent>
+                            )}
+                        </Card>
+                    )}
+                </LoadingState>
             </FlexibleBox>
 
             {/* Projects Overview Section */}

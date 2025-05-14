@@ -18,6 +18,7 @@ import { selectAuthUser, useTypedSelector } from '@/redux';
 import { useAxios } from '@/hooks';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import Image from 'next/image';
+import { LoadingState } from '@/core-ui/components/LoadingState';
 
 const TeamUserSeatsManager: React.FC = () => {
     const { t } = useTranslation(['team'])
@@ -293,69 +294,56 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                {renderTeam === false ? (
-                    <Block className="text-center">
-                        <Text className="text-gray-400">
-                            Team not found
-                        </Text>
-                    </Block>
-                ) : renderTeam === undefined ? (
-                    <Block className="flex justify-center">
-                        <Image
-                            src="/spinner-loader.gif"
-                            alt="Loading..."
-                            width={45}
-                            height={45}
-                        />
-                    </Block>
-                ) : (
-                    <Card className="shadow-lg rounded-lg mb-4">
-                        <CardContent>
-                            {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
-                                <Block>{t('team:seatsManager:length0_iamowner')}</Block>
-                            ) : (
-                                <Grid container spacing={3}>
-                                    {Array.isArray(renderUserSeats) && renderUserSeats.map((seat) => (
-                                        <Grid item xs={12} sm={6} md={4} key={seat.Seat_ID}>
-                                            <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all">
-                                                <CardContent className="p-4">
-                                                    <Block variant="span" className="flex flex-col gap-3">
-                                                        <Typography variant="h6" className="font-semibold text-lg">
-                                                            {seat.user?.User_FirstName} {seat.user?.User_Surname}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t('team:seatsManager:role')}: {seat.Seat_Role}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t('team:seatsManager:status')}: {seat.Seat_Status}
-                                                        </Typography>
+                <LoadingState singular="Team" renderItem={renderTeam}>
+                    {renderTeam && (
+                        <Card className="shadow-lg rounded-lg mb-4">
+                            <CardContent>
+                                {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
+                                    <Block>{t('team:seatsManager:length0_iamowner')}</Block>
+                                ) : (
+                                    <Grid container spacing={3}>
+                                        {Array.isArray(renderUserSeats) && renderUserSeats.map((seat) => (
+                                            <Grid item xs={12} sm={6} md={4} key={seat.Seat_ID}>
+                                                <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all">
+                                                    <CardContent className="p-4">
+                                                        <Block variant="span" className="flex flex-col gap-3">
+                                                            <Typography variant="h6" className="font-semibold text-lg">
+                                                                {seat.user?.User_FirstName} {seat.user?.User_Surname}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                {t('team:seatsManager:role')}: {seat.Seat_Role}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                {t('team:seatsManager:status')}: {seat.Seat_Status}
+                                                            </Typography>
 
-                                                        {authUser && renderTeam?.organisation?.User_ID === authUser.User_ID && (
-                                                            <div className="flex justify-between mt-4">
-                                                                <button
-                                                                    onClick={() => handleSelectSeat(seat)}
-                                                                    className="blue-link w-[48%]"
-                                                                >
-                                                                    {t('team:seatsManager:edit')}
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
-                                                                    className="blue-link w-[48%]"
-                                                                >
-                                                                    {t('team:seatsManager:remove')}
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </Block>
-                                                </CardContent>
-                                            </Card>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
+                                                            {authUser && renderTeam?.organisation?.User_ID === authUser.User_ID && (
+                                                                <div className="flex justify-between mt-4">
+                                                                    <button
+                                                                        onClick={() => handleSelectSeat(seat)}
+                                                                        className="blue-link w-[48%]"
+                                                                    >
+                                                                        {t('team:seatsManager:edit')}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
+                                                                        className="blue-link w-[48%]"
+                                                                    >
+                                                                        {t('team:seatsManager:remove')}
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </Block>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+                </LoadingState>
             </FlexibleBox>
 
             {renderTeam && selectedSeat ? (

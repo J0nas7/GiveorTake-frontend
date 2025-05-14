@@ -15,8 +15,8 @@ const prod = {
 const dev = {
     url: {
         APP_URL: "http://localhost:3000",
-        //API_URL: "http://192.168.0.119:8000",
-        API_URL: "http://10.71.27.192:8000",
+        API_URL: "http://192.168.0.119:8000",
+        // API_URL: "http://10.71.27.192:8000",
     },
     mobilepay: {
         MP_CLIENT_ID: "",

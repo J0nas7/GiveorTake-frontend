@@ -18,6 +18,7 @@ import Link from "next/link"
 import { FlexibleBox } from "@/components/ui/flexible-box"
 import clsx from "clsx"
 import Image from "next/image"
+import { LoadingState } from "@/core-ui/components/LoadingState"
 
 const ItemType = { TASK: "task" }
 
@@ -209,36 +210,23 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                {renderBacklog === false ? (
-                    <Block className="text-center">
-                        <Text className="text-gray-400">
-                            Backlog not found
-                        </Text>
-                    </Block>
-                ) : renderBacklog === undefined ? (
-                    <Block className="flex justify-center">
-                        <Image
-                            src="/spinner-loader.gif"
-                            alt="Loading..."
-                            width={45}
-                            height={45}
-                        />
-                    </Block>
-                ) : (
-                    <Block className={styles.board}>
-                        {Object.entries(columns).map(([key, label]) => (
-                            <Column
-                                key={key}
-                                status={label}
-                                label={label}
-                                tasks={tasks ? tasks.filter(task => task.Task_Status === label) : undefined}
-                                archiveTask={archiveTask}
-                                setTaskDetail={setTaskDetail}
-                                moveTask={moveTask}
-                            />
-                        ))}
-                    </Block>
-                )}
+                <LoadingState singular="Backlog" renderItem={renderBacklog}>
+                    {renderBacklog && (
+                        <Block className={styles.board}>
+                            {Object.entries(columns).map(([key, label]) => (
+                                <Column
+                                    key={key}
+                                    status={label}
+                                    label={label}
+                                    tasks={tasks ? tasks.filter(task => task.Task_Status === label) : undefined}
+                                    archiveTask={archiveTask}
+                                    setTaskDetail={setTaskDetail}
+                                    moveTask={moveTask}
+                                />
+                            ))}
+                        </Block>
+                    )}
+                </LoadingState>
             </FlexibleBox>
         </Block>
     )

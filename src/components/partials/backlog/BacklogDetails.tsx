@@ -19,6 +19,7 @@ import { useBacklogsContext } from '@/contexts';
 import { Backlog, BacklogStates, User } from '@/types';
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { Block, Text, FlexibleBox } from '@/components';
+import { LoadingState } from '@/core-ui/components/LoadingState';
 
 export const BacklogDetails: React.FC = () => {
     const { backlogId } = useParams<{ backlogId: string }>();
@@ -146,116 +147,103 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                 icon={faList}
                 className="no-box w-auto inline-block"
             >
-                {renderBacklog === false ? (
-                    <Block className="text-center">
-                        <Text className="text-gray-400">
-                            Team not found
-                        </Text>
-                    </Block>
-                ) : renderBacklog === undefined ? (
-                    <Block className="flex justify-center">
-                        <Image
-                            src="/spinner-loader.gif"
-                            alt="Loading..."
-                            width={45}
-                            height={45}
-                        />
-                    </Block>
-                ) : (
-                    <Card>
-                        {authUser && renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ? (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Edit Backlog Details
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Backlog Name"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={renderBacklog.Backlog_Name}
-                                            onChange={handleBacklogInputChange}
-                                            name="Backlog_Name"
-                                        />
+                <LoadingState singular="Backlog" renderItem={renderBacklog}>
+                    {renderBacklog && (
+                        <Card>
+                            {authUser && renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ? (
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Edit Backlog Details
+                                    </Typography>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Backlog Name"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={renderBacklog.Backlog_Name}
+                                                onChange={handleBacklogInputChange}
+                                                name="Backlog_Name"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography>Backlog Description</Typography>
+                                            <ReactQuill
+                                                className="w-full"
+                                                theme="snow"
+                                                value={renderBacklog.Backlog_Description}
+                                                onChange={(e: string) => handleBacklogChange("Backlog_Description", e)}
+                                                modules={{
+                                                    toolbar: [
+                                                        [{ header: "1" }, { header: "2" }, { font: [] }],
+                                                        [{ list: "ordered" }, { list: "bullet" }],
+                                                        ["bold", "italic", "underline", "strike"],
+                                                        [{ align: [] }],
+                                                        ["link"],
+                                                        ["blockquote"],
+                                                    ],
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="Start Date"
+                                                type="date"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={renderBacklog.Backlog_StartDate || ''}
+                                                onChange={(e) => handleBacklogChange("Backlog_StartDate", e.target.value)}
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label="End Date"
+                                                type="date"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={renderBacklog.Backlog_EndDate || ''}
+                                                onChange={(e) => handleBacklogChange("Backlog_EndDate", e.target.value)}
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs={12}>
-                                        <Typography>Backlog Description</Typography>
-                                        <ReactQuill
-                                            className="w-full"
-                                            theme="snow"
-                                            value={renderBacklog.Backlog_Description}
-                                            onChange={(e: string) => handleBacklogChange("Backlog_Description", e)}
-                                            modules={{
-                                                toolbar: [
-                                                    [{ header: "1" }, { header: "2" }, { font: [] }],
-                                                    [{ list: "ordered" }, { list: "bullet" }],
-                                                    ["bold", "italic", "underline", "strike"],
-                                                    [{ align: [] }],
-                                                    ["link"],
-                                                    ["blockquote"],
-                                                ],
-                                            }}
-                                        />
+                                    <Block className="mt-2 flex justify-between">
+                                        <button onClick={handleSaveChanges} className="button-blue">
+                                            Save Changes
+                                        </button>
+                                        <button onClick={handleDeleteBacklog} className="blue-link-light red-link-light">
+                                            Delete Backlog
+                                        </button>
+                                    </Block>
+                                </CardContent>
+                            ) : (
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Backlog Details
+                                    </Typography>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} sm={6}>
+                                            <strong>Description:</strong>
+                                            <div
+                                                className="bg-gray-100 p-2"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: renderBacklog.Backlog_Description || "No description provided",
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <strong>Start:</strong> {renderBacklog.Backlog_StartDate || "N/A"}
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <strong>End:</strong> {renderBacklog.Backlog_EndDate || "N/A"}
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Start Date"
-                                            type="date"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={renderBacklog.Backlog_StartDate || ''}
-                                            onChange={(e) => handleBacklogChange("Backlog_StartDate", e.target.value)}
-                                            InputLabelProps={{ shrink: true }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="End Date"
-                                            type="date"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={renderBacklog.Backlog_EndDate || ''}
-                                            onChange={(e) => handleBacklogChange("Backlog_EndDate", e.target.value)}
-                                            InputLabelProps={{ shrink: true }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                                <Block className="mt-2 flex justify-between">
-                                    <button onClick={handleSaveChanges} className="button-blue">
-                                        Save Changes
-                                    </button>
-                                    <button onClick={handleDeleteBacklog} className="blue-link-light red-link-light">
-                                        Delete Backlog
-                                    </button>
-                                </Block>
-                            </CardContent>
-                        ) : (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Backlog Details
-                                </Typography>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
-                                        <strong>Description:</strong>
-                                        <div
-                                            className="bg-gray-100 p-2"
-                                            dangerouslySetInnerHTML={{
-                                                __html: renderBacklog.Backlog_Description || "No description provided",
-                                            }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={3}>
-                                        <strong>Start:</strong> {renderBacklog.Backlog_StartDate || "N/A"}
-                                    </Grid>
-                                    <Grid item xs={12} sm={3}>
-                                        <strong>End:</strong> {renderBacklog.Backlog_EndDate || "N/A"}
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        )}
-                    </Card>
-                )}
+                                </CardContent>
+                            )}
+                        </Card>
+                    )}
+                </LoadingState>
             </FlexibleBox>
 
             {/* Task Summary Section */}

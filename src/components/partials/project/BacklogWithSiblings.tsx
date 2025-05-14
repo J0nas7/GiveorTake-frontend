@@ -19,6 +19,7 @@ import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
 import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 import Image from "next/image";
 import clsx from "clsx";
+import { LoadingState } from "@/core-ui/components/LoadingState";
 
 type BacklogWithSiblingsContainerProps = {
     backlogId: number | undefined
@@ -281,23 +282,8 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     handleSelectAllChange
 }) => {
     return (
-        <>
-            {renderBacklog === false ? (
-                <Block className="text-center">
-                    <Text className="text-gray-400">
-                        Backlog not found
-                    </Text>
-                </Block>
-            ) : renderBacklog === undefined ? (
-                <Block className="flex justify-center">
-                    <Image
-                        src="/spinner-loader.gif"
-                        alt="Loading..."
-                        width={45}
-                        height={45}
-                    />
-                </Block>
-            ) : (
+        <LoadingState singular="Backlog" renderItem={renderBacklog}>
+            {renderBacklog && (
                 <Block className="overflow-x-auto">
                     <Block className={styles.taskTable}>
                         <Block className={clsx(
@@ -457,6 +443,6 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                     </table>
                 </Block>
             )}
-        </>
-    );
+        </LoadingState>
+    )
 };

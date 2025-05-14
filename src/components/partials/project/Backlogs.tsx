@@ -13,6 +13,7 @@ import { useProjectsContext } from '@/contexts'
 import { useParams } from 'next/navigation'
 import { BacklogWithSiblingsContainer } from './BacklogWithSiblings'
 import Image from 'next/image'
+import { LoadingState } from '@/core-ui/components/LoadingState'
 
 export const BacklogsContainer = () => {
     // Hooks
@@ -69,30 +70,17 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
             className="no-box w-auto inline-block"
             numberOfColumns={2}
         >
-            {renderProject === false ? (
-                <Block className="text-center">
-                    <Text className="text-gray-400">
-                        Project not found
-                    </Text>
-                </Block>
-            ) : renderProject === undefined ? (
-                <Block className="flex justify-center">
-                    <Image
-                        src="/spinner-loader.gif"
-                        alt="Loading..."
-                        width={45}
-                        height={45}
-                    />
-                </Block>
-            ) : (
-                <>
-                    {renderProject.backlogs && renderProject.backlogs.map((backlog: Backlog) => (
-                        <Block className="mb-7" key={backlog.Backlog_ID}>
-                            <BacklogWithSiblingsContainer backlogId={backlog.Backlog_ID} />
-                        </Block>
-                    ))}
-                </>
-            )}
+            <LoadingState singular="Project" renderItem={renderProject}>
+                {renderProject && (
+                    <>
+                        {renderProject.backlogs && renderProject.backlogs.map((backlog: Backlog) => (
+                            <Block className="mb-7" key={backlog.Backlog_ID}>
+                                <BacklogWithSiblingsContainer backlogId={backlog.Backlog_ID} />
+                            </Block>
+                        ))}
+                    </>
+                )}
+            </LoadingState>
         </FlexibleBox>
     </Block>
 )

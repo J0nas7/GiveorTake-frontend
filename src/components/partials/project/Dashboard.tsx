@@ -18,6 +18,7 @@ import { FlexibleBox } from "@/components/ui/flexible-box";
 import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { LoadingState } from "@/core-ui/components/LoadingState";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
@@ -149,83 +150,70 @@ const DashboardContainer = () => {
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                {renderBacklog === false ? (
-                    <Block className="text-center">
-                        <Text className="text-gray-400">
-                            Backlog not found
-                        </Text>
-                    </Block>
-                ) : renderBacklog === undefined ? (
-                    <Block className="flex justify-center">
-                        <Image
-                            src="/spinner-loader.gif"
-                            alt="Loading..."
-                            width={45}
-                            height={45}
-                        />
-                    </Block>
-                ) : (
-                    <>
-                        {/* KPI Metrics */}
-                        <div className={styles.kpiSection}>
-                            <Block className={styles.kpiCard}>
-                                <Heading variant="h3">{t('dashboard.totalTasks')}</Heading>
-                                <Text>{totalTasks}</Text>
-                            </Block>
-                            <Block className={styles.kpiCard}>
-                                <Heading variant="h3">{t('dashboard.completedTasks')}</Heading>
-                                <Text>{completedTasks} ({completionRate}%)</Text>
-                            </Block>
-                            <Block className={styles.kpiCard}>
-                                <Heading variant="h3">{t('dashboard.overdueTasks')}</Heading>
-                                <Text>{overdueTasks}</Text>
-                            </Block>
-                            <Block className={styles.kpiCard}>
-                                <Heading variant="h3">{t('dashboard.tasksInProgress')}</Heading>
-                                <Text>{inProgressTasks}</Text>
-                            </Block>
-                        </div>
+                <LoadingState singular="Backlog" renderItem={renderBacklog}>
+                    {renderBacklog && (
+                        <>
+                            {/* KPI Metrics */}
+                            <div className={styles.kpiSection}>
+                                <Block className={styles.kpiCard}>
+                                    <Heading variant="h3">{t('dashboard.totalTasks')}</Heading>
+                                    <Text>{totalTasks}</Text>
+                                </Block>
+                                <Block className={styles.kpiCard}>
+                                    <Heading variant="h3">{t('dashboard.completedTasks')}</Heading>
+                                    <Text>{completedTasks} ({completionRate}%)</Text>
+                                </Block>
+                                <Block className={styles.kpiCard}>
+                                    <Heading variant="h3">{t('dashboard.overdueTasks')}</Heading>
+                                    <Text>{overdueTasks}</Text>
+                                </Block>
+                                <Block className={styles.kpiCard}>
+                                    <Heading variant="h3">{t('dashboard.tasksInProgress')}</Heading>
+                                    <Text>{inProgressTasks}</Text>
+                                </Block>
+                            </div>
 
-                        {/* Progress Bar for Completed vs. In Progress */}
-                        <div className={styles.progressSection}>
-                            <Heading variant="h3">{t('dashboard.progress')}</Heading>
-                            <ProgressBar completed={completionRate} />
-                        </div>
+                            {/* Progress Bar for Completed vs. In Progress */}
+                            <div className={styles.progressSection}>
+                                <Heading variant="h3">{t('dashboard.progress')}</Heading>
+                                <ProgressBar completed={completionRate} />
+                            </div>
 
-                        <div className={styles.chartSection}>
-                            {/* Task Distribution (Pie Chart) */}
-                            <Block className={styles.chartBlock}>
-                                <Heading variant="h2">{t('dashboard.analytics')}</Heading>
-                                <Pie data={chartData} />
-                            </Block>
+                            <div className={styles.chartSection}>
+                                {/* Task Distribution (Pie Chart) */}
+                                <Block className={styles.chartBlock}>
+                                    <Heading variant="h2">{t('dashboard.analytics')}</Heading>
+                                    <Pie data={chartData} />
+                                </Block>
 
-                            {/* Task Completion Over Time (Bar Chart) */}
-                            <Block className={styles.chartBlock}>
-                                <Heading variant="h2">{t('dashboard.taskCompletionOverTime')}</Heading>
-                                <Bar data={barChartData} options={{
-                                    responsive: true,
-                                    plugins: {
-                                        legend: {
-                                            position: 'top',
+                                {/* Task Completion Over Time (Bar Chart) */}
+                                <Block className={styles.chartBlock}>
+                                    <Heading variant="h2">{t('dashboard.taskCompletionOverTime')}</Heading>
+                                    <Bar data={barChartData} options={{
+                                        responsive: true,
+                                        plugins: {
+                                            legend: {
+                                                position: 'top',
+                                            },
+                                            tooltip: {
+                                                mode: 'index',
+                                                intersect: false,
+                                            },
                                         },
-                                        tooltip: {
-                                            mode: 'index',
-                                            intersect: false,
-                                        },
-                                    },
-                                    scales: {
-                                        x: {
-                                            stacked: true,
-                                        },
-                                        y: {
-                                            stacked: true,
+                                        scales: {
+                                            x: {
+                                                stacked: true,
+                                            },
+                                            y: {
+                                                stacked: true,
+                                            }
                                         }
-                                    }
-                                }} />
-                            </Block>
-                        </div>
-                    </>
-                )}
+                                    }} />
+                                </Block>
+                            </div>
+                        </>
+                    )}
+                </LoadingState>
             </FlexibleBox>
         </Block>
     );
