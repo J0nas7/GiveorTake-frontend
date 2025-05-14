@@ -29,6 +29,7 @@ export const useAuthActions = () => {
                 data.userData &&
                 data.message === "Is logged in"
             ) {
+                console.log("authMe", data)
                 // Update the Redux store with the user's logged-in status and details
                 // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))
                 dispatch(setIsLoggedIn({ "data": true }))

@@ -119,7 +119,7 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <LoadingState singular="Organisation" renderItem={renderOrganisation}>
+                <LoadingState singular="Organisation" renderItem={renderOrganisation} permitted={undefined}>
                     {renderOrganisation && (
                         <Card>
                             {authUser && renderOrganisation.User_ID === authUser.User_ID ? (

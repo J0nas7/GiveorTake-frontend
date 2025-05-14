@@ -8,7 +8,7 @@ import { useQRCode } from 'next-qrcode';
 
 // Internal
 import { useUsersContext } from '@/contexts';
-import { selectAuthUser, selectAuthUserOrganisation, selectAuthUserSeat, useTypedSelector } from '@/redux';
+import { selectAuthUser, selectAuthUserOrganisation, selectAuthUserSeat, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { Organisation, TeamUserSeat, User } from '@/types';
 import { Heading } from '@/components/ui/heading';
 import styles from "@/core-ui/styles/modules/User.settings.module.scss";
@@ -18,16 +18,19 @@ import { useCookies } from '@/hooks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const UserDetails: React.FC = () => {
-    // Get user data and the save function from context
+    // Hooks
+    const dispatch = useAppDispatch()
     const { saveUserChanges, removeUser } = useUsersContext()
     const authUserSeats = useTypedSelector(selectAuthUserSeat); // Redux
+    
+    // State
     const authUserOrganisation = useTypedSelector(selectAuthUserOrganisation); // Redux
     const authUser = useTypedSelector(selectAuthUser); // Redux
-
     const [renderUser, setRenderUser] = useState<User | undefined>(undefined)
     const [renderOrganisation, setRenderOrganisation] = useState<Organisation | undefined>(undefined)
     const [imagePreview, setImagePreview] = useState<string | undefined>(renderUser?.User_ImageSrc);
 
+    // Effects
     useEffect(() => {
         if (authUserSeats && authUserSeats.team?.projects?.[0]?.Project_ID) {
             setRenderOrganisation(authUserSeats.team?.organisation)
@@ -74,9 +77,13 @@ const UserDetails: React.FC = () => {
     };
 
     // Handle form submission (saving user changes)
-    const handleSaveChanges = () => {
+    const handleSaveChanges = async () => {
         if (renderUser) {
-            saveUserChanges(renderUser, 0)
+            const saveChanges = await saveUserChanges(renderUser, 0)
+            
+            dispatch(setSnackMessage(
+                saveChanges ? "User changes saved successfully!" : "Failed to save user changes."
+            ))
         }
     };
 

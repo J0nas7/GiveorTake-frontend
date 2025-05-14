@@ -8,22 +8,22 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'next-i18next';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChair, faPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faChair, faPlus, faUser, faUserPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
 import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
-import { Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
+import { Backlog, Project, Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
-import { selectAuthUser, useTypedSelector } from '@/redux';
+import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { useAxios } from '@/hooks';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import Image from 'next/image';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 
 const TeamUserSeatsManager: React.FC = () => {
-    const { t } = useTranslation(['team'])
     const router = useRouter()
+    const dispatch = useAppDispatch()
     const searchParams = useSearchParams()
+    const { t } = useTranslation(['team'])
 
     const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
     const urlSeatId = searchParams.get("seatId")
@@ -52,13 +52,15 @@ const TeamUserSeatsManager: React.FC = () => {
         status: 'active', // default status
     });
 
-    /** 
-     * Methods
-     */
-    const handleSaveChanges = () => {
+    // Methods
+    const handleSaveChanges = async () => {
         console.log("selectedSeat", selectedSeat)
         if (selectedSeat) {
-            saveTeamUserSeatChanges(selectedSeat, parseInt(teamId));
+            const saveChanges = await saveTeamUserSeatChanges(selectedSeat, parseInt(teamId))
+
+            dispatch(setSnackMessage(
+                saveChanges ? "Seat changes saved successfully!" : "Failed to save seat changes."
+            ))
         }
     };
 
@@ -118,8 +120,8 @@ const TeamUserSeatsManager: React.FC = () => {
     };
 
     const availablePermissions = [
-        "Manage Team Members", "Modify Team Settings", "Modify Organisation Settings"
-    ];
+        "Modify Organisation Settings", "Modify Team Settings", "Manage Team Members"
+    ]
 
     const togglePermission = (permission: string, isChecked: boolean) => {
         setSelectedSeat((prevSeat) => {
@@ -142,9 +144,7 @@ const TeamUserSeatsManager: React.FC = () => {
         });
     };
 
-    /**
-     * Effects
-     */
+    // Effects
     useEffect(() => {
         if (teamId) {
             readTeamById(parseInt(teamId))
@@ -261,6 +261,10 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
     setDisplayInviteForm,
     togglePermission
 }) => {
+    const canManageTeamMembers = (authUser && renderTeam && (
+        renderTeam.organisation?.User_ID === authUser.User_ID ||
+        false
+    ))
     return (
         <Block className="page-content">
             <FlexibleBox
@@ -294,7 +298,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <LoadingState singular="Team" renderItem={renderTeam}>
+                <LoadingState singular="Team" renderItem={renderTeam} permitted={canManageTeamMembers}>
                     {renderTeam && (
                         <Card className="shadow-lg rounded-lg mb-4">
                             <CardContent>
@@ -345,132 +349,143 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                     )}
                 </LoadingState>
             </FlexibleBox>
-
-            {renderTeam && selectedSeat ? (
-                <Card className="shadow-lg rounded-lg mt-4">
-                    <CardContent className="p-4">
-                        <Block className="mb-4">
-                            <Typography variant="h6" gutterBottom className="font-semibold">
-                                {t('team:seatsManager:editUserSeat')}
-                            </Typography>
-                            <Text variant="span" className="font-semibold">
-                                {selectedSeat.user?.User_FirstName} {selectedSeat.user?.User_Surname}
-                            </Text>
-                        </Block>
-
-                        <Grid container spacing={3}>
-                            {/* Role Input */}
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    label={t('team:seatsManager:userRole')}
-                                    variant="outlined"
-                                    fullWidth
-                                    value={selectedSeat.Seat_Role}
-                                    onChange={(e) => handleSeatChange('Seat_Role', e.target.value)}
-                                    className="bg-white"
-                                />
-                            </Grid>
-
-                            {/* Status Dropdown */}
-                            <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel>{t('team:seatsManager:status')}</InputLabel>
-                                    <Select
-                                        value={selectedSeat.Seat_Status}
-                                        onChange={(e) => handleSeatChange('Seat_Status', e.target.value)}
-                                        className="bg-white"
-                                    >
-                                        <MenuItem value="Active">{t('team:seatsManager:active')}</MenuItem>
-                                        <MenuItem value="Inactive">{t('team:seatsManager:inactive')}</MenuItem>
-                                        <MenuItem value="Pending">{t('team:seatsManager:pending')}</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                        </Grid>
-
-                        {/* Permissions Section */}
-                        <Box mt={4}>
-                            <Typography variant="subtitle1" gutterBottom>
-                                {t('team:seatsManager:permissions')}
-                            </Typography>
-
-                            <Grid container spacing={2}>
-                                {renderTeam?.projects?.map(project => {
-                                    const permissions = [
-                                        {
-                                            key: `editProject.${project.Project_ID}`,
-                                            label: `Manage Project: ${project.Project_Name}`
-                                        },
-                                        {
-                                            key: `archivingTasks.${project.Project_ID}`,
-                                            label: `Archiving Tasks: ${project.Project_Name}`
-                                        }
-                                    ]
-
-                                    return permissions.map(permission => (
-                                        <Grid item key={permission.key} xs={6} sm={4}>
-                                            <FormControlLabel
-                                                control={
-                                                    <Checkbox
-                                                        checked={selectedSeat.Seat_Permissions?.includes(permission.key) || false}
-                                                        onChange={(e) => togglePermission(permission.key, e.target.checked)}
-                                                    />
-                                                }
-                                                label={permission.label}
+            
+            {canManageTeamMembers && (
+                <>
+                    {renderTeam && selectedSeat ? (
+                        <FlexibleBox
+                            title={t('team:seatsManager:editUserSeat')}
+                            subtitle={`${selectedSeat.user?.User_FirstName} ${selectedSeat.user?.User_Surname}`}
+                            icon={faUser}
+                            className="no-box w-auto inline-block"
+                            numberOfColumns={2}
+                        >
+                            <Card className="shadow-lg rounded-lg mt-4">
+                                <CardContent className="p-4">
+                                    <Grid container spacing={3}>
+                                        {/* Role Input */}
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                label={t('team:seatsManager:userRole')}
+                                                variant="outlined"
+                                                fullWidth
+                                                value={selectedSeat.Seat_Role}
+                                                onChange={(e) => handleSeatChange('Seat_Role', e.target.value)}
+                                                className="bg-white"
                                             />
                                         </Grid>
-                                    ))
-                                })}
 
-                                {availablePermissions.map((permission) => (
-                                    <Grid item key={permission} xs={6} sm={4}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={selectedSeat.Seat_Permissions?.includes(permission) || false}
-                                                    onChange={(e) => togglePermission(permission, e.target.checked)}
-                                                />
-                                            }
-                                            label={permission}
-                                        />
+                                        {/* Status Dropdown */}
+                                        <Grid item xs={12} sm={6}>
+                                            <FormControl fullWidth>
+                                                <InputLabel>{t('team:seatsManager:status')}</InputLabel>
+                                                <Select
+                                                    value={selectedSeat.Seat_Status}
+                                                    onChange={(e) => handleSeatChange('Seat_Status', e.target.value)}
+                                                    className="bg-white"
+                                                >
+                                                    <MenuItem value="Active">{t('team:seatsManager:active')}</MenuItem>
+                                                    <MenuItem value="Inactive">{t('team:seatsManager:inactive')}</MenuItem>
+                                                    <MenuItem value="Pending">{t('team:seatsManager:pending')}</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
                                     </Grid>
-                                ))}
-                            </Grid>
-                        </Box>
 
-                        {/* Actions */}
-                        <Box mt={4} className="flex gap-4 justify-end">
-                            <button
-                                className="blue-link-light"
-                                onClick={() => {
-                                    setSelectedSeat(undefined)
-                                    setDisplayInviteForm(false)
-                                }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="button-blue px-6 py-2"
-                                onClick={handleSaveChanges}
-                            >
-                                {t('team:seatsManager:saveChanges')}
-                            </button>
-                        </Box>
-                    </CardContent>
-                </Card>
-            ) : displayInviteForm ? (
-                <Card className="shadow-lg rounded-lg mt-6">
-                    <InviteUserForm
-                        teamId={teamId}
-                        t={t}
-                        addTeamUserSeat={addTeamUserSeat}
-                        readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
-                        setSelectedSeat={setSelectedSeat}
-                        setDisplayInviteForm={setDisplayInviteForm}
-                    />
-                </Card>
-            ) : (
-                <></>
+                                    {/* Permissions Section */}
+                                    <Box mt={4}>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            {t('team:seatsManager:permissions')}
+                                        </Typography>
+
+                                        <Grid container spacing={2}>
+                                            {availablePermissions.map((permission) => (
+                                                <Grid item key={permission} xs={6} sm={4}>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={selectedSeat.Seat_Permissions?.includes(permission) || false}
+                                                                onChange={(e) => togglePermission(permission, e.target.checked)}
+                                                            />
+                                                        }
+                                                        label={permission}
+                                                    />
+                                                </Grid>
+                                            ))}
+
+                                            {renderTeam?.projects?.map((project: Project) => {
+                                                const permissions = [
+                                                    {
+                                                        key: `editProject.${project.Project_ID}`,
+                                                        label: `Manage Project: ${project.Project_Name}`
+                                                    }
+                                                ]
+
+                                                project.backlogs?.map((backlog: Backlog) => {
+                                                    permissions.push({
+                                                        key: `editBacklog.${backlog.Backlog_ID}`,
+                                                        label: `Manage Backlog: ${backlog.Backlog_Name}`
+                                                    })
+                                                })
+
+                                                return permissions.map(permission => (
+                                                    <Grid item key={permission.key} xs={6} sm={4}>
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={selectedSeat.Seat_Permissions?.includes(permission.key) || false}
+                                                                    onChange={(e) => togglePermission(permission.key, e.target.checked)}
+                                                                />
+                                                            }
+                                                            label={permission.label}
+                                                        />
+                                                    </Grid>
+                                                ))
+                                            })}
+                                        </Grid>
+                                    </Box>
+
+                                    {/* Actions */}
+                                    <Box mt={4} className="flex gap-4 justify-end">
+                                        <button
+                                            className="blue-link-light"
+                                            onClick={() => {
+                                                setSelectedSeat(undefined)
+                                                setDisplayInviteForm(false)
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            className="button-blue px-6 py-2"
+                                            onClick={handleSaveChanges}
+                                        >
+                                            {t('team:seatsManager:saveChanges')}
+                                        </button>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </FlexibleBox>
+                    ) : displayInviteForm ? (
+                        <FlexibleBox
+                            title={t("team:seatsManager:searchAndInviteUser")}
+                            icon={faUserPlus}
+                            className="no-box w-auto inline-block"
+                            numberOfColumns={2}
+                        >
+                            <Card className="shadow-lg rounded-lg mt-6">
+                                <InviteUserForm
+                                    teamId={teamId}
+                                    t={t}
+                                    addTeamUserSeat={addTeamUserSeat}
+                                    readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
+                                    setSelectedSeat={setSelectedSeat}
+                                    setDisplayInviteForm={setDisplayInviteForm}
+                                />
+                            </Card>
+                        </FlexibleBox>
+                    ) : null}
+                </>
             )}
         </Block>
     );
@@ -569,10 +584,6 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
 
     return (
         <CardContent className="p-4">
-            <Typography variant="h6" gutterBottom>
-                {t("team:seatsManager:searchAndInviteUser")}
-            </Typography>
-
             <Grid container spacing={3}>
                 <Grid item xs={12}>
                     <TextField
