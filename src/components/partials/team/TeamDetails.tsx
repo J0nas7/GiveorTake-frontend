@@ -17,7 +17,7 @@ import { Team, TeamFields, TeamStates, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBuilding, faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faLightbulb, faList, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import Image from 'next/image';
 
@@ -244,9 +244,18 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                             <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
                                 <Card>
                                     <CardContent>
-                                        <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
-                                            {project.Project_Name}
-                                        </Link>
+                                        <Block className="flex justify-between items-center flex-col sm:flex-row w-full">
+                                            <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
+                                                {project.Project_Name}
+                                            </Link>
+                                            <Link
+                                                href={`/backlogs/${project.Project_ID}`} 
+                                                className="blue-link !inline-flex gap-2 items-center"
+                                            >
+                                                <FontAwesomeIcon icon={faList} />
+                                                All backlogs and tasks
+                                            </Link>
+                                        </Block>
                                         <Typography variant="body2" color="textSecondary" paragraph>
                                             <div dangerouslySetInnerHTML={{
                                                 __html: project.Project_Description || 'No description available'
@@ -254,6 +263,9 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                         </Typography>
                                         <Typography variant="body2" color="textSecondary">
                                             Status: {project.Project_Status}
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary">
+                                            Number of Backlogs: {project.backlogs?.length}
                                         </Typography>
                                         <Typography variant="body2" color="textSecondary">
                                             Start Date: {project.Project_Start_Date || 'N/A'}

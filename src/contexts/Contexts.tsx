@@ -363,7 +363,7 @@ export type BacklogsContextType = {
     backlogDetail: Backlog | undefined;
     newBacklog: Backlog | undefined;
     readBacklogsByProjectId: (parentId: number) => Promise<void>;
-    readBacklogById: (itemId: number) => Promise<void>;
+    readBacklogById: (itemId: number, reply?: boolean) => Promise<any>
     setBacklogDetail: React.Dispatch<React.SetStateAction<Backlog | undefined>>;
     handleChangeNewBacklog: (field: BacklogFields, value: string) => Promise<void>;
     addBacklog: (parentId: number, object?: Backlog) => Promise<void>;
@@ -458,7 +458,7 @@ export type TasksContextType = {
     taskById: Task | undefined | false
     taskDetail: Task | undefined
     newTask: Task | undefined
-    readTasksByBacklogId: (parentId: number, refresh?: boolean) => Promise<void>
+    readTasksByBacklogId: (parentId: number, refresh?: boolean | undefined, reply?: boolean) => Promise<any>
     // readTaskById: (itemId: number) => Promise<void>
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     handleChangeNewTask: (field: TaskFields, value: string, object?: Task) => Promise<void>

@@ -96,6 +96,8 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
     handleSaveChanges,
     handleDeleteProject
 }) => {
+    const STATUSES = ["To Do", "In Progress", "Waiting for Review", "Done"]
+
     return (
         <Block className="page-content">
             <FlexibleBox
@@ -104,13 +106,6 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                 titleAction={
                     renderProject && (
                         <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
-                            <Link
-                                href={`/time-tracks/project/${renderProject?.Project_ID}`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faClock} />
-                                <Text variant="span">Time Entries</Text>
-                            </Link>
                             <Link
                                 href={`/team/${renderProject?.team?.Team_ID}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
@@ -263,73 +258,116 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
             {/* Projects Overview Section */}
             {renderProject && (
                 <Box mb={4}>
-                    <Typography variant="h5" gutterBottom>
-                        Backlogs Overview
-                    </Typography>
-                    <Grid container spacing={3}>
-                        {renderProject?.backlogs?.map((backlog) => (
-                            <Grid item xs={12} sm={6} md={4} key={backlog.Backlog_ID}>
-                                <Card>
-                                    <CardContent>
-                                        <p className="font-semibold">
-                                            {backlog.Backlog_Name}
-                                        </p>
+                    <FlexibleBox
+                        title={`Backlogs`}
+                        icon={faList}
+                        subtitle={`${renderProject?.backlogs?.length} total`}
+                        titleAction={
+                            renderProject && (
+                                <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
+                                    <Link
+                                        href={`/time-tracks/project/${renderProject?.Project_ID}`}
+                                        className="blue-link !inline-flex gap-2 items-center"
+                                    >
+                                        <FontAwesomeIcon icon={faClock} />
+                                        <Text variant="span">Time Entries</Text>
+                                    </Link>
+                                    <Link
+                                        href={`/backlogs/${renderProject.Project_ID}`}
+                                        className="blue-link !inline-flex gap-2 items-center"
+                                    >
+                                        <FontAwesomeIcon icon={faList} />
+                                        <Text variant="span">All Backlogs and Tasks</Text>
+                                    </Link>
+                                </Block>
+                            )
+                        }
+                        className="no-box w-auto inline-block"
+                        numberOfColumns={2}
+                    >
+                        <Grid container spacing={3}>
+                            {renderProject?.backlogs?.map((backlog) => (
+                                <Grid item xs={12} sm={6} md={4} key={backlog.Backlog_ID}>
+                                    <Card>
+                                        <CardContent>
+                                            <Text variant="p" className="font-semibold">
+                                                {backlog.Backlog_Name}
+                                            </Text>
 
-                                        <Block className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-2">
-                                            <Link
-                                                href={`/backlog/${backlog.Backlog_ID}`}
-                                                className="blue-link !inline-flex gap-2 items-center"
-                                            >
-                                                <FontAwesomeIcon icon={faList} />
-                                                Backlog
-                                            </Link>
-                                            <Link
-                                                href={`/kanban/${backlog.Backlog_ID}`}
-                                                className="blue-link !inline-flex gap-2 items-center"
-                                            >
-                                                <FontAwesomeIcon icon={faWindowRestore} />
-                                                Kanban Board
-                                            </Link>
-                                            <Link
-                                                href={`/dashboard/${backlog.Backlog_ID}`}
-                                                className="blue-link !inline-flex gap-2 items-center"
-                                            >
-                                                <FontAwesomeIcon icon={faGauge} />
-                                                <Text variant="span">Dashboard</Text>
-                                            </Link>
-                                        </Block>
+                                            <Typography variant="body2" color="textSecondary" paragraph>
+                                                <div dangerouslySetInnerHTML={{
+                                                    __html: backlog.Backlog_Description || 'No description available'
+                                                }} />
+                                            </Typography>
 
-                                        <Typography variant="body2" color="textSecondary" paragraph>
-                                            <div dangerouslySetInnerHTML={{
-                                                __html: backlog.Backlog_Description || 'No description available'
-                                            }} />
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Number of Tasks: {backlog.tasks?.length || 0}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Start Date: {backlog.Backlog_StartDate ? new Date(backlog.Backlog_StartDate).toLocaleString() : 'N/A'}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            End Date: {backlog.Backlog_EndDate ? new Date(backlog.Backlog_EndDate).toLocaleString() : 'N/A'}
-                                        </Typography>
-
-                                        {backlog.Backlog_IsPrimary ? (
-                                            <Block className="mt-2 text-gray-400">
-                                                Primary Backlog
-                                            </Block>
-                                        ) : (
-                                            <Block className="mt-2">
-                                                <Link href={`/finish-backlog/${backlog.Backlog_ID}`} className="blue-link-light red-link-light">
-                                                    Finish Backlog
+                                            <Block className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-2">
+                                                <Link
+                                                    href={`/backlog/${backlog.Backlog_ID}`}
+                                                    className="blue-link !inline-flex gap-2 items-center"
+                                                >
+                                                    <FontAwesomeIcon icon={faList} />
+                                                    Backlog
+                                                </Link>
+                                                <Link
+                                                    href={`/kanban/${backlog.Backlog_ID}`}
+                                                    className="blue-link !inline-flex gap-2 items-center"
+                                                >
+                                                    <FontAwesomeIcon icon={faWindowRestore} />
+                                                    Kanban Board
+                                                </Link>
+                                                <Link
+                                                    href={`/dashboard/${backlog.Backlog_ID}`}
+                                                    className="blue-link !inline-flex gap-2 items-center"
+                                                >
+                                                    <FontAwesomeIcon icon={faGauge} />
+                                                    <Text variant="span">Dashboard</Text>
                                                 </Link>
                                             </Block>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
+
+                                            <Block className="bg-gray-100 p-2 my-2 rounded-lg">
+                                                <Text variant="span">Number of Tasks: {backlog.tasks?.length || 0}</Text>
+                                                <Block className="grid grid-cols-1 md:grid-cols-2 gap-4 my-3">
+                                                    {Array.isArray(backlog.tasks ?? []) && STATUSES.map(status => {
+                                                        const totalTasks = (backlog.tasks ?? []).length;
+                                                        const statusCount = (backlog.tasks ?? []).filter(task => task.Task_Status === status).length;
+                                                        const percentage = totalTasks > 0 ? ((statusCount / totalTasks) * 100).toFixed(0) : 0;
+                                                        return (
+                                                            <Text key={status}>
+                                                                {status}: {statusCount} ({percentage}%)
+                                                            </Text>
+                                                        );
+                                                    })}
+                                                </Block>
+                                            </Block>
+
+                                            <Block className="flex justify-between sm:items-end flex-col sm:flex-row">
+                                                <Block>
+                                                    <Typography variant="body2" color="textSecondary">
+                                                        Start Date: {backlog.Backlog_StartDate ? new Date(backlog.Backlog_StartDate).toLocaleString() : 'N/A'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="textSecondary">
+                                                        End Date: {backlog.Backlog_EndDate ? new Date(backlog.Backlog_EndDate).toLocaleString() : 'N/A'}
+                                                    </Typography>
+                                                </Block>
+
+                                                {backlog.Backlog_IsPrimary ? (
+                                                    <Block className="mt-2 text-gray-400">
+                                                        Primary Backlog
+                                                    </Block>
+                                                ) : (
+                                                    <Block className="mt-2">
+                                                        <Link href={`/finish-backlog/${backlog.Backlog_ID}`} className="blue-link-light red-link-light">
+                                                            Finish Backlog
+                                                        </Link>
+                                                    </Block>
+                                                )}
+                                            </Block>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </FlexibleBox>
                 </Box>
             )}
         </Block>

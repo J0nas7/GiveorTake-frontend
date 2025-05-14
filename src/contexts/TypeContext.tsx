@@ -18,19 +18,35 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
 
-    const readItemsById = async (parentId: number, refresh?: boolean) => {
+    const readItemsById = async (parentId: number, refresh?: boolean|undefined, reply?: boolean) => {
         if (refresh) setItemsById([])
 
         const data = await fetchItemsByParent(parentId) // Fetch all items by parentId
-        if (data) setItemsById(data)
+        if (data) {
+            if (reply) {
+                return data
+            } else {
+                setItemsById(data)
+            }
+        } else if (reply) {
+            return false
+        }
     }
 
-    const readItemById = async (itemId: number) => {
+    const readItemById = async (itemId: number, reply?: boolean) => {
         const data = await fetchItem(itemId) // Fetch item by id
         if (data.code == "ERR_BAD_REQUEST" && data.name == "AxiosError") {
-            setItemById(false)
+            if (reply) {
+                return false
+            } else {
+                setItemById(false)
+            }
         } else {
-            setItemById(data)
+            if (reply) {
+                return data
+            } else {
+                setItemById(data)
+            }
         }
     }
 

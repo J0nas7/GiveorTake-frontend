@@ -87,7 +87,7 @@ export const Startpage = () => {
                                                                     {team.projects.map((project) => (
                                                                         <Link
                                                                             key={project.Project_ID}
-                                                                            href={`/project/${project.Project_ID}`}
+                                                                            href={`/backlogs/${project.Project_ID}`}
                                                                             className="p-3 bg-white rounded-md shadow-sm blue-link inline-block w-full sm:w-1/4"
                                                                         >
                                                                             <Text className="text-blue-500 font-medium">{project.Project_Name}</Text>

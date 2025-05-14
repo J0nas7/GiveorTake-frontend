@@ -5,8 +5,9 @@
 .taskTable {
     @apply w-full border-collapse bg-white shadow-md rounded-lg;
 
-    th {
-        @apply text-left py-3 px-4 bg-gray-200 font-semibold cursor-pointer;
+    th { @apply cursor-pointer; }
+    .header, th {
+        @apply text-left py-3 px-4 bg-gray-200 font-semibold;
         
         span {
             @apply inline-block;
