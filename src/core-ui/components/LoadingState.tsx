@@ -18,7 +18,7 @@ export const LoadingState: React.FC<LoadingStateType> = ({
             {permitted !== undefined && !permitted ? (
                 <Block className="text-center">
                     <Text className="text-gray-400">
-                        You don't have permission to view this
+                        You don't have permission to view this {singular.toLowerCase()}
                     </Text>
                 </Block>
             ) : renderItem === false ? (

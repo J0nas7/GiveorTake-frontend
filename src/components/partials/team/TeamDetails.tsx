@@ -42,6 +42,14 @@ const TeamDetails: React.FC = () => {
         renderTeam.organisation?.User_ID === authUser.User_ID ||
         parsedPermissions?.includes("Manage Team Members")
     ))
+    const accessibleProjectsCount = renderTeam && renderTeam.projects?.filter(
+        (project) =>
+            authUser &&
+            (
+                project.team?.organisation?.User_ID === authUser.User_ID ||
+                parsedPermissions?.includes(`accessProject.${project.Project_ID}`)
+            )
+    ).length || 0;
 
     // Effects
     useEffect(() => { readTeamById(parseInt(teamId)); }, [teamId]);
@@ -94,6 +102,7 @@ const TeamDetails: React.FC = () => {
             canModifyTeamSettings={canModifyTeamSettings}
             canManageTeamMembers={canManageTeamMembers}
             parsedPermissions={parsedPermissions}
+            accessibleProjectsCount={accessibleProjectsCount}
             handleHTMLInputChange={handleHTMLInputChange}
             handleTeamChange={handleTeamChange}
             handleSaveChanges={handleSaveChanges}
@@ -109,6 +118,7 @@ export interface TeamDetailsViewProps {
     canModifyTeamSettings: boolean | undefined;
     canManageTeamMembers: boolean | undefined;
     parsedPermissions: string[] | undefined
+    accessibleProjectsCount: number
     handleHTMLInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleTeamChange: (field: TeamFields, value: string) => void;
     handleSaveChanges: () => Promise<void>
@@ -122,6 +132,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
     canModifyTeamSettings,
     canManageTeamMembers,
     parsedPermissions,
+    accessibleProjectsCount,
     handleHTMLInputChange,
     handleTeamChange,
     handleSaveChanges,
@@ -246,7 +257,9 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                     <FlexibleBox
                         title={`Projects Overview`}
                         icon={faLightbulb}
-                        subtitle={`${renderTeam.projects?.length || 0} project${renderTeam.projects?.length === 1 ? '' : 's'}`}
+                        subtitle={
+                            `${accessibleProjectsCount} project${accessibleProjectsCount === 1 ? '' : 's'}`
+                        }
                         className="no-box w-auto inline-block"
                         numberOfColumns={2}
                     >
@@ -259,6 +272,15 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                     parsedPermissions?.includes(`editProject.${project.Project_ID}`)
                                 ))
                                 if (!canAccessAndModifyProjectWithId) return
+
+                                const accessibleBacklogsCount = project.backlogs?.filter(
+                                    (backlog) =>
+                                        authUser &&
+                                        (
+                                            backlog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+                                            parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`)
+                                        )
+                                ).length || 0;
 
                                 return (
                                     <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
@@ -285,7 +307,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                                     Status: {project.Project_Status}
                                                 </Typography>
                                                 <Typography variant="body2" color="textSecondary">
-                                                    Number of Backlogs: {project.backlogs?.length}
+                                                    Accessible Backlogs: {accessibleBacklogsCount}
                                                 </Typography>
                                                 <Typography variant="body2" color="textSecondary">
                                                     Start Date: {project.Project_Start_Date || 'N/A'}

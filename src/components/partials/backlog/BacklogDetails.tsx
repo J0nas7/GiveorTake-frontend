@@ -17,34 +17,37 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 // Internal
 import { useBacklogsContext } from '@/contexts';
 import { Backlog, BacklogStates, User } from '@/types';
-import { selectAuthUser, useTypedSelector } from '@/redux';
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux';
 import { Block, Text, FlexibleBox } from '@/components';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 
 export const BacklogDetails: React.FC = () => {
+    // ---- Hooks ----
     const { backlogId } = useParams<{ backlogId: string }>();
     const pathname = usePathname();
-    const authUser = useTypedSelector(selectAuthUser);
-
     const { readBacklogById, backlogById, saveBacklogChanges, removeBacklog } = useBacklogsContext();
+
+    // ---- State ----
+    const authUser = useTypedSelector(selectAuthUser);
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined);
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
+    // Determine if the authenticated user can access the backlog:
+    const canAccessBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
+    ))
+    // Determine if the authenticated user can manage the backlog:
+    const canManageBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
+    ))
 
-    useEffect(() => {
-        if (backlogId) readBacklogById(parseInt(backlogId));
-    }, [backlogId]);
-
-    useEffect(() => {
-        if (backlogById) {
-            setRenderBacklog(backlogById);
-            document.title = `Backlog: ${backlogById.Backlog_Name}`;
-        }
-    }, [backlogById]);
-
+    // ---- Methods ----
     // Handle Input Change for text fields
     const handleBacklogInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!renderBacklog) return
         const { name, value } = e.target;
-        
+
         setRenderBacklog({
             ...renderBacklog,
             [name]: value,
@@ -87,11 +90,25 @@ export const BacklogDetails: React.FC = () => {
         }
     };
 
+    // ---- Effects ----
+    useEffect(() => {
+        if (backlogId) readBacklogById(parseInt(backlogId));
+    }, [backlogId]);
+
+    useEffect(() => {
+        if (backlogById) {
+            setRenderBacklog(backlogById);
+            document.title = `Backlog: ${backlogById.Backlog_Name}`;
+        }
+    }, [backlogById]);
+
+    // ---- Render ----
     return (
         <BacklogDetailsView
             renderBacklog={renderBacklog}
             authUser={authUser}
-            pathname={pathname}
+            canAccessBacklog={canAccessBacklog}
+            canManageBacklog={canManageBacklog}
             handleBacklogInputChange={handleBacklogInputChange}
             handleBacklogChange={handleBacklogChange}
             handleSaveChanges={handleSaveChanges}
@@ -103,7 +120,8 @@ export const BacklogDetails: React.FC = () => {
 interface BacklogDetailsViewProps {
     renderBacklog: BacklogStates;
     authUser?: User;
-    pathname: string;
+    canAccessBacklog: boolean | undefined
+    canManageBacklog: boolean | undefined
     handleBacklogInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleBacklogChange: (field: keyof Backlog, value: string) => void;
     handleSaveChanges: () => Promise<void>;
@@ -131,7 +149,8 @@ const calculateTaskStats = (tasks: Backlog["tasks"]) => {
 const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
     renderBacklog,
     authUser,
-    pathname,
+    canAccessBacklog,
+    canManageBacklog,
     handleBacklogInputChange,
     handleBacklogChange,
     handleSaveChanges,
@@ -144,13 +163,24 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
             <FlexibleBox
                 title="Backlog"
                 subtitle={renderBacklog ? renderBacklog.Backlog_Name : ''}
+                titleAction={
+                    renderBacklog && (
+                        <Link
+                            href={`/backlog/${renderBacklog.Backlog_ID}`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faList} />
+                            <Text variant="span">Go to Backlog</Text>
+                        </Link>
+                    )
+                }
                 icon={faList}
                 className="no-box w-auto inline-block"
             >
-                <LoadingState singular="Backlog" renderItem={renderBacklog}>
+                <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
                     {renderBacklog && (
                         <Card>
-                            {authUser && renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ? (
+                            {canManageBacklog ? (
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>
                                         Edit Backlog Details
@@ -247,7 +277,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
             </FlexibleBox>
 
             {/* Task Summary Section */}
-            {renderBacklog && renderBacklog?.tasks && stats && (
+            {canAccessBacklog && renderBacklog && renderBacklog?.tasks && stats && (
                 <Box mt={4}>
                     <Typography variant="h5" gutterBottom>
                         Task Summary

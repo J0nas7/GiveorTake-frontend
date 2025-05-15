@@ -5,14 +5,14 @@ import React, { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { TFunction, useTranslation } from "next-i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisV, faLightbulb, faList, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
+import { faEllipsisV, faLightbulb, faList, faPencil, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field, Heading } from "@/components"
 import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
 import { Backlog, BacklogStates, Project, Task, TaskFields } from "@/types";
-import { selectAuthUser, useTypedSelector } from "@/redux";
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
@@ -21,23 +21,122 @@ import Image from "next/image";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 
 export const BacklogContainer = () => {
+    // ---- Hooks ----
     const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(['backlog'])
-
     const { backlogById, readBacklogById } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
-    const authUser = useTypedSelector(selectAuthUser) // Redux
-
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
-    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
-
     const urlTaskIds = searchParams.get("taskIds")
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
+
+    // ---- State ----
+    const authUser = useTypedSelector(selectAuthUser) // Redux
+    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
+    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
+    // Determine if the authenticated user can access the backlog:
+    const canAccessBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
+    ))
+    // Determine if the authenticated user can manage the backlog:
+    const canManageBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
+    ))
 
+    // ---- Methods ----
+    // Handles the 'Enter' key press event to trigger task creation.
+    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? prepareCreateTask() : null
+
+    // Prepares and creates a new task in the backlog.
+    const prepareCreateTask = async () => {
+        if (!renderBacklog) return
+
+        const newTaskPlaceholder: Task = {
+            Backlog_ID: parseInt(backlogId),
+            Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
+            Task_Title: newTask?.Task_Title || "",
+            Task_Status: newTask?.Task_Status || "To Do",
+            Assigned_User_ID: newTask?.Assigned_User_ID
+        }
+
+        await addTask(parseInt(backlogId), newTaskPlaceholder)
+
+        await readTasksByBacklogId(parseInt(backlogId), true)
+    }
+
+    // Archives a task by removing it and refreshing the backlog tasks.
+    const archiveTask = async (task: Task) => {
+        if (!task.Task_ID) return
+
+        await removeTask(task.Task_ID, task.Backlog_ID, undefined)
+
+        await readTasksByBacklogId(parseInt(backlogId), true)
+    }
+
+    // Handles the change event for a checkbox input, updating the selected task IDs and URL parameters.
+    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value, checked } = event.target;
+
+        let updatedTaskIds = selectedTaskIds;
+
+        if (checked) {
+            updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
+        } else {
+            updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
+        }
+
+        updateURLParams(updatedTaskIds)
+    };
+
+    // Handles the change event for selecting or deselecting all tasks.
+    const handleSelectAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { checked } = e.target;
+        setSelectAll(checked);
+
+        let updatedTaskIds = selectedTaskIds
+
+        if (checked) {
+            // Select all task IDs
+            updatedTaskIds = sortedTasks.map((task) => task.Task_ID!.toString())
+        } else {
+            // Deselect all task IDs
+            updatedTaskIds = []
+        }
+
+        updateURLParams(updatedTaskIds)
+    };
+
+    // Updates the URL parameters based on the provided task IDs and optionally returns the updated URL.
+    const updateURLParams = (newTaskIds?: string[] | string, returnUrl?: boolean) => {
+        const url = new URL(window.location.href)
+
+        if (newTaskIds === undefined) {
+            url.searchParams.delete("taskIds")
+        } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
+            if (newTaskIds.length > 0 && newTaskIds.length <= tasksById.length) {
+                url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
+            } else {
+                url.searchParams.delete("taskIds"); // Remove if empty
+            }
+        }
+        // } else if (newUserId || userId) {
+        //     url.searchParams.set("userId", newUserId || userId!);
+        // }
+
+        if (returnUrl) {
+            return url.toString()
+        } else {
+            router.push(url.toString(), { scroll: false }); // Prevent full page reload
+        }
+    };
+
+    // ---- Effects ----
     useEffect(() => {
         // console.log("tasksByID changed")
         console.log("tasksById changed", tasksById, renderTasks)
@@ -72,6 +171,7 @@ export const BacklogContainer = () => {
         }
     }, [urlTaskIds])
 
+    // ---- Special: Sorting ----
     const currentSort = searchParams.get("sort") || "Task_ID";
     const currentOrder = searchParams.get("order") || "desc";
 
@@ -119,86 +219,6 @@ export const BacklogContainer = () => {
         });
     }, [renderTasks, currentSort, currentOrder, urlTaskBulkFocus, urlTaskIds]);
 
-    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? prepareCreateTask() : null
-
-    const prepareCreateTask = async () => {
-        if (!renderBacklog) return
-
-        const newTaskPlaceholder: Task = {
-            Backlog_ID: parseInt(backlogId),
-            Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
-            Task_Title: newTask?.Task_Title || "",
-            Task_Status: newTask?.Task_Status || "To Do",
-            Assigned_User_ID: newTask?.Assigned_User_ID
-        }
-
-        await addTask(parseInt(backlogId), newTaskPlaceholder)
-
-        await readTasksByBacklogId(parseInt(backlogId), true)
-    }
-
-    const archiveTask = async (task: Task) => {
-        if (!task.Task_ID) return
-
-        await removeTask(task.Task_ID, task.Backlog_ID, undefined)
-
-        await readTasksByBacklogId(parseInt(backlogId), true)
-    }
-
-    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { value, checked } = event.target;
-
-        let updatedTaskIds = selectedTaskIds;
-
-        if (checked) {
-            updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
-        } else {
-            updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
-        }
-
-        updateURLParams(updatedTaskIds)
-    };
-
-    const handleSelectAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { checked } = e.target;
-        setSelectAll(checked);
-
-        let updatedTaskIds = selectedTaskIds
-
-        if (checked) {
-            // Select all task IDs
-            updatedTaskIds = sortedTasks.map((task) => task.Task_ID!.toString())
-        } else {
-            // Deselect all task IDs
-            updatedTaskIds = []
-        }
-
-        updateURLParams(updatedTaskIds)
-    };
-
-    const updateURLParams = (newTaskIds?: string[] | string, returnUrl?: boolean) => {
-        const url = new URL(window.location.href)
-
-        if (newTaskIds === undefined) {
-            url.searchParams.delete("taskIds")
-        } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
-            if (newTaskIds.length > 0 && newTaskIds.length <= tasksById.length) {
-                url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
-            } else {
-                url.searchParams.delete("taskIds"); // Remove if empty
-            }
-        }
-        // } else if (newUserId || userId) {
-        //     url.searchParams.set("userId", newUserId || userId!);
-        // }
-
-        if (returnUrl) {
-            return url.toString()
-        } else {
-            router.push(url.toString(), { scroll: false }); // Prevent full page reload
-        }
-    };
-
     return (
         <>
             <TaskBulkActionMenu />
@@ -211,6 +231,8 @@ export const BacklogContainer = () => {
                 t={t}
                 selectedTaskIds={selectedTaskIds}
                 selectAll={selectAll}
+                canAccessBacklog={canAccessBacklog}
+                canManageBacklog={canManageBacklog}
                 handleSort={handleSort}
                 handleCreateTask={prepareCreateTask}
                 ifEnter={ifEnter}
@@ -232,6 +254,8 @@ export interface BacklogContainerViewProps {
     t: TFunction
     selectedTaskIds: string[]
     selectAll: boolean
+    canAccessBacklog: boolean | undefined
+    canManageBacklog: boolean | undefined
     handleSort: (column: string) => void;
     handleCreateTask: () => void;
     ifEnter: (e: React.KeyboardEvent) => Promise<void> | null
@@ -249,6 +273,8 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     newTask,
     selectedTaskIds,
     selectAll,
+    canAccessBacklog,
+    canManageBacklog,
     handleSort,
     handleCreateTask,
     ifEnter,
@@ -264,20 +290,33 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                 subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
                 titleAction={
                     renderBacklog && (
-                        <Link
-                            href={`/project/${renderBacklog?.Project_ID}`}
-                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faLightbulb} />
-                            <Text variant="span">Go to Project</Text>
-                        </Link>
+                        <Block className="flex gap-2 items-center w-full">
+                            {/* New Invite Link */}
+                            {canManageBacklog && (
+                                <Link
+                                    className="blue-link !inline-flex gap-2 items-center"
+                                    href={`/backlog/${renderBacklog.Backlog_ID}/edit`}
+                                >
+                                    <FontAwesomeIcon icon={faPencil} />
+                                    <Text variant="span">Edit Backlog</Text>
+                                </Link>
+                            )}
+
+                            <Link
+                                href={`/project/${renderBacklog?.Project_ID}`}
+                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faLightbulb} />
+                                <Text variant="span">Go to Project</Text>
+                            </Link>
+                        </Block>
                     )
                 }
                 icon={faList}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <LoadingState singular="Backlog" renderItem={renderBacklog}>
+                <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
                     {renderBacklog && (
                         <Block className="overflow-x-auto">
                             <table className={styles.taskTable}>
@@ -406,6 +445,6 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                     )}
                 </LoadingState>
             </FlexibleBox>
-        </Block>
+        </Block >
     );
 };

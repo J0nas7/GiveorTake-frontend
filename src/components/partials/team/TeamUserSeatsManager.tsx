@@ -424,38 +424,66 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                             ))}
 
                                             {renderTeam?.projects?.map((project: Project) => {
+                                                // Define permissions for each project and its associated backlogs
                                                 const permissions = [
                                                     {
-                                                        key: `editProject.${project.Project_ID}`,
-                                                        label: `Manage & Access Project: ${project.Project_Name}`
+                                                        key1: `accessProject.${project.Project_ID}`,
+                                                        label1: `Access Project: ${project.Project_Name}`,
+                                                        key2: `manageProject.${project.Project_ID}`,
+                                                        label2: `Manage Project: ${project.Project_Name}`,
                                                     }
-                                                ]
+                                                ];
 
+                                                // Add permissions for each backlog within the project
                                                 project.backlogs?.map((backlog: Backlog) => {
-                                                    permissions.push({
-                                                        key: `editBacklog.${backlog.Backlog_ID}`,
-                                                        label: `Manage & Access Backlog: ${backlog.Backlog_Name}`
-                                                    })
-                                                })
+                                                    permissions.push(
+                                                        {
+                                                            key1: `accessBacklog.${backlog.Backlog_ID}`,
+                                                            label1: `Access Backlog: ${backlog.Backlog_Name}`,
+                                                            key2: `manageBacklog.${backlog.Backlog_ID}`,
+                                                            label2: `Manage Backlog: ${backlog.Backlog_Name}`,
+                                                        }
+                                                    );
+                                                });
 
+                                                // Map through permissions and render checkboxes for each permission
                                                 return permissions.map(permission => (
-                                                    <Grid item key={permission.key} xs={6} sm={4}>
+                                                    <Grid item key={permission.key1} xs={6} sm={4}>
+                                                        {/* Checkbox for the first permission */}
                                                         <FormControlLabel
                                                             control={
                                                                 <Checkbox
-                                                                    checked={selectedSeat.Seat_Permissions?.includes(permission.key) || false}
-                                                                    onChange={(e) => togglePermission(permission.key, e.target.checked)}
+                                                                    checked={selectedSeat.Seat_Permissions?.includes(permission.key1) || false}
+                                                                    onChange={(e) => {
+                                                                        // Toggle the first permission and ensure the second permission is unchecked if the first is unchecked
+                                                                        togglePermission(permission.key1, e.target.checked);
+                                                                        if (!e.target.checked) togglePermission(permission.key2, e.target.checked);
+                                                                    }}
                                                                 />
                                                             }
-                                                            label={permission.label}
+                                                            label={permission.label1}
+                                                        />
+                                                        {/* Checkbox for the second permission */}
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={selectedSeat.Seat_Permissions?.includes(permission.key2) || false}
+                                                                    onChange={(e) => {
+                                                                        // Toggle the second permission and ensure the first permission is checked if the second is checked
+                                                                        if (e.target.checked) togglePermission(permission.key1, e.target.checked);
+                                                                        togglePermission(permission.key2, e.target.checked);
+                                                                    }}
+                                                                />
+                                                            }
+                                                            label={permission.label2}
                                                         />
                                                     </Grid>
-                                                ))
+                                                ));
                                             })}
                                         </Grid>
                                     </Box>
 
-                                    {/* Actions */}
+                                    {/* Action Buttons */}
                                     <Box mt={4} className="flex gap-4 justify-end">
                                         <button
                                             className="blue-link-light"
