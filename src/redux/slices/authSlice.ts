@@ -18,6 +18,7 @@ export interface AuthState {
     adminLoggedIn: string,
     authUser: User | undefined,
     authUserSeat: TeamUserSeat | undefined,
+    authUserSeatPermissions: string[] | undefined,
     authUserOrganisation: Organisation | undefined,
     authUserTaskTimeTrack: TaskTimeTrack | undefined,
     snackMessage: string | undefined,
@@ -33,6 +34,7 @@ const initialState = {
     adminLoggedIn: '',
     authUser: undefined,
     authUserSeat: undefined,
+    authUserSeatPermissions: undefined,
     authUserOrganisation: undefined,
     authUserTaskTimeTrack: undefined,
     snackMessage: undefined,
@@ -54,7 +56,23 @@ export const authSlice = createSlice({
             state.authUser = action.payload.data
         },
         setAuthUserSeat: (state: AuthState, action: PayloadAction<any>) => {
-            state.authUserSeat = action.payload.data
+            const data = action.payload.data
+            const Seat_Permissions = data.Seat_Permissions
+            state.authUserSeat = data
+
+            let parsedPermissions: string[] = [];
+
+            if (Array.isArray(Seat_Permissions)) {
+                parsedPermissions = Seat_Permissions;
+            } else if (typeof Seat_Permissions === 'string') {
+                try {
+                    parsedPermissions = JSON.parse(Seat_Permissions);
+                } catch (e) {
+                    console.error("Failed to parse Seat_Permissions:", e);
+                }
+            }
+
+            state.authUserSeatPermissions = parsedPermissions
         },
         setAuthUserOrganisation: (state: AuthState, action: PayloadAction<any>) => {
             state.authUserOrganisation = action.payload.data
@@ -103,6 +121,7 @@ export default authSlice.reducer
 export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn
 export const selectAuthUser = (state: RootState) => state.auth.authUser
 export const selectAuthUserSeat = (state: RootState) => state.auth.authUserSeat
+export const selectAuthUserSeatPermissions = (state: RootState) => state.auth.authUserSeatPermissions
 export const selectAuthUserOrganisation = (state: RootState) => state.auth.authUserOrganisation
 export const selectAuthUserTaskTimeTrack = (state: RootState) => state.auth.authUserTaskTimeTrack
 export const selectSnackMessage = (state: RootState) => state.auth.snackMessage

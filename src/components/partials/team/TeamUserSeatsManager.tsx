@@ -14,20 +14,17 @@ import { faChair, faPlus, faUser, faUserPlus, faUsers } from '@fortawesome/free-
 import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
 import { Backlog, Project, Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
-import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
+import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { useAxios } from '@/hooks';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 
 const TeamUserSeatsManager: React.FC = () => {
+    // ---- Hooks ----
     const router = useRouter()
     const dispatch = useAppDispatch()
     const searchParams = useSearchParams()
     const { t } = useTranslation(['team'])
-
-    const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
-    const urlSeatId = searchParams.get("seatId")
-
     const {
         teamUserSeatsById,
         readTeamUserSeatsByTeamId,
@@ -37,12 +34,22 @@ const TeamUserSeatsManager: React.FC = () => {
     } = useTeamUserSeatsContext();
     const { teamById, readTeamById } = useTeamsContext();
     const { addUser } = useUsersContext(); // Assuming you have a `UsersContext` for adding new users
-    const authUser = useTypedSelector(selectAuthUser); // Redux
 
+    // ---- State ----
+    const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
+    const urlSeatId = searchParams.get("seatId")
+    const authUser = useTypedSelector(selectAuthUser); // Redux
     const [renderUserSeats, setRenderUserSeats] = useState<TeamUserSeat[]>([]);
     const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
     const [selectedSeat, setSelectedSeat] = useState<TeamUserSeat | undefined>(undefined);
     const [displayInviteForm, setDisplayInviteForm] = useState<boolean>(false);
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions); // Redux
+    // Determine if the authenticated user can manage team members
+    const canManageTeamMembers = (authUser && renderTeam && (
+        renderTeam.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes("Manage Team Members")
+    ));
+    const availablePermissions = ["Modify Organisation Settings", "Modify Team Settings", "Manage Team Members"]
     // New User Form State
     const [newUserDetails, setNewUserDetails] = useState({
         email: '',
@@ -52,9 +59,9 @@ const TeamUserSeatsManager: React.FC = () => {
         status: 'active', // default status
     });
 
-    // Methods
+    // ---- Methods ----
+    // Handles saving changes made to the selected seat
     const handleSaveChanges = async () => {
-        console.log("selectedSeat", selectedSeat)
         if (selectedSeat) {
             const saveChanges = await saveTeamUserSeatChanges(selectedSeat, parseInt(teamId))
 
@@ -64,8 +71,10 @@ const TeamUserSeatsManager: React.FC = () => {
         }
     };
 
+    // Handles the removal of a team user seat.
     const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(seatId, parseInt(teamId), "/team/" + teamId + "/seats");
 
+    // Handles changes to a specific field of the selected team user seat.
     const handleSeatChange = (field: TeamUserSeatFields, value: string) => {
         if (selectedSeat) {
             setSelectedSeat((prevSeat) => ({
@@ -75,6 +84,7 @@ const TeamUserSeatsManager: React.FC = () => {
         }
     };
 
+    // Handles the selection of a team user seat and updates the URL with the selected seat's ID.
     const handleSelectSeat = (seat: TeamUserSeat) => {
         if (!seat.Seat_ID) return
 
@@ -84,6 +94,7 @@ const TeamUserSeatsManager: React.FC = () => {
         router.push(url.toString(), { scroll: false }); // Prevent full page reload
     };
 
+    // Updates the state for new user details based on input changes.
     const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setNewUserDetails((prevDetails) => ({
@@ -92,6 +103,7 @@ const TeamUserSeatsManager: React.FC = () => {
         }));
     };
 
+    // Handles the creation of a new user and assigns a seat to the team.
     const handleCreateNewUser = async () => {
         const { email, firstName, lastName, role, status } = newUserDetails;
         if (!email || !firstName || !lastName) {
@@ -119,10 +131,7 @@ const TeamUserSeatsManager: React.FC = () => {
         await saveTeamUserSeatChanges(newSeat, parseInt(teamId));
     };
 
-    const availablePermissions = [
-        "Modify Organisation Settings", "Modify Team Settings", "Manage Team Members"
-    ]
-
+    // Toggles a permission for the selected seat by adding or removing it from the permissions list.
     const togglePermission = (permission: string, isChecked: boolean) => {
         setSelectedSeat((prevSeat) => {
             if (!prevSeat) return prevSeat;
@@ -144,7 +153,7 @@ const TeamUserSeatsManager: React.FC = () => {
         });
     };
 
-    // Effects
+    // ---- Effects ----
     useEffect(() => {
         if (teamId) {
             readTeamById(parseInt(teamId))
@@ -157,10 +166,11 @@ const TeamUserSeatsManager: React.FC = () => {
         setRenderTeam(teamById)
     }, [teamUserSeatsById, teamById]);
 
+    // Handle URL seatId changes and update the state accordingly
     useEffect(() => {
         if (!renderTeam) return
 
-        if (urlSeatId && authUser && renderTeam?.organisation?.User_ID !== authUser.User_ID) {
+        if (urlSeatId && authUser && canManageTeamMembers === false) {
             router.push(`/team/${renderTeam?.Team_ID}/seats`)
             return
         }
@@ -175,6 +185,7 @@ const TeamUserSeatsManager: React.FC = () => {
         }
     }, [urlSeatId, renderUserSeats])
 
+    // ---- Render ----
     return (
         <TeamUserSeatsView
             renderUserSeats={renderUserSeats}
@@ -186,6 +197,7 @@ const TeamUserSeatsManager: React.FC = () => {
             teamId={teamId}
             t={t}
             availablePermissions={availablePermissions}
+            canManageTeamMembers={canManageTeamMembers}
             addTeamUserSeat={addTeamUserSeat}
             readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
             handleSelectSeat={handleSelectSeat}
@@ -218,6 +230,7 @@ export interface TeamUserSeatsViewProps {
     teamId: string
     t: TFunction
     availablePermissions: string[]
+    canManageTeamMembers: boolean | undefined
     addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     handleSelectSeat: (seat: TeamUserSeat) => void;
@@ -248,6 +261,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
     teamId,
     t,
     availablePermissions,
+    canManageTeamMembers,
     addTeamUserSeat,
     readTeamUserSeatsByTeamId,
     handleSelectSeat,
@@ -261,10 +275,6 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
     setDisplayInviteForm,
     togglePermission
 }) => {
-    const canManageTeamMembers = (authUser && renderTeam && (
-        renderTeam.organisation?.User_ID === authUser.User_ID ||
-        false
-    ))
     return (
         <Block className="page-content">
             <FlexibleBox
@@ -274,7 +284,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                     renderTeam && (
                         <Block className="flex gap-2 items-center w-full">
                             {/* New Invite Link */}
-                            {authUser && renderTeam?.organisation?.User_ID === authUser.User_ID && (
+                            {canManageTeamMembers && (
                                 <Link
                                     className="blue-link !inline-flex gap-2 items-center"
                                     href="?seatId=new"
@@ -321,7 +331,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                                                 {t('team:seatsManager:status')}: {seat.Seat_Status}
                                                             </Typography>
 
-                                                            {authUser && renderTeam?.organisation?.User_ID === authUser.User_ID && (
+                                                            {canManageTeamMembers && (
                                                                 <div className="flex justify-between mt-4">
                                                                     <button
                                                                         onClick={() => handleSelectSeat(seat)}
@@ -349,7 +359,7 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                     )}
                 </LoadingState>
             </FlexibleBox>
-            
+
             {canManageTeamMembers && (
                 <>
                     {renderTeam && selectedSeat ? (
@@ -417,14 +427,14 @@ export const TeamUserSeatsView: React.FC<TeamUserSeatsViewProps> = ({
                                                 const permissions = [
                                                     {
                                                         key: `editProject.${project.Project_ID}`,
-                                                        label: `Manage Project: ${project.Project_Name}`
+                                                        label: `Manage & Access Project: ${project.Project_Name}`
                                                     }
                                                 ]
 
                                                 project.backlogs?.map((backlog: Backlog) => {
                                                     permissions.push({
                                                         key: `editBacklog.${backlog.Backlog_ID}`,
-                                                        label: `Manage Backlog: ${backlog.Backlog_Name}`
+                                                        label: `Manage & Access Backlog: ${backlog.Backlog_Name}`
                                                     })
                                                 })
 

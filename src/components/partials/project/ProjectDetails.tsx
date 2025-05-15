@@ -121,7 +121,7 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <LoadingState singular="Project" renderItem={renderProject}>
+                <LoadingState singular="Project" renderItem={renderProject} permitted={undefined}>
                     {renderProject && (
                         <Card>
                             {authUser && renderProject.team?.organisation?.User_ID === authUser.User_ID ? (

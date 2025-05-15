@@ -15,7 +15,7 @@ import { useOrganisationsContext } from '@/contexts/'; // Ensure this is correct
 import { Organisation, OrganisationFields, OrganisationStates, User } from '@/types';
 import Link from 'next/link';
 import { Block, Text } from '@/components/ui/block-text';
-import { selectAuthUser, useTypedSelector } from '@/redux';
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import { faBuilding, faHouseChimney, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -24,28 +24,29 @@ import Image from 'next/image';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 
 const OrganisationDetails: React.FC = () => {
+    // ---- Hooks ----
     const router = useRouter()
     const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
     const { organisationById, readOrganisationById, saveOrganisationChanges, removeOrganisation } = useOrganisationsContext()
+
+    // ---- State ----
     const authUser = useTypedSelector(selectAuthUser) // Redux
-
     const [renderOrganisation, setRenderOrganisation] = useState<OrganisationStates>(undefined)
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
+    // Determine if the authenticated user can modify organisation settings:
+    const canModifyOrganisationSettings = (authUser && renderOrganisation && (
+        renderOrganisation.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes("Modify Organisation Settings")
+    ))
 
-    useEffect(() => { readOrganisationById(parseInt(organisationId)); }, [organisationId])
-    useEffect(() => {
-        if (organisationId) {
-            setRenderOrganisation(organisationById)
-
-            if (organisationById) document.title = `Organisation: ${organisationById?.Organisation_Name} - GiveOrTake`
-        }
-    }, [organisationById])
-
+    // ---- Methods ----
+    // Handles changes to HTML input fields and updates the organisation state.
     const handleHTMLInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         handleOrganisationChange(name as OrganisationFields, value)
     };
 
-    // Handle input changes for text fields
+    // Updates the organisation state with changes to a specific field.
     const handleOrganisationChange = (field: OrganisationFields, value: string) => {
         if (!renderOrganisation) return
 
@@ -55,10 +56,12 @@ const OrganisationDetails: React.FC = () => {
         });
     }
 
+    // Handles saving changes made to the organisation details.
     const handleSaveChanges = async () => {
         if (renderOrganisation) await saveOrganisationChanges(renderOrganisation, renderOrganisation.User_ID)
     }
 
+    // Handles deleting the organisation.
     const handleDeleteOrganisation = async () => {
         if (!renderOrganisation || !renderOrganisation.Organisation_ID) return
         const removed = await removeOrganisation(
@@ -67,11 +70,22 @@ const OrganisationDetails: React.FC = () => {
             `/`
         )
     }
+    
+    // ---- Effects ----
+    useEffect(() => { readOrganisationById(parseInt(organisationId)); }, [organisationId])
+    useEffect(() => {
+        if (organisationId) {
+            setRenderOrganisation(organisationById)
 
+            if (organisationById) document.title = `Organisation: ${organisationById?.Organisation_Name} - GiveOrTake`
+        }
+    }, [organisationById])
+
+    // ---- Render ----
     return (
         <OrganisationDetailsView
             renderOrganisation={renderOrganisation}
-            authUser={authUser}
+            canModifyOrganisationSettings={canModifyOrganisationSettings}
             handleOrganisationChange={handleOrganisationChange}
             handleSaveChanges={handleSaveChanges}
             handleDeleteOrganisation={handleDeleteOrganisation}
@@ -81,7 +95,7 @@ const OrganisationDetails: React.FC = () => {
 
 type OrganisationDetailsViewProps = {
     renderOrganisation: OrganisationStates;
-    authUser: User | undefined;
+    canModifyOrganisationSettings: boolean | undefined
     handleOrganisationChange: (field: OrganisationFields, value: string) => void;
     handleSaveChanges: () => Promise<void>
     handleDeleteOrganisation: () => Promise<void>
@@ -89,7 +103,7 @@ type OrganisationDetailsViewProps = {
 
 export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = ({
     renderOrganisation,
-    authUser,
+    canModifyOrganisationSettings,
     handleOrganisationChange,
     handleSaveChanges,
     handleDeleteOrganisation,
@@ -101,7 +115,7 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                 subtitle={renderOrganisation ? renderOrganisation.Organisation_Name : undefined}
                 titleAction={
                     <Block className="flex gap-3 w-full">
-                        {renderOrganisation && authUser && renderOrganisation.User_ID === authUser.User_ID && (
+                        {renderOrganisation && canModifyOrganisationSettings && (
                             <Link href={`/organisation/${renderOrganisation.Organisation_ID}/create-team`} className="blue-link !inline-flex gap-2 items-center">
                                 <FontAwesomeIcon icon={faUsers} />
                                 <Text variant="span">Create Team</Text>
@@ -122,7 +136,7 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                 <LoadingState singular="Organisation" renderItem={renderOrganisation} permitted={undefined}>
                     {renderOrganisation && (
                         <Card>
-                            {authUser && renderOrganisation.User_ID === authUser.User_ID ? (
+                            {canModifyOrganisationSettings ? (
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>
                                         Edit Organisation Details

@@ -15,7 +15,7 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import { useTeamsContext } from '@/contexts/';
 import { Team, TeamFields, TeamStates, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
-import { selectAuthUser, selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
+import { selectAuthUser, selectAuthUserSeatPermissions, selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBuilding, faLightbulb, faList, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleBox } from '@/components/ui/flexible-box';
@@ -33,6 +33,15 @@ const TeamDetails: React.FC = () => {
     // State
     const authUser = useTypedSelector(selectAuthUser)
     const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions); // Redux
+    const canModifyTeamSettings = (authUser && renderTeam && (
+        renderTeam.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes("Modify Team Settings")
+    ))
+    const canManageTeamMembers = (authUser && renderTeam && (
+        renderTeam.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes("Manage Team Members")
+    ))
 
     // Effects
     useEffect(() => { readTeamById(parseInt(teamId)); }, [teamId]);
@@ -82,6 +91,9 @@ const TeamDetails: React.FC = () => {
             renderTeam={renderTeam}
             authUser={authUser}
             pathname={pathname}
+            canModifyTeamSettings={canModifyTeamSettings}
+            canManageTeamMembers={canManageTeamMembers}
+            parsedPermissions={parsedPermissions}
             handleHTMLInputChange={handleHTMLInputChange}
             handleTeamChange={handleTeamChange}
             handleSaveChanges={handleSaveChanges}
@@ -94,6 +106,9 @@ export interface TeamDetailsViewProps {
     renderTeam: TeamStates;
     authUser: User | undefined;
     pathname: string;
+    canModifyTeamSettings: boolean | undefined;
+    canManageTeamMembers: boolean | undefined;
+    parsedPermissions: string[] | undefined
     handleHTMLInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleTeamChange: (field: TeamFields, value: string) => void;
     handleSaveChanges: () => Promise<void>
@@ -104,12 +119,14 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
     renderTeam,
     authUser,
     pathname,
+    canModifyTeamSettings,
+    canManageTeamMembers,
+    parsedPermissions,
     handleHTMLInputChange,
     handleTeamChange,
     handleSaveChanges,
     handleDeleteTeam,
 }) => {
-
     return (
         <Block className="page-content">
             <FlexibleBox
@@ -121,14 +138,16 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                 titleAction={
                     renderTeam && (
                         <Block className="flex flex-col sm:flex-row gap-2 w-full">
-                            <Link
-                                href={`${pathname}/seats`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faUsers} />
-                                <Text variant="span">Seats</Text>
-                            </Link>
-                            {authUser && renderTeam.organisation?.User_ID === authUser.User_ID && (
+                            {canManageTeamMembers && (
+                                <Link
+                                    href={`${pathname}/seats`}
+                                    className="blue-link !inline-flex gap-2 items-center"
+                                >
+                                    <FontAwesomeIcon icon={faUsers} />
+                                    <Text variant="span">Seats</Text>
+                                </Link>
+                            )}
+                            {canModifyTeamSettings && (
                                 <Link
                                     href={`${pathname}/create-project`}
                                     className="blue-link !inline-flex gap-2 items-center"
@@ -149,10 +168,10 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                     )
                 }
             >
-                <LoadingState singular="Team" renderItem={renderTeam}>
+                <LoadingState singular="Team" renderItem={renderTeam} permitted={undefined}>
                     {renderTeam && (
                         <Card>
-                            {authUser && renderTeam.organisation?.User_ID === authUser.User_ID ? (
+                            {canModifyTeamSettings ? (
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>
                                         Edit Team Details
@@ -224,48 +243,63 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
             {/* Projects Overview Section */}
             {renderTeam && (
                 <Box mb={4}>
-                    <Typography variant="h5" gutterBottom>
-                        Projects Overview
-                    </Typography>
-                    <Grid container spacing={3}>
-                        {renderTeam.projects?.map((project) => (
-                            <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
-                                <Card>
-                                    <CardContent>
-                                        <Block className="flex justify-between items-center flex-col sm:flex-row w-full">
-                                            <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
-                                                {project.Project_Name}
-                                            </Link>
-                                            <Link
-                                                href={`/backlogs/${project.Project_ID}`} 
-                                                className="blue-link !inline-flex gap-2 items-center"
-                                            >
-                                                <FontAwesomeIcon icon={faList} />
-                                                All backlogs and tasks
-                                            </Link>
-                                        </Block>
-                                        <Typography variant="body2" color="textSecondary" paragraph>
-                                            <div dangerouslySetInnerHTML={{
-                                                __html: project.Project_Description || 'No description available'
-                                            }} />
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Status: {project.Project_Status}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Number of Backlogs: {project.backlogs?.length}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Start Date: {project.Project_Start_Date || 'N/A'}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            End Date: {project.Project_End_Date || 'N/A'}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
+                    <FlexibleBox
+                        title={`Projects Overview`}
+                        icon={faLightbulb}
+                        subtitle={`${renderTeam.projects?.length || 0} project${renderTeam.projects?.length === 1 ? '' : 's'}`}
+                        className="no-box w-auto inline-block"
+                        numberOfColumns={2}
+                    >
+                        <Grid container spacing={3}>
+                            {renderTeam.projects?.map((project) => {
+                                // Check if the authenticated user has access and modification rights for the project
+                                // Skip rendering if the user lacks permissions
+                                const canAccessAndModifyProjectWithId = (authUser && (
+                                    project.team?.organisation?.User_ID === authUser.User_ID ||
+                                    parsedPermissions?.includes(`editProject.${project.Project_ID}`)
+                                ))
+                                if (!canAccessAndModifyProjectWithId) return
+
+                                return (
+                                    <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
+                                        <Card>
+                                            <CardContent>
+                                                <Block className="flex justify-between items-center flex-col sm:flex-row w-full">
+                                                    <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
+                                                        {project.Project_Name}
+                                                    </Link>
+                                                    <Link
+                                                        href={`/backlogs/${project.Project_ID}`}
+                                                        className="blue-link !inline-flex gap-2 items-center"
+                                                    >
+                                                        <FontAwesomeIcon icon={faList} />
+                                                        All backlogs and tasks
+                                                    </Link>
+                                                </Block>
+                                                <Typography variant="body2" color="textSecondary" paragraph>
+                                                    <div dangerouslySetInnerHTML={{
+                                                        __html: project.Project_Description || 'No description available'
+                                                    }} />
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    Status: {project.Project_Status}
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    Number of Backlogs: {project.backlogs?.length}
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    Start Date: {project.Project_Start_Date || 'N/A'}
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    End Date: {project.Project_End_Date || 'N/A'}
+                                                </Typography>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                )
+                            })}
+                        </Grid>
+                    </FlexibleBox>
                 </Box>
             )}
         </Block>
