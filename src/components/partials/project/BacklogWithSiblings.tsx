@@ -12,7 +12,7 @@ import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field } from "@/components"
 import { useBacklogsContext, useTasksContext } from "@/contexts"
 import { Backlog, BacklogStates, Task, TaskFields } from "@/types";
-import { selectAuthUser, useTypedSelector } from "@/redux";
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
@@ -28,14 +28,14 @@ type BacklogWithSiblingsContainerProps = {
 export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainerProps> = ({
     backlogId
 }) => {
-    // Hooks
+    // ---- Hooks ----
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(['backlog'])
     const { readBacklogById } = useBacklogsContext()
     const { readTasksByBacklogId, setTaskDetail, addTask, removeTask } = useTasksContext()
 
-    // State and other Variables
+    // ---- State and other Variables ----
     const [localNewTask, setLocalNewTask] = useState<Task | undefined>(undefined)
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
@@ -44,7 +44,129 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
 
-    // Effects
+    const authUser = useTypedSelector(selectAuthUser)
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
+    // Determine if the authenticated user can access the backlog:
+    const canAccessBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
+    ))
+    // Determine if the authenticated user can manage the backlog:
+    const canManageBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
+    ))
+
+    // ---- Methods ----
+    // Handles changes to the local new task state by updating specific fields or merging an object.
+    const handleChangeLocalNewTask = async (field: TaskFields, value: string, object?: Task) => {
+        if (object) {
+            setLocalNewTask((prevState) => ({
+                ...prevState,
+                ...object
+            } as Task))
+        } else {
+            setLocalNewTask((prevState) => ({
+                ...prevState,
+                [field]: value,
+            } as Task))
+        }
+    }
+
+    // Handles the 'Enter' key press event to trigger task creation.
+    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? prepareCreateTask() : null
+
+    // Prepares and creates a new task in the backlog.
+    const prepareCreateTask = async () => {
+        if (!renderBacklog || !renderBacklog.Backlog_ID) return
+
+        const newTaskPlaceholder: Task = {
+            Backlog_ID: parseInt(renderBacklog.Backlog_ID.toString()),
+            Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
+            Task_Title: localNewTask?.Task_Title || "",
+            Task_Status: localNewTask?.Task_Status || "To Do",
+            Assigned_User_ID: localNewTask?.Assigned_User_ID
+        }
+
+        await addTask(renderBacklog.Backlog_ID, newTaskPlaceholder)
+
+        const theTasks = await readTasksByBacklogId(renderBacklog.Backlog_ID, undefined, true)
+        if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
+
+        if (theTasks && theTasks.length) setRenderTasks(theTasks)
+    }
+
+    // Archives a task by removing it from the backlog and updating the rendered tasks.
+    const archiveTask = async (task: Task) => {
+        if (!task.Task_ID || !renderBacklog || !renderBacklog.Backlog_ID) return
+
+        await removeTask(task.Task_ID, task.Backlog_ID, undefined)
+
+        const theTasks = await readTasksByBacklogId(renderBacklog.Backlog_ID, undefined, true)
+        if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
+
+        if (theTasks && theTasks.length) setRenderTasks(theTasks)
+    }
+
+    // Handles the change event for a checkbox input, updating the selected task IDs and URL parameters.
+    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value, checked } = event.target;
+
+        let updatedTaskIds = selectedTaskIds;
+
+        if (checked) {
+            updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
+        } else {
+            updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
+        }
+
+        updateURLParams(updatedTaskIds)
+    };
+
+    // Handles the change event for selecting or deselecting all tasks.
+    const handleSelectAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { checked } = e.target;
+        setSelectAll(checked);
+
+        let updatedTaskIds = selectedTaskIds
+
+        if (checked) {
+            // Select all task IDs
+            updatedTaskIds = sortedTasks.map((task) => task.Task_ID!.toString())
+        } else {
+            // Deselect all task IDs
+            updatedTaskIds = []
+        }
+
+        updateURLParams(updatedTaskIds)
+    };
+
+    // Updates the URL parameters based on the provided task IDs.
+    const updateURLParams = (newTaskIds?: string[] | string, returnUrl?: boolean) => {
+        const url = new URL(window.location.href)
+
+        if (newTaskIds === undefined) {
+            url.searchParams.delete("taskIds")
+        } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
+            if (newTaskIds.length > 0 && renderTasks && newTaskIds.length <= renderTasks.length) {
+                url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
+            } else {
+                url.searchParams.delete("taskIds"); // Remove if empty
+            }
+        }
+        // } else if (newUserId || userId) {
+        //     url.searchParams.set("userId", newUserId || userId!);
+        // }
+
+        if (returnUrl) {
+            return url.toString()
+        } else {
+            router.push(url.toString(), { scroll: false }); // Prevent full page reload
+        }
+    };
+
+    // ---- Effects ----
+    // Fetch and set backlog and tasks when backlogId changes
     useEffect(() => {
         const fetchBacklog = async () => {
             if (backlogId) {
@@ -74,6 +196,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
         }
     }, [urlTaskIds])
 
+    // ---- Special: Backlog Sorting ----
     const currentSort = searchParams.get("sort") || "Task_ID";
     const currentOrder = searchParams.get("order") || "desc";
 
@@ -86,21 +209,6 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
 
     // Default sorting field if an invalid key is used
     const DEFAULT_SORT_KEY: keyof Task = "Task_ID";
-
-    // Methods
-    const handleChangeLocalNewTask = async (field: TaskFields, value: string, object?: Task) => {
-        if (object) {
-            setLocalNewTask((prevState) => ({
-                ...prevState,
-                ...object
-            } as Task))
-        } else {
-            setLocalNewTask((prevState) => ({
-                ...prevState,
-                [field]: value,
-            } as Task))
-        }
-    }
 
     // Function to toggle sorting order
     const handleSort = (column: string) => {
@@ -136,93 +244,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
         });
     }, [renderTasks, currentSort, currentOrder, urlTaskBulkFocus, urlTaskIds]);
 
-    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? prepareCreateTask() : null
-
-    const prepareCreateTask = async () => {
-        if (!renderBacklog || !renderBacklog.Backlog_ID) return
-
-        const newTaskPlaceholder: Task = {
-            Backlog_ID: parseInt(renderBacklog.Backlog_ID.toString()),
-            Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
-            Task_Title: localNewTask?.Task_Title || "",
-            Task_Status: localNewTask?.Task_Status || "To Do",
-            Assigned_User_ID: localNewTask?.Assigned_User_ID
-        }
-
-        await addTask(renderBacklog.Backlog_ID, newTaskPlaceholder)
-
-        const theTasks = await readTasksByBacklogId(renderBacklog.Backlog_ID, undefined, true)
-        if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
-
-        if (theTasks && theTasks.length) setRenderTasks(theTasks)
-    }
-
-    const archiveTask = async (task: Task) => {
-        if (!task.Task_ID || !renderBacklog || !renderBacklog.Backlog_ID) return
-
-        await removeTask(task.Task_ID, task.Backlog_ID, undefined)
-
-        const theTasks = await readTasksByBacklogId(renderBacklog.Backlog_ID, undefined, true)
-        if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
-
-        if (theTasks && theTasks.length) setRenderTasks(theTasks)
-    }
-
-    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { value, checked } = event.target;
-
-        let updatedTaskIds = selectedTaskIds;
-
-        if (checked) {
-            updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
-        } else {
-            updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
-        }
-
-        updateURLParams(updatedTaskIds)
-    };
-
-    const handleSelectAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { checked } = e.target;
-        setSelectAll(checked);
-
-        let updatedTaskIds = selectedTaskIds
-
-        if (checked) {
-            // Select all task IDs
-            updatedTaskIds = sortedTasks.map((task) => task.Task_ID!.toString())
-        } else {
-            // Deselect all task IDs
-            updatedTaskIds = []
-        }
-
-        updateURLParams(updatedTaskIds)
-    };
-
-    const updateURLParams = (newTaskIds?: string[] | string, returnUrl?: boolean) => {
-        const url = new URL(window.location.href)
-
-        if (newTaskIds === undefined) {
-            url.searchParams.delete("taskIds")
-        } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
-            if (newTaskIds.length > 0 && renderTasks && newTaskIds.length <= renderTasks.length) {
-                url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
-            } else {
-                url.searchParams.delete("taskIds"); // Remove if empty
-            }
-        }
-        // } else if (newUserId || userId) {
-        //     url.searchParams.set("userId", newUserId || userId!);
-        // }
-
-        if (returnUrl) {
-            return url.toString()
-        } else {
-            router.push(url.toString(), { scroll: false }); // Prevent full page reload
-        }
-    };
-
-    // Render
+    // ---- Render ----
     return (
         <>
             <TaskBulkActionMenu />
@@ -235,6 +257,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
                 t={t}
                 selectedTaskIds={selectedTaskIds}
                 selectAll={selectAll}
+                canAccessBacklog={canAccessBacklog}
                 handleSort={handleSort}
                 handleCreateTask={prepareCreateTask}
                 ifEnter={ifEnter}
@@ -256,6 +279,7 @@ export interface BacklogContainerViewProps {
     t: TFunction
     selectedTaskIds: string[]
     selectAll: boolean
+    canAccessBacklog: boolean | undefined
     handleSort: (column: string) => void;
     handleCreateTask: () => void;
     ifEnter: (e: React.KeyboardEvent) => Promise<void> | null
@@ -273,6 +297,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     localNewTask,
     selectedTaskIds,
     selectAll,
+    canAccessBacklog,
     handleSort,
     handleCreateTask,
     ifEnter,
@@ -282,7 +307,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     handleSelectAllChange
 }) => {
     return (
-        <LoadingState singular="Backlog" renderItem={renderBacklog}>
+        <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
             {renderBacklog && (
                 <Block className="overflow-x-auto">
                     <Block className={styles.taskTable}>

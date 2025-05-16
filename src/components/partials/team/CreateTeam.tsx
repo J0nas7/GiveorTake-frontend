@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 
 // Internal
 import { useOrganisationsContext, useTeamsContext } from "@/contexts";
-import { Team, TeamFields } from "@/types";
+import { OrganisationStates, Team, TeamFields } from "@/types";
 import { Block, Text } from "@/components/ui/block-text";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { faUsers } from "@fortawesome/free-solid-svg-icons";
@@ -20,7 +20,7 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import { LoadingState } from "@/core-ui/components/LoadingState";
 
-const CreateTeam: React.FC = () => {
+export const CreateTeam = () => {
     // ---- Hooks ----
     const router = useRouter();
     const authUser = useTypedSelector(selectAuthUser)
@@ -62,9 +62,7 @@ const CreateTeam: React.FC = () => {
         router.push(`/organisation/${organisationId}`); // Redirect to organisation page
     };
 
-    /**
-     * Effects
-     */
+    // ---- Effects ----
     useEffect(() => {
         if (organisationId) readOrganisationById(parseInt(organisationId))
     }, [organisationId])
@@ -75,63 +73,83 @@ const CreateTeam: React.FC = () => {
         }
     }, [organisationById])
 
+    // ---- Render ----
     return (
-        <Block className="page-content">
-            <Block className="mb-8">
-                <FlexibleBox
-                    title="Create New Team"
-                    icon={faUsers}
-                    className="no-box w-auto inline-block"
-                    numberOfColumns={2}
-                >
-                    <LoadingState singular="Organisation" renderItem={organisationById} permitted={canModifyOrganisationSettings}>
-                        <Block className="bg-white shadow-md rounded-xl p-6">
-                            <Heading variant="h2" className="mb-4">
-                                Team Details
-                            </Heading>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Field
-                                    lbl="Team Name"
-                                    value={newTeam.Team_Name}
-                                    onChange={(e: string) => handleInputChange("Team_Name", e)}
-                                    type="text"
-                                    disabled={false}
-                                    className="w-full"
-                                />
-                                <div className="col-span-1 sm:col-span-2">
-                                    <Text>Team Description</Text>
-                                    <ReactQuill
-                                        className="w-full mt-2 border border-gray-300 rounded-md"
-                                        theme="snow"
-                                        value={newTeam.Team_Description || ""}
-                                        onChange={(value) => handleInputChange("Team_Description", value)}
-                                        modules={{
-                                            toolbar: [
-                                                [{ header: "1" }, { header: "2" }, { font: [] }],
-                                                [{ list: "ordered" }, { list: "bullet" }],
-                                                ["bold", "italic", "underline", "strike"],
-                                                [{ align: [] }],
-                                                ["link"],
-                                                ["blockquote"],
-                                            ],
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                            <div className="mt-4">
-                                <button
-                                    onClick={handleCreateTeam}
-                                    className="button-blue"
-                                >
-                                    Create Team
-                                </button>
-                            </div>
-                        </Block>
-                    </LoadingState>
-                </FlexibleBox>
-            </Block>
-        </Block>
+        <CreateTeamView
+            organisationById={organisationById}
+            canModifyOrganisationSettings={canModifyOrganisationSettings}
+            newTeam={newTeam}
+            handleInputChange={handleInputChange}
+            handleCreateTeam={handleCreateTeam}
+        />
     );
 };
 
-export default CreateTeam;
+type CreateTeamViewProps = {
+    organisationById: OrganisationStates
+    canModifyOrganisationSettings: boolean | undefined
+    newTeam: Team
+    handleInputChange: (field: TeamFields, value: string) => void
+    handleCreateTeam: () => Promise<void>
+}
+
+export const CreateTeamView: React.FC<CreateTeamViewProps> = ({
+    organisationById, canModifyOrganisationSettings, newTeam, 
+    handleInputChange, handleCreateTeam
+}) => (
+    <Block className="page-content">
+        <Block className="mb-8">
+            <FlexibleBox
+                title="Create New Team"
+                icon={faUsers}
+                className="no-box w-auto inline-block"
+                numberOfColumns={2}
+            >
+                <LoadingState singular="Organisation" renderItem={organisationById} permitted={canModifyOrganisationSettings}>
+                    <Block className="bg-white shadow-md rounded-xl p-6">
+                        <Heading variant="h2" className="mb-4">
+                            Team Details
+                        </Heading>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field
+                                lbl="Team Name"
+                                value={newTeam.Team_Name}
+                                onChange={(e: string) => handleInputChange("Team_Name", e)}
+                                type="text"
+                                disabled={false}
+                                className="w-full"
+                            />
+                            <div className="col-span-1 sm:col-span-2">
+                                <Text>Team Description</Text>
+                                <ReactQuill
+                                    className="w-full mt-2 border border-gray-300 rounded-md"
+                                    theme="snow"
+                                    value={newTeam.Team_Description || ""}
+                                    onChange={(value) => handleInputChange("Team_Description", value)}
+                                    modules={{
+                                        toolbar: [
+                                            [{ header: "1" }, { header: "2" }, { font: [] }],
+                                            [{ list: "ordered" }, { list: "bullet" }],
+                                            ["bold", "italic", "underline", "strike"],
+                                            [{ align: [] }],
+                                            ["link"],
+                                            ["blockquote"],
+                                        ],
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-4">
+                            <button
+                                onClick={handleCreateTeam}
+                                className="button-blue"
+                            >
+                                Create Team
+                            </button>
+                        </div>
+                    </Block>
+                </LoadingState>
+            </FlexibleBox>
+        </Block>
+    </Block>
+)

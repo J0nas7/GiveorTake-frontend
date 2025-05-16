@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation";
-import { useTranslation } from "next-i18next"
+import { TFunction, useTranslation } from "next-i18next"
 
 // External chart library
 import { Pie, Bar } from 'react-chartjs-2';
@@ -19,19 +19,37 @@ import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LoadingState } from "@/core-ui/components/LoadingState";
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const DashboardContainer = () => {
+    // ---- Hooks ----
     const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
     const { t } = useTranslation(['dashboard']);
     const { tasksById, readTasksByBacklogId } = useTasksContext();
     const { backlogById, readBacklogById } = useBacklogsContext();
 
+    // ---- State ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
+    const authUser = useTypedSelector(selectAuthUser)
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
+    // Determine if the authenticated user can access the backlog:
+    const canAccessBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
+    ))
+    // Determine if the authenticated user can manage the backlog:
+    const canManageBacklog = (authUser && renderBacklog && (
+        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
+    ))
+
+    // ---- Effects ----
+    // Sync renderTasks state with tasksById changes
     useEffect(() => {
         console.log("tasksByID changed")
         if (tasksById.length == 0 && renderTasks) {
@@ -53,6 +71,7 @@ const DashboardContainer = () => {
         }
     }, [backlogById])
 
+    // ---- Special: Dashboard Calculations ----
     // Ensure tasks is always an array
     const safeTasks = Array.isArray(renderTasks) ? renderTasks : [];
 
@@ -130,94 +149,141 @@ const DashboardContainer = () => {
         ]
     };
 
+    // ---- Render ----
     return (
-        <Block className="page-content">
-            <FlexibleBox
-                title={`${t('dashboard.title')}`}
-                subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
-                titleAction={
-                    renderBacklog && (
-                        <Link
-                            href={`/project/${renderBacklog?.Project_ID}`}
-                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faLightbulb} />
-                            <Text variant="span">Go to Project</Text>
-                        </Link>
-                    )
-                }
-                icon={faGauge}
-                className="no-box w-auto inline-block"
-                numberOfColumns={2}
-            >
-                <LoadingState singular="Backlog" renderItem={renderBacklog}>
-                    {renderBacklog && (
-                        <>
-                            {/* KPI Metrics */}
-                            <div className={styles.kpiSection}>
-                                <Block className={styles.kpiCard}>
-                                    <Heading variant="h3">{t('dashboard.totalTasks')}</Heading>
-                                    <Text>{totalTasks}</Text>
-                                </Block>
-                                <Block className={styles.kpiCard}>
-                                    <Heading variant="h3">{t('dashboard.completedTasks')}</Heading>
-                                    <Text>{completedTasks} ({completionRate}%)</Text>
-                                </Block>
-                                <Block className={styles.kpiCard}>
-                                    <Heading variant="h3">{t('dashboard.overdueTasks')}</Heading>
-                                    <Text>{overdueTasks}</Text>
-                                </Block>
-                                <Block className={styles.kpiCard}>
-                                    <Heading variant="h3">{t('dashboard.tasksInProgress')}</Heading>
-                                    <Text>{inProgressTasks}</Text>
-                                </Block>
-                            </div>
+        <DashboardContainerView
+            renderBacklog={renderBacklog}
+            canAccessBacklog={canAccessBacklog}
+            totalTasks={totalTasks}
+            completedTasks={completedTasks}
+            completionRate={completionRate}
+            overdueTasks={overdueTasks}
+            inProgressTasks={inProgressTasks}
+            chartData={chartData}
+            barChartData={barChartData}
+            t={t}
+        />
+    )
+}
 
-                            {/* Progress Bar for Completed vs. In Progress */}
-                            <div className={styles.progressSection}>
-                                <Heading variant="h3">{t('dashboard.progress')}</Heading>
-                                <ProgressBar completed={completionRate} />
-                            </div>
+type DashboardContainerViewProps = {
+    renderBacklog: BacklogStates
+    canAccessBacklog: boolean | undefined
+    totalTasks: number
+    completedTasks: number
+    completionRate: number
+    overdueTasks: number
+    inProgressTasks: number
+    chartData: {
+        labels: ("To Do" | "In Progress" | "Waiting for Review" | "Done")[];
+        datasets: {
+            data: number[];
+            backgroundColor: string[];
+        }[];
+    }
+    barChartData: {
+        labels: string[];
+        datasets: {
+            label: string;
+            data: number[];
+            backgroundColor: string;
+            borderColor: string;
+            borderWidth: number;
+        }[];
+    }
+    t: TFunction
+}
 
-                            <div className={styles.chartSection}>
-                                {/* Task Distribution (Pie Chart) */}
-                                <Block className={styles.chartBlock}>
-                                    <Heading variant="h2">{t('dashboard.analytics')}</Heading>
-                                    <Pie data={chartData} />
-                                </Block>
+const DashboardContainerView: React.FC<DashboardContainerViewProps> = ({
+    renderBacklog, canAccessBacklog, totalTasks, completedTasks, completionRate,
+    overdueTasks, inProgressTasks, chartData, barChartData, t
+}) => (
+    <Block className="page-content">
+        <FlexibleBox
+            title={`${t('dashboard.title')}`}
+            subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
+            titleAction={
+                renderBacklog && (
+                    <Link
+                        href={`/project/${renderBacklog?.Project_ID}`}
+                        className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                    >
+                        <FontAwesomeIcon icon={faLightbulb} />
+                        <Text variant="span">Go to Project</Text>
+                    </Link>
+                )
+            }
+            icon={faGauge}
+            className="no-box w-auto inline-block"
+            numberOfColumns={2}
+        >
+            <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
+                {renderBacklog && (
+                    <>
+                        {/* KPI Metrics */}
+                        <div className={styles.kpiSection}>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.totalTasks')}</Heading>
+                                <Text>{totalTasks}</Text>
+                            </Block>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.completedTasks')}</Heading>
+                                <Text>{completedTasks} ({completionRate}%)</Text>
+                            </Block>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.overdueTasks')}</Heading>
+                                <Text>{overdueTasks}</Text>
+                            </Block>
+                            <Block className={styles.kpiCard}>
+                                <Heading variant="h3">{t('dashboard.tasksInProgress')}</Heading>
+                                <Text>{inProgressTasks}</Text>
+                            </Block>
+                        </div>
 
-                                {/* Task Completion Over Time (Bar Chart) */}
-                                <Block className={styles.chartBlock}>
-                                    <Heading variant="h2">{t('dashboard.taskCompletionOverTime')}</Heading>
-                                    <Bar data={barChartData} options={{
-                                        responsive: true,
-                                        plugins: {
-                                            legend: {
-                                                position: 'top',
-                                            },
-                                            tooltip: {
-                                                mode: 'index',
-                                                intersect: false,
-                                            },
+                        {/* Progress Bar for Completed vs. In Progress */}
+                        <div className={styles.progressSection}>
+                            <Heading variant="h3">{t('dashboard.progress')}</Heading>
+                            <ProgressBar completed={completionRate} />
+                        </div>
+
+                        <div className={styles.chartSection}>
+                            {/* Task Distribution (Pie Chart) */}
+                            <Block className={styles.chartBlock}>
+                                <Heading variant="h2">{t('dashboard.analytics')}</Heading>
+                                <Pie data={chartData} />
+                            </Block>
+
+                            {/* Task Completion Over Time (Bar Chart) */}
+                            <Block className={styles.chartBlock}>
+                                <Heading variant="h2">{t('dashboard.taskCompletionOverTime')}</Heading>
+                                <Bar data={barChartData} options={{
+                                    responsive: true,
+                                    plugins: {
+                                        legend: {
+                                            position: 'top',
                                         },
-                                        scales: {
-                                            x: {
-                                                stacked: true,
-                                            },
-                                            y: {
-                                                stacked: true,
-                                            }
+                                        tooltip: {
+                                            mode: 'index',
+                                            intersect: false,
+                                        },
+                                    },
+                                    scales: {
+                                        x: {
+                                            stacked: true,
+                                        },
+                                        y: {
+                                            stacked: true,
                                         }
-                                    }} />
-                                </Block>
-                            </div>
-                        </>
-                    )}
-                </LoadingState>
-            </FlexibleBox>
-        </Block>
-    );
-};
+                                    }
+                                }} />
+                            </Block>
+                        </div>
+                    </>
+                )}
+            </LoadingState>
+        </FlexibleBox>
+    </Block>
+)
 
 interface ProgressBarProps {
     completed: number; // Completion percentage (0 - 100)
@@ -234,10 +300,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ completed }) => {
             </div>
         </div>
     );
-};
-
-export const Dashboard = () => {
-    return (
-        <DashboardContainer />
-    )
 }
+
+export const Dashboard = () => (
+    <DashboardContainer />
+)

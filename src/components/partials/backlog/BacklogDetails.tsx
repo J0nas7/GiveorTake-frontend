@@ -3,7 +3,7 @@
 // External
 import React, { useEffect, useState } from 'react';
 import { useParams, usePathname } from "next/navigation";
-import { faList } from '@fortawesome/free-solid-svg-icons';
+import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -166,11 +166,11 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                 titleAction={
                     renderBacklog && (
                         <Link
-                            href={`/backlog/${renderBacklog.Backlog_ID}`}
+                            href={`/project/${renderBacklog?.Project_ID}`}
                             className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                         >
-                            <FontAwesomeIcon icon={faList} />
-                            <Text variant="span">Go to Backlog</Text>
+                            <FontAwesomeIcon icon={faLightbulb} />
+                            <Text variant="span">Go to Project</Text>
                         </Link>
                     )
                 }

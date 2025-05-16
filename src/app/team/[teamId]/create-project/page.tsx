@@ -2,7 +2,7 @@
 import React from 'react'
 
 // Internal
-import CreateProject from '@/components/partials/project/CreateProject'
+import { CreateProject } from '@/components/partials/project/CreateProject'
 
 const CreateProjectPage = () => {
     return (

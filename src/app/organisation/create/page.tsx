@@ -2,7 +2,7 @@
 import React from 'react'
 
 // Internal
-import CreateOrganisation from '@/components/partials/organisation/CreateOrganisation'
+import { CreateOrganisation } from '@/components/partials/organisation/CreateOrganisation'
 
 const CreateOrganisationPage = () => {
     return (

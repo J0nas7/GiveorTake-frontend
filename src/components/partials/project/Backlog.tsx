@@ -32,11 +32,11 @@ export const BacklogContainer = () => {
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
 
     // ---- State ----
-    const authUser = useTypedSelector(selectAuthUser) // Redux
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
+    const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
     // Determine if the authenticated user can access the backlog:
     const canAccessBacklog = (authUser && renderBacklog && (
@@ -291,17 +291,6 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                 titleAction={
                     renderBacklog && (
                         <Block className="flex gap-2 items-center w-full">
-                            {/* New Invite Link */}
-                            {canManageBacklog && (
-                                <Link
-                                    className="blue-link !inline-flex gap-2 items-center"
-                                    href={`/backlog/${renderBacklog.Backlog_ID}/edit`}
-                                >
-                                    <FontAwesomeIcon icon={faPencil} />
-                                    <Text variant="span">Edit Backlog</Text>
-                                </Link>
-                            )}
-
                             <Link
                                 href={`/project/${renderBacklog?.Project_ID}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"

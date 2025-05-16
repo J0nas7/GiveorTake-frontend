@@ -424,19 +424,20 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
                                 </Block>
 
                                 {canManageBacklog && (
-                                    <>
+                                    <Block className="mt-2">
+                                        <Link href={`/backlog/${backlog.Backlog_ID}/edit`} className="blue-link-light">
+                                            Edit Backlog
+                                        </Link>
                                         {backlog.Backlog_IsPrimary ? (
-                                            <Block className="mt-2 text-gray-400">
+                                            <Text className="text-gray-400">
                                                 Primary Backlog
-                                            </Block>
+                                            </Text>
                                         ) : (
-                                            <Block className="mt-2">
-                                                <Link href={`/finish-backlog/${backlog.Backlog_ID}`} className="blue-link-light red-link-light">
-                                                    Finish Backlog
-                                                </Link>
-                                            </Block>
+                                            <Link href={`/finish-backlog/${backlog.Backlog_ID}`} className="blue-link-light red-link-light">
+                                                Finish Backlog
+                                            </Link>
                                         )}
-                                    </>
+                                    </Block>
                                 )}
                             </Block>
                         </CardContent>
