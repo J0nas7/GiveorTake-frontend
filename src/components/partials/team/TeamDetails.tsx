@@ -48,7 +48,7 @@ export const TeamDetails = () => {
         (project) =>
             authUser &&
             (
-                project.team?.organisation?.User_ID === authUser.User_ID ||
+                renderTeam.organisation?.User_ID === authUser.User_ID ||
                 parsedPermissions?.includes(`accessProject.${project.Project_ID}`)
             )
     ).length || 0
@@ -274,7 +274,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                             // Check if the authenticated user has access and modification rights for the project
                             // Skip rendering if the user lacks permissions
                             const canAccessAndModifyProjectWithId = (authUser && (
-                                project.team?.organisation?.User_ID === authUser.User_ID ||
+                                renderTeam.organisation?.User_ID === authUser.User_ID ||
                                 parsedPermissions?.includes(`editProject.${project.Project_ID}`)
                             ))
                             if (!canAccessAndModifyProjectWithId) return

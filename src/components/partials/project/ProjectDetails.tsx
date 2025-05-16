@@ -31,9 +31,9 @@ const ProjectDetails: React.FC = () => {
     const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext()
 
     // ---- State ----
-    const authUser = useTypedSelector(selectAuthUser)
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
     const STATUSES = ["To Do", "In Progress", "Waiting for Review", "Done"]
+    const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
     // Determine if the authenticated user can access the project:
     const canAccessProject = (authUser && renderProject && (
@@ -50,7 +50,7 @@ const ProjectDetails: React.FC = () => {
         (backlog) =>
             authUser &&
             (
-                backlog.project?.team?.organisation?.User_ID === authUser.User_ID || // Check if the user owns the organisation
+                renderProject.team?.organisation?.User_ID === authUser.User_ID || // Check if the user owns the organisation
                 parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`) // Check if the user has access permissions
             )
     ).length || 0;
@@ -322,7 +322,9 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                     <Grid container spacing={3}>
                         {renderProject?.backlogs?.map((backlog) => (
                             <BacklogItem
+                                key={backlog.Backlog_ID}
                                 backlog={backlog}
+                                renderProject={renderProject}
                                 authUser={authUser}
                                 STATUSES={STATUSES}
                             />
@@ -335,25 +337,27 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
 )
 
 export interface BacklogItemProps {
-    backlog: BacklogStates;
+    backlog: BacklogStates
+    renderProject: Project
     authUser: User | undefined
     STATUSES: string[]
 }
 
 export const BacklogItem: React.FC<BacklogItemProps> = ({
     backlog,
+    renderProject,
     authUser,
     STATUSES
 }) => {
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
     // Determine if the authenticated user can access the backlog:
     const canAccessBacklog = (authUser && backlog && (
-        backlog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
         parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`)
     ))
     // Determine if the authenticated user can manage the backlog:
     const canManageBacklog = (authUser && backlog && (
-        backlog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
         parsedPermissions?.includes(`manageBacklog.${backlog.Backlog_ID}`)
     ))
 
@@ -405,7 +409,7 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
                                         const statusCount = (backlog.tasks ?? []).filter(task => task.Task_Status === status).length;
                                         const percentage = totalTasks > 0 ? ((statusCount / totalTasks) * 100).toFixed(0) : 0;
                                         return (
-                                            <Text key={status}>
+                                            <Text variant="span" key={status}>
                                                 {status}: {statusCount} ({percentage}%)
                                             </Text>
                                         );
@@ -424,7 +428,7 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
                                 </Block>
 
                                 {canManageBacklog && (
-                                    <Block className="mt-2">
+                                    <Block className="mt-2 flex flex-col items-end">
                                         <Link href={`/backlog/${backlog.Backlog_ID}/edit`} className="blue-link-light">
                                             Edit Backlog
                                         </Link>

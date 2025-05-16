@@ -340,7 +340,7 @@ export const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, se
                                     {media.Media_CreatedAt && (
                                         <CreatedAtToTimeSince dateCreatedAt={media.Media_CreatedAt} />
                                     )}
-                                    </Block>
+                                </Block>
                                 <Block>By: {media.user?.User_FirstName} {media.user?.User_Surname}</Block>
                             </Block>
                             <button
@@ -768,7 +768,7 @@ const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
         if (!task.Task_ID) return
 
         const removed = await removeTask(
-            task.Task_ID, 
+            task.Task_ID,
             task.Backlog_ID,
             undefined
         )
@@ -970,11 +970,11 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     className="p-2 border rounded"
                 >
                     <option value="">Unassigned</option>
-                    {task.backlog?.project?.team?.user_seats?.map(userSeat => {
-                        return (
-                            <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
-                        )
-                    })}
+                    {task.backlog?.project?.team?.user_seats?.map(userSeat => (
+                        <option key={userSeat.user?.User_ID} value={userSeat.user?.User_ID}>
+                            {userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}
+                        </option>
+                    ))}
                 </select>
             </p>
             <p>

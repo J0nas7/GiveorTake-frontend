@@ -6,45 +6,55 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faClock, faSliders, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faClock, faLightbulb, faSliders, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import clsx from "clsx";
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 // Internal
 import styles from "@/core-ui/styles/modules/TimeTracks.module.scss"
 import { Block, Text } from "@/components/ui/block-text";
 import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
-import { Project, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
+import { Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 import { Heading } from "@/components/ui/heading";
+import { LoadingState } from "@/core-ui/components/LoadingState";
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
 
-// Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-// Component
-// export const TimeTracksContainer: React.FC<{userId: string | undefined}> = ({ userId }) => {
 export const TimeTracksContainer = () => {
-    // Get the necessary params from query parameter
+    // ---- Hooks ----
     const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(["timetrack"]);
-
-    const [filterTimeEntries, setFilterTimeEntries] = useState<boolean>(false)
-
-    const urlUserIds = searchParams.get("userIds")
-    const urlTaskIds = searchParams.get("taskIds")
-    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
-    const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
-
     const { projectById, readProjectById } = useProjectsContext();
     const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
     const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
 
-    const [renderProject, setRenderProject] = useState<Project | undefined>(undefined);
+    // ---- State ----
+    const urlUserIds = searchParams.get("userIds")
+    const urlTaskIds = searchParams.get("taskIds")
+    const [filterTimeEntries, setFilterTimeEntries] = useState<boolean>(false)
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
+    const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
+    const [renderProject, setRenderProject] = useState<ProjectStates>(undefined);
     const [renderTimeTracks, setRenderTimeTracks] = useState<TaskTimeTrack[] | undefined>(undefined);
+
+    const authUser = useTypedSelector(selectAuthUser)
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
+    // Determine if the authenticated user can access the project:
+    const canAccessProject = (authUser && renderProject && (
+        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
+        parsedPermissions?.includes(`accessProject.${renderProject.Project_ID}`)
+    ))
+
+    // Extract all tasks from the project's backlogs
+    const allProjectTasks = renderProject && renderProject?.backlogs
+        ?.flatMap((backlog) => backlog.tasks || []) || [];
 
     // Computed from renderTimeTracks
     const [sortedByDuration, setSortedByDuration] = useState<TaskTimeTrack[] | undefined>(undefined)
@@ -97,7 +107,8 @@ export const TimeTracksContainer = () => {
     const [startDate, setStartDate] = useState(startDateParam || defaultStart);
     const [endDate, setEndDate] = useState(endDateParam || defaultEnd);
 
-    // Get userIds from URL
+    // ---- Effects ----
+    // Sync selected user IDs with URL or default to all users
     useEffect(() => {
         if (urlUserIds) {
             // If userIds exist in the URL, use them
@@ -108,27 +119,32 @@ export const TimeTracksContainer = () => {
             const allUserIds = teamUserSeatsById
                 .map((userSeat: TeamUserSeat) => userSeat.user?.User_ID?.toString())
                 .filter((userId) => userId !== undefined) // Remove undefined values
-            setSelectedUserIds(allUserIds)
+            setSelectedUserIds([])
         }
     }, [urlUserIds, teamUserSeatsById])
 
+    // Sync selected task IDs with URL or default to all tasks
     useEffect(() => {
+        if (!renderProject) return
+
         if (urlTaskIds) {
             // If taskIds exist in the URL, use them
             const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : []
             setSelectedTaskIds(taskIdsFromURL)
-        } else if (renderProject?.tasks?.length) {
+        } else if (allProjectTasks.length) {
             // If no taskIds in URL, select all tasks by default
-            const allTaskIds = renderProject.tasks
-                .map((task) => task.Task_ID?.toString())
-                .filter((taskId) => taskId !== undefined) // Remove undefined values
-            setSelectedTaskIds(allTaskIds)
+            const allTaskIds = allProjectTasks
+                .map((task: Task) => task.Task_ID?.toString())
+                .filter((taskId): taskId is string => taskId !== undefined) // Remove undefined values
+
+            setSelectedTaskIds([]);
         }
     }, [urlTaskIds, renderProject])
 
     // Fetch project data
     useEffect(() => {
         const loadRenders = async () => {
+            console.log("loadRenders", selectedUserIds)
             await getTaskTimeTracksByProject(
                 parseInt(projectId),
                 startDate,
@@ -150,7 +166,7 @@ export const TimeTracksContainer = () => {
     useEffect(() => {
         if (projectId) {
             setRenderProject(projectById);
-            document.title = `${t("timetrack.title")}: ${projectById?.Project_Name} - GiveOrTake`;
+            if (projectById) document.title = `${t("timetrack.title")}: ${projectById?.Project_Name} - GiveOrTake`;
         }
     }, [projectById]);
 
@@ -164,6 +180,7 @@ export const TimeTracksContainer = () => {
         }
     }, [taskTimeTracksByProjectId]);
 
+    // Sort time tracks by duration and latest entry
     useEffect(() => {
         if (renderTimeTracks && renderTimeTracks.length > 0) {
             // Make a copy and sort by Time_Tracking_Duration in descending order
@@ -187,52 +204,64 @@ export const TimeTracksContainer = () => {
         }
     }, [renderProject])
 
-    if (!renderProject) return null
-
+    // ---- Render ----
     return (
         <Block className="page-content">
-            <Link
-                href={`/project/${renderProject.Project_ID}`}
-                className="blue-link"
-            >
-                &laquo; Go to Project
-            </Link>
-
             <FlexibleBox
-                title={`${t("timetrack.title")}: ${renderProject.Project_Name}`}
-                titleAction={<>
-                    <button
-                        className="blue-link !inline-flex gap-2 items-center"
-                        onClick={() => setFilterTimeEntries(!filterTimeEntries)}
-                    >
-                        <FontAwesomeIcon icon={faSliders} />
-                        <Text variant="span" className="text-sm font-semibold">Filter Time Entries</Text>
-                    </button>
-                </>}
+                title={`${t("timetrack.title")}`}
+                subtitle={renderProject ? renderProject.Project_Name : undefined}
+                titleAction={
+                    renderProject && (
+                        <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
+                            <button
+                                className="blue-link !inline-flex gap-2 items-center"
+                                onClick={() => setFilterTimeEntries(!filterTimeEntries)}
+                            >
+                                <FontAwesomeIcon icon={faSliders} />
+                                <Text variant="span" className="text-sm font-semibold">Filter Time Entries</Text>
+                            </button>
+                            <Link
+                                href={`/project/${renderProject.Project_ID}`}
+                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faLightbulb} />
+                                <Text variant="span">Go to Project</Text>
+                            </Link>
+                        </Block>
+                    )
+                }
                 icon={faClock}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <Block className="w-full flex flex-col gap-3">
-                    <Block className="w-full p-4 bg-white rounded-lg shadow-md">
-                        <TimeSummary timeTracks={renderTimeTracks} />
-                    </Block>
-                    <Block className="w-full p-4 bg-white rounded-lg shadow-md">
-                        <TimeTracksPeriodSum timeTracks={sortedByLatest} />
-                    </Block>
-                    <Block className="flex flex-col lg:flex-row gap-4">
-                        <Block className="w-full lg:w-1/4 p-4 bg-white rounded-lg shadow-md">
-                            <TimeSpentPerTask renderProject={renderProject} sortedByDuration={sortedByDuration} />
-                        </Block>
+                <LoadingState singular="Project" renderItem={renderProject} permitted={canAccessProject}>
+                    {renderProject && (
+                        <Block className="w-full flex flex-col gap-3">
+                            <Block className="w-full p-4 bg-white rounded-lg shadow-md">
+                                <TimeSummary
+                                    timeTracks={renderTimeTracks}
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                />
+                            </Block>
+                            <Block className="w-full p-4 bg-white rounded-lg shadow-md">
+                                <TimeTracksPeriodSum timeTracks={sortedByLatest} />
+                            </Block>
+                            <Block className="flex flex-col lg:flex-row gap-4">
+                                <Block className="w-full lg:w-1/4 p-4 bg-white rounded-lg shadow-md">
+                                    <TimeSpentPerTask renderProject={renderProject} sortedByDuration={sortedByDuration} />
+                                </Block>
 
-                        {/* List of Time Tracks */}
-                        <Block className="w-full lg:w-3/4 p-4 bg-white rounded-lg shadow-md">
-                            <LatestTimeLogs
-                                sortedByLatest={sortedByLatest}
-                            />
+                                {/* List of Time Tracks */}
+                                <Block className="w-full lg:w-3/4 p-4 bg-white rounded-lg shadow-md">
+                                    <LatestTimeLogs
+                                        sortedByLatest={sortedByLatest}
+                                    />
+                                </Block>
+                            </Block>
                         </Block>
-                    </Block>
-                </Block>
+                    )}
+                </LoadingState>
             </FlexibleBox>
 
             <FilterTimeEntries
@@ -243,18 +272,19 @@ export const TimeTracksContainer = () => {
                 selectedUserIds={selectedUserIds}
                 selectedTaskIds={selectedTaskIds}
                 startDate={startDate}
-                setStartDate={setStartDate}
                 endDate={endDate}
+                setStartDate={setStartDate}
                 setEndDate={setEndDate}
                 startDateParam={startDateParam}
                 endDateParam={endDateParam}
+                allProjectTasks={allProjectTasks}
             />
         </Block>
     );
 }
 
 interface FilterTimeEntriesProps {
-    renderProject: Project
+    renderProject: ProjectStates
     filterTimeEntries: boolean
     setFilterTimeEntries: React.Dispatch<React.SetStateAction<boolean>>
     teamUserSeatsById: TeamUserSeat[]
@@ -266,282 +296,282 @@ interface FilterTimeEntriesProps {
     setEndDate: React.Dispatch<React.SetStateAction<string>>
     startDateParam: string | null
     endDateParam: string | null
+    allProjectTasks: Task[]
 }
 
-const FilterTimeEntries: React.FC<FilterTimeEntriesProps> =
-    ({
-        renderProject,
-        filterTimeEntries,
-        setFilterTimeEntries,
-        teamUserSeatsById,
-        selectedUserIds,
-        selectedTaskIds,
-        startDate,
-        setStartDate,
-        endDate,
-        setEndDate,
-        startDateParam,
-        endDateParam
-    }) => {
-        const router = useRouter()
-        const searchParams = useSearchParams();
+const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
+    renderProject,
+    filterTimeEntries,
+    setFilterTimeEntries,
+    teamUserSeatsById,
+    selectedUserIds,
+    selectedTaskIds,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    startDateParam,
+    endDateParam,
+    allProjectTasks
+}) => {
+    const router = useRouter()
+    const searchParams = useSearchParams();
 
-        const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserIds: string[] | undefined, newTaskIds: string[] | undefined | string, returnUrl?: boolean) => {
-            const url = new URL(window.location.href);
+    // Updates the URL parameters based on the provided filters.
+    const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserIds: string[] | undefined, newTaskIds: string[] | undefined | string, returnUrl?: boolean) => {
+        const url = new URL(window.location.href);
 
-            // startDate
-            if (newStartDate) {
-                url.searchParams.set("startDate", newStartDate);
-            } else {
-                url.searchParams.delete("startDate")
-            }
+        // startDate
+        if (newStartDate) {
+            url.searchParams.set("startDate", newStartDate);
+        } else {
+            url.searchParams.delete("startDate")
+        }
 
-            // endDate
-            if (newEndDate) {
-                url.searchParams.set("endDate", newEndDate);
-            } else {
-                url.searchParams.delete("endDate")
-            }
+        // endDate
+        if (newEndDate) {
+            url.searchParams.set("endDate", newEndDate);
+        } else {
+            url.searchParams.delete("endDate")
+        }
 
-            // userIds
-            if (newUserIds === undefined) {
-                url.searchParams.delete("userIds")
-            } else if (Array.isArray(newUserIds)) { // Handle userIds (convert array to a comma-separated string)
-                if (newUserIds.length > 0) {
-                    if (teamUserSeatsById.length > newUserIds.length) {
-                        url.searchParams.set("userIds", newUserIds.join(",")); // Store as comma-separated values
-                    } else {
-                        url.searchParams.delete("userIds"); // Remove if all are selected, as that is default 
-                    }
+        // userIds
+        if (newUserIds === undefined) {
+            url.searchParams.delete("userIds")
+        } else if (Array.isArray(newUserIds)) { // Handle userIds (convert array to a comma-separated string)
+            if (newUserIds.length > 0) {
+                if (teamUserSeatsById.length > newUserIds.length) {
+                    url.searchParams.set("userIds", newUserIds.join(",")); // Store as comma-separated values
                 } else {
-                    url.searchParams.set("userIds", "");
+                    url.searchParams.delete("userIds"); // Remove if all are selected, as that is default 
                 }
+            } else {
+                url.searchParams.set("userIds", "");
             }
+        }
 
-            // taskIds
-            if (newTaskIds === undefined) {
-                url.searchParams.delete("taskIds")
-            } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
-                if (newTaskIds.length > 0) {
-                    if (renderProject.tasks && renderProject.tasks.length > newTaskIds.length) {
-                        url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
-                    } else {
-                        url.searchParams.delete("taskIds"); // Remove if all are selected, as that is default 
-                    }
+        // taskIds
+        if (newTaskIds === undefined) {
+            url.searchParams.delete("taskIds")
+        } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
+            if (newTaskIds.length > 0) {
+                if (allProjectTasks && allProjectTasks.length > newTaskIds.length) {
+                    url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
                 } else {
-                    url.searchParams.set("taskIds", "");
+                    url.searchParams.delete("taskIds"); // Remove if all are selected, as that is default 
                 }
-            }
-
-            if (returnUrl) {
-                return url.toString()
             } else {
-                router.push(url.toString(), { scroll: false }); // Prevent full page reload
+                url.searchParams.set("taskIds", "");
             }
-        };
+        }
 
-        const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const newStart = `${e.target.value} 00:00:00`;
-            setStartDate(newStart);
-            updateURLParams(newStart, endDate, selectedUserIds, selectedTaskIds);
-        };
-
-        const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const newEnd = `${e.target.value} 23:59:59`;
-            setEndDate(newEnd);
-            updateURLParams(startDate, newEnd, selectedUserIds, selectedTaskIds)
-        };
-
-        const handleSelectAllTeamMembersChange = () => {
-            // console.log(`handleSelectAllChange ${selectedUserIds.length} === ${teamUserSeatsById.length}`)
-            if (selectedUserIds.length === teamUserSeatsById.length) {
-                // Deselect all if all are already selected
-                updateURLParams(startDateParam, endDateParam, ["0"], selectedTaskIds)
-            } else {
-                // Select all
-                updateURLParams(startDateParam, endDateParam, undefined, selectedTaskIds)
-            }
-        };
-
-        const handleCheckboxTeamMemberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-            const { value, checked } = event.target;
-
-            let updatedUserIds = selectedUserIds;
-
-            if (checked) {
-                updatedUserIds = [...selectedUserIds, value]; // Add new ID
-            } else {
-                updatedUserIds = selectedUserIds.filter(id => id !== value); // Remove unchecked ID
-            }
-
-            updateURLParams(startDate, endDate, updatedUserIds, selectedTaskIds)
-        };
-
-        const handleSelectAllProjectTasksChange = () => {
-            // console.log(`handleSelectAllChange ${selectedTaskIds.length} === ${renderProject.tasks?.length}`)
-            if (selectedTaskIds.length === renderProject.tasks?.length) {
-                // Deselect all if all are already selected
-                updateURLParams(startDateParam, endDateParam, selectedUserIds, ["0"])
-            } else {
-                // Select all
-                updateURLParams(startDateParam, endDateParam, selectedUserIds, undefined)
-            }
-        };
-
-        const handleCheckboxTaskChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-            const { value, checked } = event.target;
-
-            let updatedTaskIds = selectedTaskIds;
-
-            if (checked) {
-                updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
-            } else {
-                updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
-            }
-            // console.log("handleCheckboxTaskChange", checked, value, selectedTaskIds, updatedTaskIds)
-
-            updateURLParams(startDate, endDate, selectedUserIds, updatedTaskIds)
-        };
-
-        useEffect(() => {
-            // Effect to listen for the ESC key
-            const handleEscPress = (event: KeyboardEvent) => {
-                if (event.key === "Escape" && filterTimeEntries) setFilterTimeEntries(!filterTimeEntries)
-            };
-
-            // Attach event listener when component is visible
-            window.addEventListener("keydown", handleEscPress)
-        }, [])
-
-        return (
-            <Block
-                className={clsx(
-                    styles["filter-time-entries"],
-                    { [styles.open]: filterTimeEntries }
-                )}
-            >
-                <Block className="flex justify-between items-center">
-                    <Text className="font-bold">
-                        Filter Time Entries
-                    </Text>
-                    <button>
-                        <FontAwesomeIcon
-                            icon={faXmark}
-                            onClick={() => setFilterTimeEntries(!filterTimeEntries)}
-                        />
-                    </button>
-                </Block>
-                {/* Entry period */}
-                <Block>
-                    <Text className="text-sm font-semibold">Entry period</Text>
-
-                    <Block className="flex gap-3 items-center">
-                        <input
-                            type="date"
-                            value={startDate.split(" ")[0]} // Show only YYYY-MM-DD
-                            onChange={handleStartDateChange}
-                            className="bg-transparent"
-                        />
-                        <FontAwesomeIcon icon={faArrowRight} />
-                        <input
-                            type="date"
-                            value={endDate.split(" ")[0]} // Show only YYYY-MM-DD
-                            onChange={handleEndDateChange}
-                            className="bg-transparent"
-                        />
-                    </Block>
-                </Block>
-                {/* Team members */}
-                <Block>
-                    <Text className="text-sm font-semibold">Team members</Text>
-
-                    <Text
-                        variant="span"
-                        onClick={() => handleSelectAllTeamMembersChange()}
-                        className="cursor-pointer text-xs hover:underline"
-                    >
-                        Select/Deselect All
-                    </Text>
-
-                    <Block className="flex flex-col mt-3">
-                        {teamUserSeatsById.length && teamUserSeatsById.map(userSeat => {
-                            const userDetails = userSeat.user
-
-                            if (!userDetails) return null
-
-                            return (
-                                <Block variant="span" className="flex gap-2" key={userSeat.Seat_ID}>
-                                    <input
-                                        type="checkbox"
-                                        value={userDetails.User_ID}
-                                        checked={userDetails.User_ID ? selectedUserIds.includes(userDetails.User_ID.toString()) : false}
-                                        onChange={handleCheckboxTeamMemberChange}
-                                    />
-                                    <Text>{userDetails?.User_FirstName} {userDetails?.User_Surname}</Text>
-                                </Block>
-                            )
-                        })}
-                    </Block>
-                </Block>
-                {/* Project tasks */}
-                <Block>
-                    <Text className="text-sm font-semibold">Project tasks</Text>
-
-                    <Text
-                        variant="span"
-                        onClick={() => handleSelectAllProjectTasksChange()}
-                        className="cursor-pointer text-xs hover:underline"
-                    >
-                        Select/Deselect All
-                    </Text>
-
-                    <Block className="flex flex-col mt-3">
-                        {renderProject.tasks?.length && renderProject.tasks.map(task => {
-                            return (
-                                <Block variant="span" className="flex gap-2 items-center" key={task.Task_ID}>
-                                    <input
-                                        type="checkbox"
-                                        value={task.Task_ID}
-                                        checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
-                                        onChange={handleCheckboxTaskChange}
-                                    />
-                                    <Text variant="small" className="text-xs">
-                                        ({renderProject.Project_Key}-{task.Task_Key})
-                                    </Text>{" "}
-                                    <Text>{task.Task_Title}</Text>
-                                </Block>
-                            )
-                        })}
-                    </Block>
-                </Block>
-                {/* Selected user ID */}
-                {/* <Block>
-                    {selectedUserIds && (() => {
-                        const selectedUser = teamUserSeatsById && teamUserSeatsById.length && teamUserSeatsById.find((user) => user.User_ID === parseInt(selectedUserIds[0]))?.user
-                        if (!selectedUser) return null
-
-                        return (
-                            <Block className="flex gap-3 items-center bg-gray-100 rounded-lg shadow-lg py-1 px-3">
-                                <FontAwesomeIcon icon={faUser} />
-                                {`${selectedUser.User_FirstName} ${selectedUser.User_Surname}`}
-                                <Link href={updateURLParams(startDateParam, endDateParam, undefined, true)!}>
-                                    <FontAwesomeIcon icon={faXmark} />
-                                </Link>
-                            </Block>
-                        )
-                    })()}
-                </Block> */}
-            </Block>
-        )
+        if (returnUrl) {
+            return url.toString()
+        } else {
+            router.push(url.toString(), { scroll: false }); // Prevent full page reload
+        }
     }
 
+    // Handles changes to the start date input field.
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newStart = `${e.target.value} 00:00:00`;
+        setStartDate(newStart);
+        updateURLParams(newStart, endDate, selectedUserIds, selectedTaskIds);
+    }
 
-interface TimeTracksSubComponentsProps {
-    timeTracks: TaskTimeTrack[] | undefined;
+    // Handles changes to the end date input field.
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newEnd = `${e.target.value} 23:59:59`;
+        setEndDate(newEnd);
+        updateURLParams(startDate, newEnd, selectedUserIds, selectedTaskIds);
+    }
+
+    // Toggles selection of all team members.
+    const handleSelectAllTeamMembersChange = () => {
+        const allSelected = selectedUserIds.length === teamUserSeatsById.length;
+        updateURLParams(startDateParam, endDateParam, allSelected ? ["0"] : undefined, selectedTaskIds);
+    }
+
+    // Handles changes to the team member selection checkboxes.
+    const handleCheckboxTeamMemberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value, checked } = event.target;
+
+        const updatedUserIds = checked
+            ? [...selectedUserIds, value] // Add new ID
+            : selectedUserIds.filter(id => id !== value); // Remove unchecked ID
+
+        updateURLParams(startDate, endDate, updatedUserIds, selectedTaskIds);
+    }
+
+    // Toggles selection of all project tasks.
+    const handleSelectAllProjectTasksChange = () => {
+        const allSelected = selectedTaskIds.length === allProjectTasks.length;
+        updateURLParams(startDateParam, endDateParam, selectedUserIds, allSelected ? ["0"] : undefined);
+    }
+
+    // Handles changes to the project task selection checkboxes.
+    const handleCheckboxTaskChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value, checked } = event.target;
+
+        const updatedTaskIds = checked
+            ? [...selectedTaskIds, value] // Add new ID
+            : selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
+
+        updateURLParams(startDate, endDate, selectedUserIds, updatedTaskIds);
+    }
+
+    // Close filter panel on ESC key press
+    useEffect(() => {
+        // Effect to listen for the ESC key
+        const handleEscPress = (event: KeyboardEvent) => {
+            if (event.key === "Escape" && filterTimeEntries) setFilterTimeEntries(!filterTimeEntries)
+        };
+
+        // Attach event listener when component is visible
+        window.addEventListener("keydown", handleEscPress)
+    }, [])
+
+    return (
+        <Block
+            className={clsx(
+                styles["filter-time-entries"],
+                { [styles.open]: filterTimeEntries }
+            )}
+        >
+            <Block className="flex justify-between items-center">
+                <Text className="font-bold">
+                    Filter Time Entries
+                </Text>
+                <button>
+                    <FontAwesomeIcon
+                        icon={faXmark}
+                        onClick={() => setFilterTimeEntries(!filterTimeEntries)}
+                    />
+                </button>
+            </Block>
+            {/* Entry period */}
+            <Block>
+                <Text className="text-sm font-semibold">Entry period</Text>
+
+                <Block className="flex gap-3 items-center">
+                    <input
+                        type="date"
+                        value={startDate.split(" ")[0]} // Show only YYYY-MM-DD
+                        onChange={handleStartDateChange}
+                        className="bg-transparent"
+                    />
+                    <FontAwesomeIcon icon={faArrowRight} />
+                    <input
+                        type="date"
+                        value={endDate.split(" ")[0]} // Show only YYYY-MM-DD
+                        onChange={handleEndDateChange}
+                        className="bg-transparent"
+                    />
+                </Block>
+            </Block>
+            {/* Project backlogs */}
+            {renderProject && (
+                <Block>
+                    <Text className="text-sm font-semibold">Project backlogs</Text>
+
+                    <Block className="flex flex-col mt-3">
+                        {renderProject.backlogs?.length && renderProject.backlogs.map(backlog => {
+                            return (
+                                <Block variant="span" className="flex gap-2" key={backlog.Backlog_ID}>
+                                    <input
+                                        type="checkbox"
+                                        value={backlog.Backlog_ID}
+                                        // checked={userDetails.User_ID ? selectedUserIds.includes(userDetails.User_ID.toString()) : false}
+                                        // onChange={handleCheckboxTeamMemberChange}
+                                    />
+                                    <Text>{backlog.Backlog_Name}</Text>
+                                </Block>
+                            )
+                        })}
+                    </Block>
+                </Block>
+            )}
+            {/* Team members */}
+            <Block>
+                <Text className="text-sm font-semibold">Team members</Text>
+
+                <Text
+                    variant="span"
+                    onClick={() => handleSelectAllTeamMembersChange()}
+                    className="cursor-pointer text-xs hover:underline"
+                >
+                    Select/Deselect All
+                </Text>
+
+                <Block className="flex flex-col mt-3">
+                    {teamUserSeatsById.length && teamUserSeatsById.map(userSeat => {
+                        const userDetails = userSeat.user
+
+                        if (!userDetails) return null
+
+                        return (
+                            <Block variant="span" className="flex gap-2" key={userSeat.Seat_ID}>
+                                <input
+                                    type="checkbox"
+                                    value={userDetails.User_ID}
+                                    checked={selectedUserIds.length === 0 || (userDetails.User_ID ? selectedUserIds.includes(userDetails.User_ID.toString()) : false)}
+                                    onChange={handleCheckboxTeamMemberChange}
+                                />
+                                <Text>{userDetails?.User_FirstName} {userDetails?.User_Surname}</Text>
+                            </Block>
+                        )
+                    })}
+                </Block>
+            </Block>
+            {/* Project tasks */}
+            <Block>
+                <Text className="text-sm font-semibold">Project tasks</Text>
+
+                <Text
+                    variant="span"
+                    onClick={() => handleSelectAllProjectTasksChange()}
+                    className="cursor-pointer text-xs hover:underline"
+                >
+                    Select/Deselect All
+                </Text>
+
+                <Block className="flex flex-col mt-3">
+                    {allProjectTasks.length && allProjectTasks.map(task => {
+                        return (
+                            <Block variant="span" className="flex gap-2 items-center" key={task.Task_ID}>
+                                <input
+                                    type="checkbox"
+                                    value={task.Task_ID}
+                                    checked={selectedTaskIds.length === 0 || (task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false)}
+                                    onChange={handleCheckboxTaskChange}
+                                />
+                                {renderProject && (
+                                    <>
+                                        <Text variant="small" className="text-xs">
+                                            ({renderProject.Project_Key}-{task.Task_Key})
+                                        </Text>{" "}
+                                    </>
+                                )}
+                                <Text>{task.Task_Title}</Text>
+                            </Block>
+                        )
+                    })}
+                </Block>
+            </Block>
+        </Block>
+    )
 }
 
-export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks }) => {
+interface TimeTracksSubComponentsProps {
+    timeTracks: TaskTimeTrack[] | undefined
+    startDate?: string
+    endDate?: string
+}
+
+export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks, startDate, endDate }) => {
     const { t } = useTranslation(["timetrack"]);
+    const startDateWithoutTime = new Date(startDate ? startDate : '')
+    const endDateWithoutTime = new Date(endDate ? endDate : '')
 
     // Calculate total time tracked
     const totalTimeTracked = useMemo(() => {
@@ -560,27 +590,33 @@ export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks
     }, [timeTracks, totalTimeTracked]);
 
     return (
-        <Block className="w-full flex flex-col items-center sm:flex-row gap-4 p-4">
-            <Block className="w-1/2 flex flex-col items-center">
-                <FontAwesomeIcon icon={faClock} className="text-blue-500 text-2xl mb-2" />
-                <Heading variant="h3" className="text-sm font-medium">
-                    {t("timetrack.timeSummary.totalTimeTracked")}
-                </Heading>
-                <Text variant="p" className="text-lg font-semibold text-center">
-                    <SecondsToTimeDisplay totalSeconds={totalTimeTracked} />
-                </Text>
-            </Block>
+        <>
+            <Block className="w-full flex flex-col items-center sm:flex-row gap-4 p-4">
+                <Block className="w-2/5 flex flex-col items-center">
+                    <FontAwesomeIcon icon={faClock} className="text-blue-500 text-2xl mb-2" />
+                    <Heading variant="h3" className="text-sm font-medium">
+                        {t("timetrack.timeSummary.totalTimeTracked")}
+                    </Heading>
+                    <Text variant="p" className="text-lg font-semibold text-center">
+                        <SecondsToTimeDisplay totalSeconds={totalTimeTracked} />
+                    </Text>
+                </Block>
 
-            <Block className="w-1/2 flex flex-col items-center">
-                <FontAwesomeIcon icon={faClock} className="text-green-500 text-2xl mb-2" />
-                <Heading variant="h3" className="text-sm font-medium">
-                    {t("timetrack.timeSummary.avgDailyTimeSpent")}
-                </Heading>
-                <Text variant="p" className="text-lg font-semibold text-center">
-                    <SecondsToTimeDisplay totalSeconds={averageDailyTime} />
-                </Text>
+                <Block className="w-1/5 flex flex-col items-center text-sm font-semibold text-gray-400">
+                    {startDateWithoutTime.toLocaleDateString()} - {endDateWithoutTime.toLocaleDateString()}
+                </Block>
+
+                <Block className="w-2/5 flex flex-col items-center">
+                    <FontAwesomeIcon icon={faClock} className="text-green-500 text-2xl mb-2" />
+                    <Heading variant="h3" className="text-sm font-medium">
+                        {t("timetrack.timeSummary.avgDailyTimeSpent")}
+                    </Heading>
+                    <Text variant="p" className="text-lg font-semibold text-center">
+                        <SecondsToTimeDisplay totalSeconds={averageDailyTime} />
+                    </Text>
+                </Block>
             </Block>
-        </Block>
+        </>
     );
 };
 
@@ -708,9 +744,9 @@ export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ tim
                                         {timeTracksByDate[dateKey]?.slice(0, 3).map((track, index) => (
                                             <>
                                                 <Text variant="small" className="text-xs">
-                                                    ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
+                                                    ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                                 </Text>{" "}
-                                                <Link key={index} href={`/task/${track.task?.project?.Project_Key}/${track.task?.Task_Key}`} className={clsx(styles["time-entry"], "inline blue-link-light")}>
+                                                <Link key={index} href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} className={clsx(styles["time-entry"], "inline blue-link-light")}>
                                                     {track.task?.Task_Title}
                                                 </Link>
                                             </>
@@ -785,15 +821,15 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
                             {/* 📝 List of Tasks for that Day */}
                             <ul className="mt-3 space-y-2">
                                 {data.tracks.map((track) => (
-                                    <li 
-                                        key={track.Time_Tracking_ID} 
+                                    <li
+                                        key={track.Time_Tracking_ID}
                                         className="flex flex-col lg:flex-row justify-between items-center bg-gray-100 p-2 rounded-md"
                                     >
                                         {/* Link to Task */}
                                         <Text variant="small" className="text-xs">
-                                            ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
+                                            ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                         </Text>{" "}
-                                        <Link href={`/task/${track.task?.project?.Project_Key}/${track.task?.Task_Key}`} className="blue-link-light inline text-gray-700">
+                                        <Link href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} className="blue-link-light inline text-gray-700">
                                             {track.task?.Task_Title}
                                         </Link>
                                         {/* ⏳ Time Spent */}
@@ -991,9 +1027,9 @@ export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
                                     {track.user?.User_FirstName} {track.user?.User_Surname}{" "}
                                     logged work on{" "}
                                     <Text variant="small">
-                                        ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
+                                        ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                     </Text>{" "}
-                                    <Link href={`/task/${track.task?.project?.Project_Key}/${track.task?.Task_Key}`} className="inline blue-link">
+                                    <Link href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} className="inline blue-link">
                                         {track.task?.Task_Title}
                                     </Link>{" "}
                                     lasting{" "}
