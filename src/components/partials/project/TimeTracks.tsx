@@ -18,7 +18,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 import styles from "@/core-ui/styles/modules/TimeTracks.module.scss"
 import { Block, Text } from "@/components/ui/block-text";
 import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
-import { Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
+import { Backlog, Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 import { Heading } from "@/components/ui/heading";
@@ -36,9 +36,11 @@ export const TimeTracksContainer = () => {
     const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
 
     // ---- State ----
+    const urlBacklogIds = searchParams.get("backlogIds")
     const urlUserIds = searchParams.get("userIds")
     const urlTaskIds = searchParams.get("taskIds")
     const [filterTimeEntries, setFilterTimeEntries] = useState<boolean>(false)
+    const [selectedBacklogIds, setSelectedBacklogIds] = useState<string[]>([])
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined);
@@ -108,6 +110,23 @@ export const TimeTracksContainer = () => {
     const [endDate, setEndDate] = useState(endDateParam || defaultEnd);
 
     // ---- Effects ----
+    // Sync selected backlog IDs with URL or default to all backlogs
+    useEffect(() => {
+        if (!renderProject) return
+
+        if (urlBacklogIds) {
+            // If backlogIds exist in the URL, use them
+            const backlogIdsFromURL = urlBacklogIds ? urlBacklogIds.split(",") : [];
+            setSelectedBacklogIds(backlogIdsFromURL);
+        } else if (renderProject?.backlogs?.length) {
+            // If no backlogIds in URL, select all backlogs by default
+            const allBacklogIds = renderProject.backlogs
+                .map((backlog: Backlog) => backlog.Backlog_ID?.toString())
+                .filter((backlogId) => backlogId !== undefined) // Remove undefined values
+            setSelectedBacklogIds(allBacklogIds)
+        }
+    }, [urlBacklogIds, renderProject])
+
     // Sync selected user IDs with URL or default to all users
     useEffect(() => {
         if (urlUserIds) {
@@ -119,7 +138,7 @@ export const TimeTracksContainer = () => {
             const allUserIds = teamUserSeatsById
                 .map((userSeat: TeamUserSeat) => userSeat.user?.User_ID?.toString())
                 .filter((userId) => userId !== undefined) // Remove undefined values
-            setSelectedUserIds([])
+            setSelectedUserIds(allUserIds)
         }
     }, [urlUserIds, teamUserSeatsById])
 
@@ -137,24 +156,27 @@ export const TimeTracksContainer = () => {
                 .map((task: Task) => task.Task_ID?.toString())
                 .filter((taskId): taskId is string => taskId !== undefined) // Remove undefined values
 
-            setSelectedTaskIds([]);
+            setSelectedTaskIds(allTaskIds);
         }
     }, [urlTaskIds, renderProject])
 
     // Fetch project data
     useEffect(() => {
         const loadRenders = async () => {
-            console.log("loadRenders", selectedUserIds)
-            await getTaskTimeTracksByProject(
-                parseInt(projectId),
-                startDate,
-                endDate,
-                selectedUserIds,
-                selectedTaskIds
-            )
+            console.log("loadRenders", selectedBacklogIds, selectedUserIds, selectedTaskIds)
+            if (selectedBacklogIds.length && selectedUserIds.length && selectedTaskIds.length) {
+                await getTaskTimeTracksByProject(
+                    parseInt(projectId),
+                    startDate,
+                    endDate,
+                    selectedBacklogIds,
+                    selectedUserIds,
+                    selectedTaskIds
+                )
+            }
         }
         loadRenders()
-    }, [projectId, selectedUserIds, selectedTaskIds, startDate, endDate])
+    }, [projectId, selectedBacklogIds, selectedUserIds, selectedTaskIds, startDate, endDate])
 
     useEffect(() => {
         const loadProject = async () => {
@@ -269,6 +291,7 @@ export const TimeTracksContainer = () => {
                 filterTimeEntries={filterTimeEntries}
                 setFilterTimeEntries={setFilterTimeEntries}
                 teamUserSeatsById={teamUserSeatsById}
+                selectedBacklogIds={selectedBacklogIds}
                 selectedUserIds={selectedUserIds}
                 selectedTaskIds={selectedTaskIds}
                 startDate={startDate}
@@ -288,6 +311,7 @@ interface FilterTimeEntriesProps {
     filterTimeEntries: boolean
     setFilterTimeEntries: React.Dispatch<React.SetStateAction<boolean>>
     teamUserSeatsById: TeamUserSeat[]
+    selectedBacklogIds: string[]
     selectedUserIds: string[]
     selectedTaskIds: string[]
     startDate: string
@@ -304,6 +328,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
     filterTimeEntries,
     setFilterTimeEntries,
     teamUserSeatsById,
+    selectedBacklogIds,
     selectedUserIds,
     selectedTaskIds,
     startDate,
@@ -318,7 +343,14 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
     const searchParams = useSearchParams();
 
     // Updates the URL parameters based on the provided filters.
-    const updateURLParams = (newStartDate: string | null, newEndDate: string | null, newUserIds: string[] | undefined, newTaskIds: string[] | undefined | string, returnUrl?: boolean) => {
+    const updateURLParams = (
+        newStartDate: string | null,
+        newEndDate: string | null,
+        newBacklogIds: string[] | undefined,
+        newUserIds: string[] | undefined,
+        newTaskIds: string[] | undefined | string,
+        returnUrl?: boolean
+    ) => {
         const url = new URL(window.location.href);
 
         // startDate
@@ -333,6 +365,21 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
             url.searchParams.set("endDate", newEndDate);
         } else {
             url.searchParams.delete("endDate")
+        }
+
+        // backlogIds
+        if (newBacklogIds === undefined) {
+            url.searchParams.delete("backlogIds")
+        } else if (Array.isArray(newBacklogIds)) { // Handle backlogIds (convert array to a comma-separated string)
+            if (newBacklogIds.length > 0) {
+                if (renderProject && (renderProject.backlogs?.length ?? 0) > newBacklogIds.length) {
+                    url.searchParams.set("backlogIds", newBacklogIds.join(",")); // Store as comma-separated values
+                } else {
+                    url.searchParams.delete("backlogIds"); // Remove if all are selected, as that is default 
+                }
+            } else {
+                url.searchParams.set("backlogIds", "");
+            }
         }
 
         // userIds
@@ -376,20 +423,45 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newStart = `${e.target.value} 00:00:00`;
         setStartDate(newStart);
-        updateURLParams(newStart, endDate, selectedUserIds, selectedTaskIds);
+        updateURLParams(newStart, endDate, selectedBacklogIds, selectedUserIds, selectedTaskIds);
     }
 
     // Handles changes to the end date input field.
     const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newEnd = `${e.target.value} 23:59:59`;
         setEndDate(newEnd);
-        updateURLParams(startDate, newEnd, selectedUserIds, selectedTaskIds);
+        updateURLParams(startDate, newEnd, selectedBacklogIds, selectedUserIds, selectedTaskIds);
+    }
+
+    // Toggles selection of all backlogs.
+    const handleSelectAllBacklogsChange = () => {
+        if (!renderProject) return
+        const allSelected = selectedBacklogIds.length === renderProject?.backlogs?.length;
+        updateURLParams(startDateParam, endDateParam, allSelected ? ["0"] : undefined, selectedUserIds, selectedTaskIds);
+    }
+
+    // Handles changes to the team member selection checkboxes.
+    const handleCheckboxBacklogChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value, checked } = event.target;
+
+        let updatedBacklogIds = checked
+            ? [...selectedBacklogIds, value] // Add new ID
+            : selectedBacklogIds.filter(id => id !== value); // Remove unchecked ID
+
+        if (selectedBacklogIds.length === 0 && renderProject) {
+            updatedBacklogIds = (renderProject.backlogs || [])
+                .filter((backlog) => backlog.Backlog_ID?.toString() !== value)
+                .map((backlog) => backlog.Backlog_ID?.toString() || "")
+                .filter((id): id is string => id !== "");
+        }
+
+        updateURLParams(startDate, endDate, updatedBacklogIds, selectedUserIds, selectedTaskIds);
     }
 
     // Toggles selection of all team members.
     const handleSelectAllTeamMembersChange = () => {
         const allSelected = selectedUserIds.length === teamUserSeatsById.length;
-        updateURLParams(startDateParam, endDateParam, allSelected ? ["0"] : undefined, selectedTaskIds);
+        updateURLParams(startDateParam, endDateParam, selectedBacklogIds, allSelected ? ["0"] : undefined, selectedTaskIds);
     }
 
     // Handles changes to the team member selection checkboxes.
@@ -400,13 +472,13 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
             ? [...selectedUserIds, value] // Add new ID
             : selectedUserIds.filter(id => id !== value); // Remove unchecked ID
 
-        updateURLParams(startDate, endDate, updatedUserIds, selectedTaskIds);
+        updateURLParams(startDate, endDate, selectedBacklogIds, updatedUserIds, selectedTaskIds);
     }
 
     // Toggles selection of all project tasks.
     const handleSelectAllProjectTasksChange = () => {
         const allSelected = selectedTaskIds.length === allProjectTasks.length;
-        updateURLParams(startDateParam, endDateParam, selectedUserIds, allSelected ? ["0"] : undefined);
+        updateURLParams(startDateParam, endDateParam, selectedBacklogIds, selectedUserIds, allSelected ? ["0"] : undefined);
     }
 
     // Handles changes to the project task selection checkboxes.
@@ -417,7 +489,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
             ? [...selectedTaskIds, value] // Add new ID
             : selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
 
-        updateURLParams(startDate, endDate, selectedUserIds, updatedTaskIds);
+        updateURLParams(startDate, endDate, selectedBacklogIds, selectedUserIds, updatedTaskIds);
     }
 
     // Close filter panel on ESC key press
@@ -474,6 +546,16 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
                 <Block>
                     <Text className="text-sm font-semibold">Project backlogs</Text>
 
+                    {(renderProject.backlogs?.length && renderProject.backlogs.length > 1) && (
+                        <Text
+                            variant="span"
+                            onClick={() => handleSelectAllBacklogsChange()}
+                            className="cursor-pointer text-xs hover:underline"
+                        >
+                            Select/Deselect All
+                        </Text>
+                    )}
+
                     <Block className="flex flex-col mt-3">
                         {renderProject.backlogs?.length && renderProject.backlogs.map(backlog => {
                             return (
@@ -481,8 +563,8 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
                                     <input
                                         type="checkbox"
                                         value={backlog.Backlog_ID}
-                                        // checked={userDetails.User_ID ? selectedUserIds.includes(userDetails.User_ID.toString()) : false}
-                                        // onChange={handleCheckboxTeamMemberChange}
+                                        checked={selectedBacklogIds.length === 0 || (backlog.Backlog_ID ? selectedBacklogIds.includes(backlog.Backlog_ID.toString()) : false)}
+                                        onChange={handleCheckboxBacklogChange}
                                     />
                                     <Text>{backlog.Backlog_Name}</Text>
                                 </Block>
@@ -495,13 +577,15 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
             <Block>
                 <Text className="text-sm font-semibold">Team members</Text>
 
-                <Text
-                    variant="span"
-                    onClick={() => handleSelectAllTeamMembersChange()}
-                    className="cursor-pointer text-xs hover:underline"
-                >
-                    Select/Deselect All
-                </Text>
+                {(teamUserSeatsById.length > 1) && (
+                    <Text
+                        variant="span"
+                        onClick={() => handleSelectAllTeamMembersChange()}
+                        className="cursor-pointer text-xs hover:underline"
+                    >
+                        Select/Deselect All
+                    </Text>
+                )}
 
                 <Block className="flex flex-col mt-3">
                     {teamUserSeatsById.length && teamUserSeatsById.map(userSeat => {
@@ -527,13 +611,15 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
             <Block>
                 <Text className="text-sm font-semibold">Project tasks</Text>
 
-                <Text
-                    variant="span"
-                    onClick={() => handleSelectAllProjectTasksChange()}
-                    className="cursor-pointer text-xs hover:underline"
-                >
-                    Select/Deselect All
-                </Text>
+                {allProjectTasks.length > 1 && (
+                    <Text
+                        variant="span"
+                        onClick={() => handleSelectAllProjectTasksChange()}
+                        className="cursor-pointer text-xs hover:underline"
+                    >
+                        Select/Deselect All
+                    </Text>
+                )}
 
                 <Block className="flex flex-col mt-3">
                     {allProjectTasks.length && allProjectTasks.map(task => {

@@ -35,13 +35,16 @@ export const BacklogsContainer = () => {
         (backlog) =>
             authUser &&
             (
-                backlog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+                renderProject.team?.organisation?.User_ID === authUser.User_ID ||
                 parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`)
             )
     ).length || 0;
 
     // ---- Effects ----
     useEffect(() => { readProjectById(parseInt(projectId)) }, [projectId])
+    useEffect(() => {
+        console.log("renderProject", renderProject)
+    }, [renderProject])
     useEffect(() => {
         if (projectId) {
             setRenderProject(projectById)
@@ -99,7 +102,7 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
             className="no-box w-auto inline-block"
             numberOfColumns={2}
         >
-            <LoadingState singular="Backlog" renderItem={renderProject} permitted={canAccessProject}>
+            <LoadingState singular="Project" renderItem={renderProject} permitted={canAccessProject}>
                 {renderProject && (
                     <>
                         {renderProject.backlogs && renderProject.backlogs.map((backlog: Backlog) => (
@@ -107,7 +110,7 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
                                 {/* Backlog rendered if the user has the necessary permissions. */}
                                 {authUser &&
                                     (
-                                        backlog.project?.team?.organisation?.User_ID === authUser.User_ID ||
+                                        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
                                         parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`)
                                     ) && (
                                         <Block className="mb-7" key={backlog.Backlog_ID}>

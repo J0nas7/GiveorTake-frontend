@@ -100,6 +100,7 @@ export type Backlog = {
     // Relationships
     project?: Project;
     team?: Team;
+    statuses?: Status[];
     tasks?: Task[];
 };
 
@@ -141,12 +142,13 @@ export type Task = {
     Assigned_User_ID?: number;
     Task_Title: string;
     Task_Description?: string;
-    Task_Status: 'To Do' | 'In Progress' | 'Waiting for Review' | 'Done';
+    Status_ID: number;
     Task_Due_Date?: string;
     Task_CreatedAt?: string;
     Task_UpdatedAt?: string;
 
     // Relationships
+    status?: Status;
     backlog?: Backlog;
     comments?: TaskComment[];
     time_tracks?: TaskTimeTrack[];
@@ -156,6 +158,27 @@ export type Task = {
 export type TaskFields =
     "Task_ID" | "Task_Key" | "Backlog_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
     "Task_Description" | "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
+
+export type Status = {
+    Status_ID?: number;
+    Backlog_ID: number;
+    Status_Name: string;
+    Status_Key?: string;
+    Status_Order?: number;
+    Status_Is_Default?: boolean;
+    Status_Is_Closed?: boolean;
+    Status_Color?: string;
+    Status_CreatedAt?: string;
+    Status_UpdatedAt?: string;
+
+    // Relationships
+    tasks?: Task[];
+    backlog?: Backlog;
+};
+
+export type StatusFields = 
+    "Status_ID" | "Backlog_ID" | "Status_Name" | "Status_Key" | "Status_Order" | 
+    "Status_Is_Default" | "Status_Is_Closed" | "Status_Color" | "Status_CreatedAt" | "Status_UpdatedAt";
 
 // Task Time Track Type
 export type TaskTimeTrack = {

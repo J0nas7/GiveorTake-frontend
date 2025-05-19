@@ -275,7 +275,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                             // Skip rendering if the user lacks permissions
                             const canAccessAndModifyProjectWithId = (authUser && (
                                 renderTeam.organisation?.User_ID === authUser.User_ID ||
-                                parsedPermissions?.includes(`editProject.${project.Project_ID}`)
+                                parsedPermissions?.includes(`accessProject.${project.Project_ID}`)
                             ))
                             if (!canAccessAndModifyProjectWithId) return
 

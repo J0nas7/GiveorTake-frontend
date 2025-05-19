@@ -24,7 +24,7 @@ const loadQuill = async () => {
 
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
-import { useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
+import { useProjectsContext, useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
 import { Task, TaskComment, TaskMediaFile, TaskTimeTrack, TeamUserSeat, User } from "@/types";
 import Link from "next/link";
 import { Block, Text } from "@/components/ui/block-text";
@@ -876,13 +876,18 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
 
     // Handle status change
     const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const newStatus = event.target.value as Task["Task_Status"]
-        handleTaskChanges("Task_Status", newStatus)
+        const newStatus = event.target.value as unknown as Task["Status_ID"]
+        handleTaskChanges("Status_ID", newStatus.toString())
     };
 
     const handleAssigneeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
         if (newAssigneeID) handleTaskChanges("Assigned_User_ID", newAssigneeID.toString())
+    }
+
+    const handleBacklogChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const newBacklogID = event.target.value as unknown as Task["Backlog_ID"]
+        if (newBacklogID) handleTaskChanges("Backlog_ID", newBacklogID.toString())
     }
 
     const handleTaskChanges = async (field: keyof Task, value: string) => {
@@ -916,6 +921,7 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
             saveTaskChanges={saveTaskChanges}
             handleStatusChange={handleStatusChange}
             handleAssigneeChange={handleAssigneeChange}
+            handleBacklogChange={handleBacklogChange}
             handleTaskChanges={handleTaskChanges}
             handleTaskTimeTrack={handleTaskTimeTrack}
         />
@@ -931,6 +937,7 @@ interface TaskDetailsViewProps {
     saveTaskChanges: (taskChanges: Task, parentId: number) => void
     handleStatusChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleAssigneeChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+    handleBacklogChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleTaskChanges: (field: keyof Task, value: string) => void
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
 }
@@ -944,25 +951,33 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     saveTaskChanges,
     handleStatusChange,
     handleAssigneeChange,
+    handleBacklogChange,
     handleTaskChanges,
     handleTaskTimeTrack,
 }) => {
+    const { projectById, readProjectById } = useProjectsContext()
+
+    useEffect(() => {
+        if (task.backlog?.Project_ID) {
+            readProjectById(task.backlog?.Project_ID)
+        }
+    }, [task])
     return (
         <Card className={styles.detailsSection}>
             <Heading variant="h2" className="font-bold">Task Details</Heading>
             {/* Task Status */}
             <p>
-                <strong>Status:</strong>
+                <strong>Status:</strong>{" "}
                 {/* Dropdown to change the status */}
-                <select value={task.Task_Status} onChange={handleStatusChange} className="p-2 border rounded">
-                    <option value="To Do">To Do</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Waiting for Review">Waiting for Review</option>
-                    <option value="Done">Done</option>
+                <select value={task.Status_ID} onChange={handleStatusChange} className="p-2 border rounded">
+                    <option value="">-</option>
+                    {projectById && projectById.backlogs?.find(backlog => backlog.Backlog_ID === task.Backlog_ID)?.statuses?.map(status => (
+                        <option value={status.Status_ID}>{status.Status_Name}</option>
+                    ))}
                 </select>
             </p>
             <p>
-                <strong>Assigned To:</strong>
+                <strong>Assigned To:</strong>{" "}
                 {/* Dropdown to change the user assignee */}
                 <select
                     value={task.Assigned_User_ID || ""}
@@ -987,7 +1002,19 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
             </p>
             <p>
                 <strong>Backlog:</strong>{" "}
-                {task.backlog?.Backlog_Name}
+                {/* Dropdown to change the backlog */}
+                <select
+                    value={task.Backlog_ID || ""}
+                    onChange={handleBacklogChange}
+                    className="p-2 border rounded"
+                >
+                    <option value="">-</option>
+                    {projectById && projectById.backlogs?.map(backlog => (
+                        <option key={backlog.Backlog_ID} value={backlog.Backlog_ID}>
+                            {backlog.Backlog_Name}
+                        </option>
+                    ))}
+                </select>
             </p>
             <p>
                 <strong>Created At:</strong>{" "}

@@ -61,7 +61,7 @@ export const BacklogContainer = () => {
             Backlog_ID: parseInt(backlogId),
             Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
             Task_Title: newTask?.Task_Title || "",
-            Task_Status: newTask?.Task_Status || "To Do",
+            Status_ID: newTask?.Status_ID || renderBacklog.statuses && renderBacklog.statuses[0]?.Status_ID || 0,
             Assigned_User_ID: newTask?.Assigned_User_ID
         }
 
@@ -177,7 +177,7 @@ export const BacklogContainer = () => {
 
     const SORT_KEYS: Record<number, keyof Task> = {
         1: "Task_Title",
-        2: "Task_Status",
+        2: "Status_ID",
         3: "Assigned_User_ID",
         4: "Task_CreatedAt",
     };
@@ -361,17 +361,16 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                         <td>
                                             {/* Dropdown to change the status */}
                                             <select
-                                                value={newTask?.Task_Status}
+                                                value={newTask?.Status_ID}
                                                 onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                                                    const newStatus = event.target.value as Task["Task_Status"]
-                                                    handleChangeNewTask("Task_Status", newStatus)
+                                                    const newStatus = event.target.value as unknown as Task["Status_ID"]
+                                                    handleChangeNewTask("Task_Status", newStatus.toString())
                                                 }}
                                                 className="p-2 border rounded"
                                             >
-                                                <option value="To Do">To Do</option>
-                                                <option value="In Progress">In Progress</option>
-                                                <option value="Waiting for Review">Waiting for Review</option>
-                                                <option value="Done">Done</option>
+                                                {renderBacklog.statuses?.map(status => (
+                                                    <option value={status.Status_ID}>{status.Status_Name}</option>
+                                                ))}
                                             </select>
                                         </td>
                                         <td>
@@ -414,7 +413,9 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                             <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
                                                 {task.Task_Title}
                                             </td>
-                                            <td className={styles.status}>{task.Task_Status}</td>
+                                            <td className={styles.status}>
+                                                {renderBacklog.statuses?.find(status => status.Status_ID === task.Status_ID)?.Status_Name}
+                                            </td>
                                             {(() => {
                                                 const assignee = renderBacklog?.project?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
                                                 return (

@@ -595,7 +595,7 @@ export type TaskTimeTrackContextType = {
     latestUniqueTaskTimeTracksByProject: TaskTimeTrack[] | undefined
     taskTimeTracksByProjectId: TaskTimeTrack[]
     getLatestUniqueTaskTimeTracksByProject: (projectId: number) => Promise<any>
-    getTaskTimeTracksByProject: (projectId: number, startTime: string, endTime: string, userIds?: string[], taskIds?: string[]) => Promise<void>
+    getTaskTimeTracksByProject: (projectId: number, startTime: string, endTime: string, backlogIds?: string[], userIds?: string[], taskIds?: string[]) => Promise<void>
     taskTimeTracksByProjectParams: { startTime: string; endTime: string; }
 };
 
@@ -660,7 +660,14 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
         }
     }
 
-    const getTaskTimeTracksByProject = async (projectId: number, startTime: string, endTime: string, userIds?: string[], taskIds?: string[]) => {
+    const getTaskTimeTracksByProject = async (
+        projectId: number, 
+        startTime: string, 
+        endTime: string, 
+        backlogIds?: string[],
+        userIds?: string[], 
+        taskIds?: string[]
+    ) => {
         try {
             // Build the URL with optional query parameters for startTime end endTime
             let url = `projects/${projectId}/task-time-tracks`
@@ -673,6 +680,8 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                 setTaskTimeTracksByProjectParams({ startTime, endTime })
             }
 
+            if (backlogIds?.length) params.push(`backlogIds=${JSON.stringify(backlogIds)}`)
+
             if (userIds?.length) params.push(`userIds=${JSON.stringify(userIds)}`)
 
             if (taskIds?.length) params.push(`taskIds=${JSON.stringify(taskIds)}`)
@@ -680,9 +689,10 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
             if (params.length > 0) url += `?${params.join('&')}`
 
             const data = await httpGetRequest(url)
+            console.log("data", params, data)
 
             if (!data.message) {
-                setTaskTimeTracksByProjectId(data)
+                setTaskTimeTracksByProjectId(data.data)
                 return
             } else if (data.message == "No time tracks found for the criterias") {
                 setTaskTimeTracksByProjectId([])

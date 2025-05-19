@@ -12,7 +12,7 @@ import { faLightbulb, faPencil, faTrash, faWindowRestore } from "@fortawesome/fr
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
 import { Block, Text, Heading } from "@/components"
 import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, BacklogStates, Project, Task } from "@/types"
+import { Backlog, BacklogStates, Project, Status, Task } from "@/types"
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux"
 import Link from "next/link"
 import { FlexibleBox } from "@/components/ui/flexible-box"
@@ -59,13 +59,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
 }
 
 interface ColumnProps {
-    status: "To Do" | "In Progress" | "Waiting for Review" | "Done"
+    status: number
     label: string
     tasks: Task[] | undefined
     canManageBacklog: boolean | undefined
     archiveTask: (task: Task) => Promise<void>
     setTaskDetail: (task: Task) => void
-    moveTask: (task: Task, newStatus: "To Do" | "In Progress" | "Waiting for Review" | "Done") => Promise<void>
+    moveTask: (task: Task, newStatus: number) => Promise<void>
 }
 
 const Column: React.FC<ColumnProps> = ({
@@ -115,6 +115,7 @@ const KanbanBoardContainer = () => {
     // ---- State and other Variables ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
+    const [kanbanColumns, setKanbanColumns] = useState<Status[] | undefined>(undefined)
     
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
@@ -128,15 +129,6 @@ const KanbanBoardContainer = () => {
         renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
         parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
     ))
-
-    const columns: {
-        [key: string]: "To Do" | "In Progress" | "Waiting for Review" | "Done"
-    } = {
-        todo: "To Do",
-        inProgress: "In Progress",
-        review: "Waiting for Review",
-        done: "Done"
-    }
 
     // ---- Effects ----
     useEffect(() => {
@@ -156,7 +148,10 @@ const KanbanBoardContainer = () => {
     useEffect(() => {
         if (backlogId) {
             setRenderBacklog(backlogById)
-            if (backlogById) document.title = `Kanban: ${backlogById?.Backlog_Name} - GiveOrTake`
+            if (backlogById) {
+                setKanbanColumns(backlogById.statuses)
+                document.title = `Kanban: ${backlogById?.Backlog_Name} - GiveOrTake`
+            }
         }
     }, [backlogById])
 
@@ -171,9 +166,9 @@ const KanbanBoardContainer = () => {
     }
 
     // Moves a task to a new status and refreshes the task list.
-    const moveTask = async (task: Task, newStatus: "To Do" | "In Progress" | "Waiting for Review" | "Done") => {
+    const moveTask = async (task: Task, newStatus: number) => {
         await saveTaskChanges(
-            { ...task, Task_Status: newStatus },
+            { ...task, Status_ID: newStatus },
             task.Backlog_ID
         )
 
@@ -186,7 +181,7 @@ const KanbanBoardContainer = () => {
             <KanbanBoardView
                 renderBacklog={renderBacklog}
                 tasks={renderTasks}
-                columns={columns}
+                kanbanColumns={kanbanColumns}
                 canAccessBacklog={canAccessBacklog}
                 canManageBacklog={canManageBacklog}
                 archiveTask={archiveTask}
@@ -200,20 +195,18 @@ const KanbanBoardContainer = () => {
 export interface KanbanBoardViewProps {
     renderBacklog: BacklogStates
     tasks: Task[] | undefined
-    columns: {
-        [key: string]: "To Do" | "In Progress" | "Waiting for Review" | "Done"
-    }
+    kanbanColumns: Status[] | undefined
     canAccessBacklog: boolean | undefined
     canManageBacklog: boolean | undefined
     archiveTask: (task: Task) => Promise<void>
     setTaskDetail: (task: Task) => void
-    moveTask: (task: Task, newStatus: "To Do" | "In Progress" | "Waiting for Review" | "Done") => Promise<void>
+    moveTask: (task: Task, newStatus: number) => Promise<void>
 }
 
 export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
     renderBacklog,
     tasks,
-    columns,
+    kanbanColumns,
     canAccessBacklog,
     canManageBacklog,
     archiveTask,
@@ -245,12 +238,12 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
                 <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
                     {renderBacklog && (
                         <Block className={styles.board}>
-                            {Object.entries(columns).map(([key, label]) => (
+                            {kanbanColumns?.map(status => (
                                 <Column
-                                    key={key}
-                                    status={label}
-                                    label={label}
-                                    tasks={tasks ? tasks.filter(task => task.Task_Status === label) : undefined}
+                                    key={status.Status_ID}
+                                    status={status.Status_ID ?? 0}
+                                    label={status.Status_Name}
+                                    tasks={tasks ? tasks.filter(task => task.Status_ID === status.Status_ID) : undefined}
                                     canManageBacklog={canManageBacklog}
                                     archiveTask={archiveTask}
                                     setTaskDetail={setTaskDetail}
