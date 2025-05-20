@@ -3,7 +3,7 @@
 // External
 import React, { useEffect, useState } from 'react';
 import { useParams, usePathname } from "next/navigation";
-import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowUp, faCheckDouble, faLightbulb, faList, faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal
+import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { useBacklogsContext } from '@/contexts';
 import { Backlog, BacklogStates, User } from '@/types';
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux';
@@ -128,22 +129,17 @@ interface BacklogDetailsViewProps {
     handleDeleteBacklog: () => Promise<void>;
 }
 
-const calculateTaskStats = (tasks: Backlog["tasks"]) => {
-    if (!tasks || tasks.length === 0) return null;
+const calculateTaskStats = (backlog: Backlog) => {
+    if (!backlog.tasks || backlog.tasks.length === 0) return null;
 
-    const total = tasks.length;
-    const statusCount = tasks.reduce((acc, task) => {
-        acc[task.Task_Status] = (acc[task.Task_Status] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-
-    const assigneeCount = tasks.reduce((acc, task) => {
+    const total = backlog.tasks.length;
+    const assigneeCount = backlog.tasks.reduce((acc, task) => {
         const key = task.Assigned_User_ID || "Unassigned";
         acc[key] = (acc[key] || 0) + 1;
         return acc;
     }, {} as Record<string | number, number>);
 
-    return { total, statusCount, assigneeCount };
+    return { total, assigneeCount };
 };
 
 const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
@@ -156,7 +152,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
     handleSaveChanges,
     handleDeleteBacklog,
 }) => {
-    const stats = renderBacklog ? calculateTaskStats(renderBacklog.tasks) : null;
+    const stats = renderBacklog ? calculateTaskStats(renderBacklog) : null;
 
     return (
         <Block className="page-content">
@@ -276,30 +272,94 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                 </LoadingState>
             </FlexibleBox>
 
+            {/* Statuses Section */}
+            {canManageBacklog && renderBacklog && renderBacklog?.statuses && (
+                <FlexibleBox
+                    title="Statuses"
+                    icon={faCheckDouble}
+                    className="no-box w-auto inline-block"
+                >
+                    <table className={styles.taskTable}>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Order</th>
+                                <th>Is Default?</th>
+                                <th>Is Closed?</th>
+                                <th>Number of Tasks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {renderBacklog.statuses.map(status => (
+                                <tr>
+                                    <td>{status.Status_Name}</td>
+                                    <td>
+                                        <Block className="flex gap-1 items-center">
+                                            {!status.Status_Is_Default && !status.Status_Is_Closed ? (
+                                                <>
+                                                    <Text className="w-3">
+                                                        {(status.Status_Order || 0) > 2 && (
+                                                            <FontAwesomeIcon icon={faArrowUp} size="xs" />
+                                                        )}
+                                                    </Text>
+                                                    <Text className="w-3">
+                                                        {renderBacklog.statuses && renderBacklog.statuses.length > (status.Status_Order || 0) + 1 && (
+                                                            <FontAwesomeIcon icon={faArrowDown} size="xs" />
+                                                        )}
+                                                    </Text>
+                                                    <Text>{status.Status_Order}</Text>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Text>{status.Status_Order}</Text>
+                                                    <FontAwesomeIcon icon={faLock} size="xs" color="lightgrey" />
+                                                </>
+                                            )}
+                                        </Block>
+                                    </td>
+                                    <td>{status.Status_Is_Default ? "Yes" : (
+                                        <input
+                                            type="radio"
+                                        />
+                                    )}</td>
+                                    <td>{status.Status_Is_Closed ? "Yes" : (
+                                        <input
+                                            type="radio"
+                                        />
+                                    )}</td>
+                                    <td>
+                                        {(() => {
+                                            const allTasks = renderBacklog.tasks?.length
+                                            const numberOfTasks = renderBacklog.tasks?.filter(task => task.Status_ID === status.Status_ID).length
+                                            if (!numberOfTasks || !allTasks) return
+
+                                            return (
+                                                <>
+                                                    {numberOfTasks} ({((numberOfTasks / allTasks) * 100).toFixed(0)}%)
+                                                </>
+                                            )
+                                        })()}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </FlexibleBox>
+            )}
+
             {/* Task Summary Section */}
             {canAccessBacklog && renderBacklog && renderBacklog?.tasks && stats && (
-                <Box mt={4}>
-                    <Typography variant="h5" gutterBottom>
-                        Task Summary
-                    </Typography>
+                <FlexibleBox
+                    title="Task Summary"
+                    icon={undefined}
+                    className="no-box w-auto inline-block"
+                >
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={4}>
                             <Card>
                                 <CardContent>
                                     <Typography variant="h6">Total Tasks</Typography>
                                     <Typography>{stats.total}</Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h6">Status Breakdown</Typography>
-                                    {Object.entries(stats.statusCount).map(([status, count]) => (
-                                        <Typography key={status}>
-                                            {status}: {((count / stats.total) * 100).toFixed(1)}%
-                                        </Typography>
-                                    ))}
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -317,7 +377,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                             </Card>
                         </Grid>
                     </Grid>
-                </Box>
+                </FlexibleBox>
             )}
         </Block>
     );
