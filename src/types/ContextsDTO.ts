@@ -157,7 +157,7 @@ export type Task = {
 
 export type TaskFields =
     "Task_ID" | "Task_Key" | "Backlog_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
-    "Task_Description" | "Task_Status" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
+    "Task_Description" | "Status_ID" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
 
 export type Status = {
     Status_ID?: number;

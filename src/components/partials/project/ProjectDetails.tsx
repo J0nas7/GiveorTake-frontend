@@ -16,7 +16,7 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal
 import { useProjectsContext } from '@/contexts/';
-import { BacklogStates, Project, ProjectFields, ProjectStates, User } from '@/types';
+import { BacklogStates, Project, ProjectFields, ProjectStates, Task, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { FlexibleBox } from '@/components/ui/flexible-box';
@@ -32,7 +32,6 @@ const ProjectDetails: React.FC = () => {
 
     // ---- State ----
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
-    const STATUSES = ["To Do", "In Progress", "Waiting for Review", "Done"]
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
     // Determine if the authenticated user can access the project:
@@ -111,7 +110,6 @@ const ProjectDetails: React.FC = () => {
             canManageProject={canManageProject}
             accessibleBacklogsCount={accessibleBacklogsCount}
             authUser={authUser}
-            STATUSES={STATUSES}
             handleProjectChange={handleProjectChange}
             handleSaveChanges={handleSaveChanges}
             handleDeleteProject={handleDeleteProject}
@@ -126,7 +124,6 @@ export interface ProjectDetailsViewProps {
     canManageProject: boolean | undefined
     accessibleBacklogsCount: number
     authUser: User | undefined
-    STATUSES: string[]
     handleProjectChange: (field: ProjectFields, value: string) => void;
     handleSaveChanges: () => Promise<void>
     handleDeleteProject: () => Promise<void>
@@ -139,7 +136,6 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
     canManageProject,
     accessibleBacklogsCount,
     authUser,
-    STATUSES,
     handleProjectChange,
     handleSaveChanges,
     handleDeleteProject
@@ -326,7 +322,6 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                                 backlog={backlog}
                                 renderProject={renderProject}
                                 authUser={authUser}
-                                STATUSES={STATUSES}
                             />
                         ))}
                     </Grid>
@@ -340,14 +335,12 @@ export interface BacklogItemProps {
     backlog: BacklogStates
     renderProject: Project
     authUser: User | undefined
-    STATUSES: string[]
 }
 
 export const BacklogItem: React.FC<BacklogItemProps> = ({
     backlog,
     renderProject,
-    authUser,
-    STATUSES
+    authUser
 }) => {
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
     // Determine if the authenticated user can access the backlog:
@@ -360,6 +353,31 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
         renderProject.team?.organisation?.User_ID === authUser.User_ID ||
         parsedPermissions?.includes(`manageBacklog.${backlog.Backlog_ID}`)
     ))
+    const [calculateStatusCounter, setCalculateStatusCounter] = useState<{
+        name: string;
+        counter: number | undefined;
+    }[] | undefined>(undefined)
+
+    const mapStatusCounters = async () => {
+        if (!backlog) return
+
+        const statuses = backlog.statuses
+        const tasks = backlog.tasks
+        
+        const calculateStatusCounter = statuses?.map(status => {
+            const numberOfSuchTasks = tasks?.filter(task => task.Status_ID === status.Status_ID).length
+
+            return {
+                name: status.Status_Name,
+                counter: numberOfSuchTasks
+            }
+        })
+        setCalculateStatusCounter(calculateStatusCounter)
+    }
+
+    useEffect(() => {
+        if (backlog) mapStatusCounters()
+    }, [backlog])
 
     return (
         <>
@@ -404,13 +422,12 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
                             <Block className="bg-gray-100 p-2 my-2 rounded-lg">
                                 <Text variant="span">Number of Tasks: {backlog.tasks?.length || 0}</Text>
                                 <Block className="grid grid-cols-1 md:grid-cols-2 gap-4 my-3">
-                                    {Array.isArray(backlog.tasks ?? []) && STATUSES.map(status => {
+                                    {Array.isArray(backlog.tasks ?? []) && Array.isArray(calculateStatusCounter) && calculateStatusCounter.map(({ name, counter }) => {
                                         const totalTasks = (backlog.tasks ?? []).length;
-                                        const statusCount = (backlog.tasks ?? []).filter(task => task.Task_Status === status).length;
-                                        const percentage = totalTasks > 0 ? ((statusCount / totalTasks) * 100).toFixed(0) : 0;
+                                        const percentage = counter && (totalTasks > 0 ? ((counter / totalTasks) * 100).toFixed(0) : 0);
                                         return (
-                                            <Text variant="span" key={status}>
-                                                {status}: {statusCount} ({percentage}%)
+                                            <Text variant="span" key={name}>
+                                                {name}: {counter} ({percentage}%)
                                             </Text>
                                         );
                                     })}

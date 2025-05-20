@@ -11,7 +11,7 @@ import { faEllipsisV, faLightbulb, faList, faPencil, faPlus, faSortDown, faSortU
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field, Heading } from "@/components"
 import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, BacklogStates, Project, Task, TaskFields } from "@/types";
+import { Backlog, BacklogStates, Project, Status, Task, TaskFields } from "@/types";
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
@@ -155,10 +155,13 @@ export const BacklogContainer = () => {
     useEffect(() => {
         if (backlogId) {
             setRenderBacklog(backlogById)
-            handleChangeNewTask("Task_Status", "To Do")
-            if (backlogById) document.title = `Backlog: ${backlogById?.Backlog_Name} - GiveOrTake`
+            if (backlogById) {
+                const firstStatus: Status | undefined = backlogById.statuses?.[0];
+                handleChangeNewTask("Status_ID", (firstStatus?.Status_ID ?? "").toString());
+                document.title = `Backlog: ${backlogById?.Backlog_Name} - GiveOrTake`;
+            }
         }
-    }, [backlogById])
+    }, [backlogById]);
 
     // Get user IDs from URL
     useEffect(() => {
@@ -167,9 +170,9 @@ export const BacklogContainer = () => {
             const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : [];
             setSelectedTaskIds(taskIdsFromURL);
         } else {
-            setSelectedTaskIds([])
+            setSelectedTaskIds([]);
         }
-    }, [urlTaskIds])
+    }, [urlTaskIds]);
 
     // ---- Special: Sorting ----
     const currentSort = searchParams.get("sort") || "Task_ID";
@@ -364,7 +367,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                                 value={newTask?.Status_ID}
                                                 onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                                                     const newStatus = event.target.value as unknown as Task["Status_ID"]
-                                                    handleChangeNewTask("Task_Status", newStatus.toString())
+                                                    handleChangeNewTask("Status_ID", newStatus.toString())
                                                 }}
                                                 className="p-2 border rounded"
                                             >

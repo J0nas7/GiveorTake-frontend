@@ -24,13 +24,16 @@ export const FinishBacklog = () => {
 
     // ---- State ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
+    const [taskStatusCounter, setTaskStatusCounter] = useState<{
+        name: string;
+        counter: Task[] | undefined;
+    }[] | undefined>(undefined)
     const [moveAction, setMoveAction] = useState<string>('move-to-primary')
     const [newBacklog, setNewBacklog] = useState<Backlog>({
         Backlog_Name: '',
         Project_ID: 0,
         Backlog_IsPrimary: false,
     })
-    const STATUSES = ["To Do", "In Progress", "Waiting for Review", "Done"]
 
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
@@ -77,6 +80,18 @@ export const FinishBacklog = () => {
                     Project_ID: backlogById.Project_ID,
                 })
 
+                setTaskStatusCounter(() => {
+                    const statuses = backlogById.statuses
+                    const tasks = backlogById.tasks
+
+                    return statuses?.map(status => {
+                        return {
+                            name: status.Status_Name,
+                            counter: tasks?.filter(task => task.Status_ID === status.Status_ID)
+                        }
+                    })
+                })
+
                 document.title = `Finishing Backlog: ${backlogById?.Backlog_Name} - GiveOrTake`
             }
         }
@@ -88,7 +103,7 @@ export const FinishBacklog = () => {
             renderBacklog={renderBacklog}
             canManageBacklog={canManageBacklog}
             tasksById={tasksById}
-            STATUSES={STATUSES}
+            taskStatusCounter={taskStatusCounter}
             moveAction={moveAction}
             newBacklog={newBacklog}
             projectById={projectById}
@@ -104,7 +119,10 @@ type FinishBacklogViewProps = {
     renderBacklog: BacklogStates
     canManageBacklog: boolean | undefined
     tasksById: Task[]
-    STATUSES: string[]
+    taskStatusCounter: {
+        name: string;
+        counter: Task[] | undefined;
+    }[] | undefined
     moveAction: string
     newBacklog: Backlog
     projectById: ProjectStates
@@ -115,7 +133,7 @@ type FinishBacklogViewProps = {
 }
 
 export const FinishBacklogView: React.FC<FinishBacklogViewProps> = ({
-    renderBacklog, canManageBacklog, tasksById, STATUSES, moveAction, newBacklog, projectById, backlogId,
+    renderBacklog, canManageBacklog, tasksById, taskStatusCounter, moveAction, newBacklog, projectById, backlogId,
     setMoveAction, setNewBacklog, doFinishBacklog
 }) => (
     <Block className="page-content">
@@ -143,9 +161,9 @@ export const FinishBacklogView: React.FC<FinishBacklogViewProps> = ({
                         <CardContent>
                             <Block className="font-semibold">{tasksById.length || 0} tasks total in this backlog</Block>
                             <Block className="flex gap-4">
-                                {Array.isArray(tasksById) && STATUSES.map(status => (
-                                    <Text>
-                                        {tasksById.filter(task => task.Task_Status === status).length} {status}
+                                {Array.isArray(taskStatusCounter) && taskStatusCounter.map(({ name, counter }) => (
+                                    <Text key={name}>
+                                        {counter?.length || 0} {name}
                                     </Text>
                                 ))}
                             </Block>

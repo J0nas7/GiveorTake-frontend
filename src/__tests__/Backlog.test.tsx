@@ -7,33 +7,36 @@ import { BacklogContainerView, BacklogContainerViewProps } from "@/components";
 import { TFunction } from "next-i18next";
 
 const mockProps: BacklogContainerViewProps = {
-    renderProject: {
+    renderBacklog: {
         Project_ID: 1,
         Team_ID: 1,
-        Project_Name: "Test Project",
-        Project_Key: "TEST",
-        Project_Status: "Active",
-        Project_CreatedAt: "2024-01-01",
-        Project_UpdatedAt: "2024-03-01",
+        Backlog_Name: "Primary Backlog",
+        Backlog_IsPrimary: true,
+        Backlog_StartDate: "2024-01-01",
+        Backlog_EndDate: "2024-12-31",
+        Backlog_CreatedAt: "2024-01-01",
+        Backlog_UpdatedAt: "2024-03-01",
     },
+    canAccessBacklog: false,
+    canManageBacklog: false,
     sortedTasks: [
         {
             Task_ID: 1,
             Task_Key: 1,
-            Project_ID: 1,
+            Backlog_ID: 1,
             Team_ID: 1,
             Task_Title: "Task 1",
-            Task_Status: "To Do",
+            Status_ID: 1,
             Task_CreatedAt: "2024-01-01",
             Task_UpdatedAt: "2024-02-01",
         },
         {
             Task_ID: 2,
             Task_Key: 2,
-            Project_ID: 1,
+            Backlog_ID: 1,
             Team_ID: 1,
             Task_Title: "Task 2",
-            Task_Status: "Done",
+            Status_ID: 2,
             Task_CreatedAt: "2024-02-01",
             Task_UpdatedAt: "2024-03-01",
         }
@@ -41,10 +44,10 @@ const mockProps: BacklogContainerViewProps = {
     newTask: {
         Task_ID: 3,
         Task_Key: 3,
-        Project_ID: 1,
+        Backlog_ID: 1,
         Team_ID: 1,
         Task_Title: "New Task",
-        Task_Status: "In Progress",
+        Status_ID: 3,
         Task_CreatedAt: "2024-03-01",
         Task_UpdatedAt: "2024-03-01",
     },
@@ -109,7 +112,7 @@ describe("BacklogContainerView Component", () => {
     });
 
     it("renders correctly when project is undefined", () => {
-        render(<BacklogContainerView {...mockProps} renderProject={undefined} />);
+        render(<BacklogContainerView {...mockProps} renderBacklog={undefined} />);
         expect(screen.getByText(/Backlog:/i)).toBeInTheDocument();
     });
 
@@ -133,7 +136,7 @@ describe("Edge Cases for BacklogContainerView", () => {
 
     // Edge Case 2: Undefined project data
     it("renders gracefully when project data is missing", () => {
-        render(<BacklogContainerView {...mockPropsEdge} renderProject={undefined} />);
+        render(<BacklogContainerView {...mockPropsEdge} renderBacklog={undefined} />);
         expect(screen.getByText(/Backlog:/i)).toBeInTheDocument();
     });
 

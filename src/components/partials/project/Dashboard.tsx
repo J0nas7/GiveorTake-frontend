@@ -12,7 +12,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScal
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
 import { Block, Text, Heading } from "@/components"
 import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, BacklogStates, Project, Task } from "@/types"
+import { Backlog, BacklogStates, Project, Status, Task } from "@/types"
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons";
@@ -75,23 +75,22 @@ const DashboardContainer = () => {
     // Ensure tasks is always an array
     const safeTasks = Array.isArray(renderTasks) ? renderTasks : [];
 
-    // Grouping tasks by status
-    const taskStatuses = useMemo(() => {
-        return safeTasks.reduce((acc, task) => {
-            if (!acc[task.Task_Status]) {
-                acc[task.Task_Status] = [];
-            }
-            acc[task.Task_Status].push(task);
-            return acc;
-        }, {} as Record<Task["Task_Status"], Task[]>);
-    }, [safeTasks]);
+    // Categorize tasks based on their related status properties
+    const taskStatuses = {
+        todo: safeTasks.filter(task => task.status?.Status_Is_Default),
+        inProgress: safeTasks.filter(
+            task =>
+                !task.status?.Status_Is_Default &&
+                !task.status?.Status_Is_Closed
+        ),
+        done: safeTasks.filter(task => task.status?.Status_Is_Closed),
+    };
 
     // KPI Calculations
     const totalTasks = safeTasks.length;
-    const completedTasks = taskStatuses["Done"]?.length || 0;
-    const inProgressTasks = taskStatuses["In Progress"]?.length || 0;
-    const todoTasks = taskStatuses["To Do"]?.length || 0;
-    const reviewTasks = taskStatuses["Waiting for Review"]?.length || 0;
+    const todoTasks = taskStatuses.todo.length;
+    const inProgressTasks = taskStatuses.inProgress.length;
+    const completedTasks = taskStatuses.done.length;
 
     // Task completion percentage
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -103,19 +102,22 @@ const DashboardContainer = () => {
             task.Task_Due_Date &&
             typeof task.Task_Due_Date === "string" &&
             task.Task_Due_Date < today &&
-            task.Task_Status !== "Done"
+            task.status?.Status_Is_Closed !== true
         ).length;
     }, [safeTasks]);
 
     // Chart data for task status overview
     const chartData = useMemo(() => {
-        const statusLabels: Task["Task_Status"][] = [
-            t("dashboard.statusLabels.toDo"),
-            t("dashboard.statusLabels.inProgress"),
-            t("dashboard.statusLabels.waitingForReview"),
-            t("dashboard.statusLabels.done"),
-        ] as any;
-        const statusCounts = statusLabels.map(status => taskStatuses[status]?.length || 0);
+        const statuses: { [key: string]: string } | undefined = backlogById ?
+            backlogById.statuses?.reduce((acc, status) => {
+                acc[status.Status_ID ?? 0] = status.Status_Name;
+                return acc;
+            }, {} as { [key: string]: string }) : undefined;
+
+        const statusLabels = statuses ? Object.entries(statuses).map(([id, name]) => name) : [];
+        const statusCounts = statuses ? Object.entries(statuses).map(([id, name]) =>
+            (backlogById && backlogById.tasks?.filter(task => task.Status_ID === parseInt(id)).length) || 0
+        ) : [];
 
         return {
             labels: statusLabels,
@@ -175,7 +177,7 @@ type DashboardContainerViewProps = {
     overdueTasks: number
     inProgressTasks: number
     chartData: {
-        labels: ("To Do" | "In Progress" | "Waiting for Review" | "Done")[];
+        labels: string[];
         datasets: {
             data: number[];
             backgroundColor: string[];

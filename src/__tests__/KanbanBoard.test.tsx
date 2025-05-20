@@ -1,18 +1,12 @@
 import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
-import { Project, Task } from "@/types"
+import { Backlog, Project, Task } from "@/types"
 import { KanbanBoardView } from "@/components"
 
 // Mocking the data
 const mockRemoveTask = jest.fn()
 const mockSetTaskDetail = jest.fn()
-
-const columns = {
-    todo: "To Do",
-    inProgress: "In Progress",
-    review: "Waiting for Review",
-    done: "Done"
-}
+const mockMoveTask = jest.fn()
 
 // Mock Project
 const mockProject: Project = {
@@ -26,32 +20,49 @@ const mockProject: Project = {
     Project_End_Date: "2025-12-31",
     Project_CreatedAt: "2025-01-01T00:00:00Z",
     Project_UpdatedAt: "2025-01-01T00:00:00Z",
-    tasks: [] // Initially no tasks
+    backlogs: [] // Initially no tasks
+}
+// Mock Backlog
+const mockBacklog: Backlog = {
+    Backlog_ID: 1,
+    Project_ID: 1,
+    Team_ID: 1,
+    Backlog_Name: "Test Backlog",
+    Backlog_Description: "This is a test backlog",
+    Backlog_IsPrimary: true,
+    Backlog_StartDate: "2025-01-01",
+    Backlog_EndDate: "2025-12-31",
+    Backlog_CreatedAt: "2025-01-01T00:00:00Z",
+    Backlog_UpdatedAt: "2025-01-01T00:00:00Z",
+    project: mockProject,
+    team: undefined,
+    statuses: [],
+    tasks: []
 }
 
 // Mock Tasks
 const mockTasks: Task[] = [
     {
         Task_ID: 1,
-        Task_Key: "TEST-1",
-        Project_ID: 1,
+        Task_Key: 1,
+        Backlog_ID: 1,
         Team_ID: 1,
         Task_Title: "Test Task 1",
-        Task_Status: "To Do",
+        Status_ID: 1,
         Task_CreatedAt: "2025-01-01T00:00:00Z",
         Task_UpdatedAt: "2025-01-01T00:00:00Z",
-        project: mockProject
+        backlog: mockBacklog
     },
     {
         Task_ID: 2,
-        Task_Key: "TEST-2",
-        Project_ID: 1,
+        Task_Key: 2,
+        Backlog_ID: 1,
         Team_ID: 1,
         Task_Title: "Test Task 2",
-        Task_Status: "In Progress",
+        Status_ID: 2,
         Task_CreatedAt: "2025-01-01T00:00:00Z",
         Task_UpdatedAt: "2025-01-01T00:00:00Z",
-        project: mockProject
+        backlog: mockBacklog
     }
 ]
 
@@ -60,11 +71,14 @@ describe("KanbanBoardView", () => {
     it("should render correctly with all required props", () => {
         render(
             <KanbanBoardView
-                project={mockProject}
+                renderBacklog={mockBacklog}
                 tasks={mockTasks}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
@@ -79,11 +93,14 @@ describe("KanbanBoardView", () => {
     it("should render correctly when 'project' is undefined", () => {
         render(
             <KanbanBoardView
-                project={undefined}
+                renderBacklog={undefined}
                 tasks={mockTasks}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
@@ -94,17 +111,19 @@ describe("KanbanBoardView", () => {
     it("should render correctly when 'tasks' are undefined", () => {
         render(
             <KanbanBoardView
-                project={mockProject}
+                renderBacklog={mockBacklog}
                 tasks={undefined}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
         // Check that the columns are rendered even without tasks
-        expect(screen.getByText("To Do")).toBeInTheDocument()
-        expect(screen.getByText("In Progress")).toBeInTheDocument()
+        expect(screen.getByText("Some Status")).toBeInTheDocument()
 
         // No tasks should be rendered
         expect(screen.queryByText("Test Task 1")).toBeNull()
@@ -114,11 +133,14 @@ describe("KanbanBoardView", () => {
     it("should handle click on task to set task details", () => {
         render(
             <KanbanBoardView
-                project={mockProject}
+                renderBacklog={mockBacklog}
                 tasks={mockTasks}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
@@ -132,11 +154,14 @@ describe("KanbanBoardView", () => {
     it("should handle task removal click", () => {
         render(
             <KanbanBoardView
-                project={mockProject}
+                renderBacklog={mockBacklog}
                 tasks={mockTasks}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
@@ -144,21 +169,24 @@ describe("KanbanBoardView", () => {
         fireEvent.click(removeButton)
 
         // Check if the removeTask function is called with correct arguments
-        expect(mockRemoveTask).toHaveBeenCalledWith(mockTasks[0].Task_ID, mockTasks[0].Project_ID)
+        expect(mockRemoveTask).toHaveBeenCalledWith(mockTasks[0].Task_ID, mockTasks[0].Backlog_ID)
     })
 })
 
 // Edge Case Tests
 describe("KanbanBoardView - Edge Cases", () => {
     it("should handle empty project name", () => {
-        const emptyProject: Project = { ...mockProject, Project_Name: "" }
+        const emptyBacklog: Backlog = { ...mockBacklog, Backlog_Name: "" }
         render(
             <KanbanBoardView
-                project={emptyProject}
+                renderBacklog={emptyBacklog}
                 tasks={mockTasks}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
@@ -169,15 +197,18 @@ describe("KanbanBoardView - Edge Cases", () => {
     it("should handle tasks with undefined status", () => {
         const taskWithUndefinedStatus: Task = { 
             ...mockTasks[0], 
-            Task_Status: undefined as any // Assign undefined as status
+            Status_ID: undefined as any // Assign undefined as status
         }
         render(
             <KanbanBoardView
-                project={mockProject}
+                renderBacklog={mockBacklog}
                 tasks={[taskWithUndefinedStatus]}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
@@ -192,11 +223,14 @@ describe("KanbanBoardView - Edge Cases", () => {
         }
         render(
             <KanbanBoardView
-                project={mockProject}
+                renderBacklog={mockBacklog}
                 tasks={[taskWithEmptyTitle]}
-                columns={columns}
-                removeTask={mockRemoveTask}
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
@@ -207,41 +241,18 @@ describe("KanbanBoardView - Edge Cases", () => {
     it("should handle null tasks array", () => {
         render(
             <KanbanBoardView
-                project={mockProject}
-                tasks={undefined} // Undefined task array
-                columns={columns}
-                removeTask={mockRemoveTask}
+                renderBacklog={mockBacklog}
+                tasks={undefined} // Undefined tasks array
+                kanbanColumns={undefined}
+                canAccessBacklog={true}
+                canManageBacklog={false}
+                archiveTask={mockRemoveTask}
                 setTaskDetail={mockSetTaskDetail}
+                moveTask={mockMoveTask}
             />
         )
 
         // Check if the board renders correctly even with null tasks
-        expect(screen.getByText("To Do")).toBeInTheDocument()
-        expect(screen.getByText("In Progress")).toBeInTheDocument()
-    })
-
-    it("should handle non-matching column names", () => {
-        const nonMatchingColumns = {
-            todo: "To Be Done",
-            inProgress: "In Process",
-            review: "Pending Review",
-            done: "Completed"
-        }
-
-        render(
-            <KanbanBoardView
-                project={mockProject}
-                tasks={mockTasks}
-                columns={nonMatchingColumns} // Using custom column names
-                removeTask={mockRemoveTask}
-                setTaskDetail={mockSetTaskDetail}
-            />
-        )
-
-        // Check if the custom column names are rendered correctly
-        expect(screen.getByText("To Be Done")).toBeInTheDocument()
-        expect(screen.getByText("In Process")).toBeInTheDocument()
-        expect(screen.getByText("Pending Review")).toBeInTheDocument()
-        expect(screen.getByText("Completed")).toBeInTheDocument()
+        expect(screen.getByText("Some Status")).toBeInTheDocument()
     })
 })

@@ -22,7 +22,7 @@ const mockTask: Task = {
     Assigned_User_ID: 2,
     Task_Title: 'Sample Task',
     Task_Description: 'Sample Description',
-    Task_Status: "To Do",
+    Status_ID: 1,
     Task_Due_Date: '2024-06-01',
     Task_CreatedAt: '2024-05-01',
     Task_UpdatedAt: '2024-05-02',
@@ -105,18 +105,69 @@ describe('TitleAreaView', () => {
 
 describe('DescriptionAreaView', () => {
     test('renders correctly with valid task', () => {
-        render(<DescriptionAreaView task={mockTask} saveTaskChanges={jest.fn()} />);
+        render(
+            <DescriptionAreaView
+                task={mockTask}
+                isEditing={false}
+                setIsEditing={jest.fn()}
+                description="Sample Description"
+                setDescription={jest.fn()}
+                handleSave={jest.fn()}
+                handleCancel={jest.fn()}
+                quillModule={{
+                    mention: {
+                        allowedChars: /^[A-Za-z\s]*$/,
+                        mentionDenotationChars: ['@'],
+                        source: jest.fn(),
+                    },
+                }}
+            />
+        );
         expect(screen.getByText('Sample Description')).toBeInTheDocument();
     });
 
     test('renders placeholder when task description is empty', () => {
-        render(<DescriptionAreaView task={{ ...mockTask, Task_Description: '' }} saveTaskChanges={jest.fn()} />);
+        render(
+            <DescriptionAreaView
+                task={{ ...mockTask, Task_Description: '' }}
+                isEditing={false}
+                setIsEditing={jest.fn()}
+                description="Sample Description"
+                setDescription={jest.fn()}
+                handleSave={jest.fn()}
+                handleCancel={jest.fn()}
+                quillModule={{
+                    mention: {
+                        allowedChars: /^[A-Za-z\s]*$/,
+                        mentionDenotationChars: ['@'],
+                        source: jest.fn(),
+                    },
+                }}
+            />
+        );
         expect(screen.getByText('Click to add description...')).toBeInTheDocument();
     });
 
     test('triggers saveTaskChanges when editor loses focus', () => {
         const saveTaskChangesMock = jest.fn();
-        render(<DescriptionAreaView task={mockTask} saveTaskChanges={saveTaskChangesMock} />);
+        render(
+            <DescriptionAreaView
+                task={mockTask}
+                isEditing={false}
+                setIsEditing={jest.fn()}
+                description="Sample Description"
+                setDescription={jest.fn()}
+                handleSave={jest.fn()}
+                handleCancel={jest.fn()}
+                quillModule={{
+                    mention: {
+                        allowedChars: /^[A-Za-z\s]*$/,
+                        mentionDenotationChars: ['@'],
+                        source: jest.fn(),
+                    },
+                }}
+            />
+        );
         fireEvent.click(screen.getByText('Sample Description'));
         fireEvent.blur(screen.getByRole('textbox'));
         expect(saveTaskChangesMock).toHaveBeenCalled();
@@ -125,54 +176,105 @@ describe('DescriptionAreaView', () => {
     // Edge case: long description
     test('renders long task description properly', () => {
         const longDescription = 'Lorem ipsum '.repeat(50);
-        render(<DescriptionAreaView task={{ ...mockTask, Task_Description: longDescription }} saveTaskChanges={jest.fn()} />);
+        render(
+            <DescriptionAreaView
+                task={{ ...mockTask, Task_Description: longDescription }}
+                isEditing={false}
+                setIsEditing={jest.fn()}
+                description="Sample Description"
+                setDescription={jest.fn()}
+                handleSave={jest.fn()}
+                handleCancel={jest.fn()}
+                quillModule={{
+                    mention: {
+                        allowedChars: /^[A-Za-z\s]*$/,
+                        mentionDenotationChars: ['@'],
+                        source: jest.fn(),
+                    },
+                }}
+            />
+        );
         expect(screen.getByText(longDescription.substring(0, 20))).toBeInTheDocument();
-    });
-
-    // Edge case: missing saveTaskChanges function
-    test('does not crash when saveTaskChanges is not provided', () => {
-        render(<DescriptionAreaView task={mockTask} saveTaskChanges={undefined as any} />);
-        expect(screen.getByText('Sample Description')).toBeInTheDocument();
     });
 });
 
 describe('MediaFilesAreaView', () => {
     test('renders media section title', () => {
-        render(<MediaFilesAreaView task={mockTask} />);
+        render(
+            <MediaFilesAreaView
+                task={mockTask}
+                setToggleAddFile={jest.fn()}
+                handleDelete={jest.fn()}
+            />
+        );
         expect(screen.getByText('Media Files')).toBeInTheDocument();
     });
 
     test('renders three placeholders for media items', () => {
-        render(<MediaFilesAreaView task={mockTask} />);
+        render(
+            <MediaFilesAreaView
+                task={mockTask}
+                setToggleAddFile={jest.fn()}
+                handleDelete={jest.fn()}
+            />
+        );
         expect(screen.getAllByText(/Image \d/)).toHaveLength(3);
     });
 
     // Edge case: no media files
     test('renders properly when no media files exist', () => {
-        render(<MediaFilesAreaView task={{ ...mockTask, mediaFiles: [] }} />);
+        render(
+            <MediaFilesAreaView
+                task={{ ...mockTask, media_files: [] }}
+                setToggleAddFile={jest.fn()}
+                handleDelete={jest.fn()}
+            />
+        );
         expect(screen.getByText('No media files available')).toBeInTheDocument();
     });
 
     // Edge case: task is undefined
     test('renders without crashing if task is undefined', () => {
-        render(<MediaFilesAreaView task={undefined as any} />);
+        render(
+            <MediaFilesAreaView
+                task={undefined as any}
+                setToggleAddFile={jest.fn()}
+                handleDelete={jest.fn()}
+            />
+        );
         expect(screen.getByText('Media Files')).toBeInTheDocument();
     });
 });
 
+const mockQuill = {
+    toolbar: [['bold', 'italic'], [{ list: 'ordered' }, { list: 'bullet' }]],
+    mention: {
+        allowedChars: /^[A-Za-z\s]*$/,
+        mentionDenotationChars: ['@'],
+        source: jest.fn(),
+    },
+}
 describe('CommentsAreaView', () => {
     test('renders comments section title', () => {
         render(
             <CommentsAreaView
-                newComment=""
-                setNewComment={jest.fn()}
-                isEditorVisible={false}
-                setIsEditorVisible={jest.fn()}
+                createComment=""
+                setCreateComment={jest.fn()}
+                editComment=""
+                setEditComment={jest.fn()}
+                isCreateCommentVisible={false}
+                setIsCreateCommentVisible={jest.fn()}
+                isEditCommentVisible={undefined}
+                setIsEditCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
-                handleCommentCancel={jest.fn()}
                 handleAddComment={jest.fn()}
+                handleCommentCancel={jest.fn()}
+                handleEditComment={jest.fn()}
+                handleEditCommentCancel={jest.fn()}
+                handleDeleteComment={jest.fn()}
+                quillModule={mockQuill}
             />
         );
         expect(screen.getByText('Comments')).toBeInTheDocument();
@@ -181,15 +283,23 @@ describe('CommentsAreaView', () => {
     test('renders comment input when editor is visible', () => {
         render(
             <CommentsAreaView
-                newComment=""
-                setNewComment={jest.fn()}
-                isEditorVisible={true}
-                setIsEditorVisible={jest.fn()}
+                createComment=""
+                setCreateComment={jest.fn()}
+                editComment=""
+                setEditComment={jest.fn()}
+                isCreateCommentVisible={true}
+                setIsCreateCommentVisible={jest.fn()}
+                isEditCommentVisible={undefined}
+                setIsEditCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
-                handleCommentCancel={jest.fn()}
                 handleAddComment={jest.fn()}
+                handleCommentCancel={jest.fn()}
+                handleEditComment={jest.fn()}
+                handleEditCommentCancel={jest.fn()}
+                handleDeleteComment={jest.fn()}
+                quillModule={mockQuill}
             />
         );
         expect(screen.getByPlaceholderText('Write a comment...')).toBeInTheDocument();
@@ -199,15 +309,23 @@ describe('CommentsAreaView', () => {
         const handleAddCommentMock = jest.fn();
         render(
             <CommentsAreaView
-                newComment="Test Comment"
-                setNewComment={jest.fn()}
-                isEditorVisible={true}
-                setIsEditorVisible={jest.fn()}
+                createComment="Test Comment"
+                setCreateComment={jest.fn()}
+                editComment=""
+                setEditComment={jest.fn()}
+                isCreateCommentVisible={false}
+                setIsCreateCommentVisible={jest.fn()}
+                isEditCommentVisible={undefined}
+                setIsEditCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
+                handleAddComment={jest.fn()}
                 handleCommentCancel={jest.fn()}
-                handleAddComment={handleAddCommentMock}
+                handleEditComment={jest.fn()}
+                handleEditCommentCancel={jest.fn()}
+                handleDeleteComment={jest.fn()}
+                quillModule={mockQuill}
             />
         );
         fireEvent.click(screen.getByRole('button', { name: /send/i }));
@@ -219,15 +337,23 @@ describe('CommentsAreaView', () => {
         const handleAddCommentMock = jest.fn();
         render(
             <CommentsAreaView
-                newComment=""
-                setNewComment={jest.fn()}
-                isEditorVisible={true}
-                setIsEditorVisible={jest.fn()}
+                createComment=""
+                setCreateComment={jest.fn()}
+                editComment=""
+                setEditComment={jest.fn()}
+                isCreateCommentVisible={false}
+                setIsCreateCommentVisible={jest.fn()}
+                isEditCommentVisible={undefined}
+                setIsEditCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
+                handleAddComment={jest.fn()}
                 handleCommentCancel={jest.fn()}
-                handleAddComment={handleAddCommentMock}
+                handleEditComment={jest.fn()}
+                handleEditCommentCancel={jest.fn()}
+                handleDeleteComment={jest.fn()}
+                quillModule={mockQuill}
             />
         );
         fireEvent.click(screen.getByRole('button', { name: /send/i }));
@@ -239,15 +365,23 @@ describe('CommentsAreaView', () => {
         const longComment = 'This is a very long comment '.repeat(20);
         render(
             <CommentsAreaView
-                newComment={longComment}
-                setNewComment={jest.fn()}
-                isEditorVisible={true}
-                setIsEditorVisible={jest.fn()}
+                createComment={longComment}
+                setCreateComment={jest.fn()}
+                editComment=""
+                setEditComment={jest.fn()}
+                isCreateCommentVisible={true}
+                setIsCreateCommentVisible={jest.fn()}
+                isEditCommentVisible={undefined}
+                setIsEditCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
-                handleCommentCancel={jest.fn()}
                 handleAddComment={jest.fn()}
+                handleCommentCancel={jest.fn()}
+                handleEditComment={jest.fn()}
+                handleEditCommentCancel={jest.fn()}
+                handleDeleteComment={jest.fn()}
+                quillModule={mockQuill}
             />
         );
         expect(screen.getByDisplayValue(longComment.substring(0, 20))).toBeInTheDocument();
@@ -256,12 +390,26 @@ describe('CommentsAreaView', () => {
 
 describe('CtaButtonsView', () => {
     test('renders "Open in URL" button when task is undefined', () => {
-        render(<CtaButtonsView theTask={mockTask} task={undefined} />);
+        render(
+            <CtaButtonsView
+                task={undefined as any}
+                taskDetail={mockTask}
+                archiveTask={jest.fn()}
+                shareTask={jest.fn()}
+            />
+        );
         expect(screen.getByText('Open in URL')).toBeInTheDocument();
     });
 
     test('does not render "Open in URL" button when task is defined', () => {
-        render(<CtaButtonsView theTask={mockTask} task={mockTask} />);
+        render(
+            <CtaButtonsView
+                task={mockTask}
+                taskDetail={undefined}
+                archiveTask={jest.fn()}
+                shareTask={jest.fn()}
+            />
+        );
         expect(screen.queryByText('Open in URL')).not.toBeInTheDocument();
     });
 });
@@ -272,10 +420,15 @@ describe('TaskDetailsView', () => {
             <TaskDetailsView
                 task={mockTask}
                 taskDetail={undefined}
+                taskTimeSpent={0}
+                taskTimeTracksById={[]}
                 setTaskDetail={jest.fn()}
                 saveTaskChanges={jest.fn()}
                 handleStatusChange={jest.fn()}
+                handleAssigneeChange={jest.fn()}
+                handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleTaskTimeTrack={jest.fn()}
             />
         );
         expect(screen.getByText('Task Details')).toBeInTheDocument();
@@ -286,10 +439,15 @@ describe('TaskDetailsView', () => {
             <TaskDetailsView
                 task={mockTask}
                 taskDetail={undefined}
+                taskTimeSpent={0}
+                taskTimeTracksById={[]}
                 setTaskDetail={jest.fn()}
                 saveTaskChanges={jest.fn()}
                 handleStatusChange={jest.fn()}
+                handleAssigneeChange={jest.fn()}
+                handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleTaskTimeTrack={jest.fn()}
             />
         );
         expect(screen.getByText('Assigned To:')).toBeInTheDocument();
@@ -299,12 +457,17 @@ describe('TaskDetailsView', () => {
     test('renders correct task status', () => {
         render(
             <TaskDetailsView
-                task={{ ...mockTask, Task_Status: 'In Progress' }}
+                task={{ ...mockTask, Status_ID: 1 }}
                 taskDetail={undefined}
+                taskTimeSpent={0}
+                taskTimeTracksById={[]}
                 setTaskDetail={jest.fn()}
                 saveTaskChanges={jest.fn()}
                 handleStatusChange={jest.fn()}
+                handleAssigneeChange={jest.fn()}
+                handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleTaskTimeTrack={jest.fn()}
             />
         );
         expect(screen.getByDisplayValue('In Progress')).toBeInTheDocument();
@@ -316,10 +479,15 @@ describe('TaskDetailsView', () => {
             <TaskDetailsView
                 task={mockTask}
                 taskDetail={undefined}
+                taskTimeSpent={0}
+                taskTimeTracksById={[]}
                 setTaskDetail={jest.fn()}
                 saveTaskChanges={jest.fn()}
                 handleStatusChange={handleStatusChangeMock}
+                handleAssigneeChange={jest.fn()}
+                handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleTaskTimeTrack={jest.fn()}
             />
         );
         fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Done' } });
@@ -337,10 +505,15 @@ describe('TaskDetailsView', () => {
             <TaskDetailsView
                 task={incompleteTask}
                 taskDetail={undefined}
+                taskTimeSpent={0}
+                taskTimeTracksById={[]}
                 setTaskDetail={jest.fn()}
                 saveTaskChanges={jest.fn()}
                 handleStatusChange={jest.fn()}
+                handleAssigneeChange={jest.fn()}
+                handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleTaskTimeTrack={jest.fn()}
             />
         );
         expect(screen.getByText('Task Details')).toBeInTheDocument();
@@ -360,10 +533,15 @@ describe('TaskDetailsView', () => {
             <TaskDetailsView
                 task={longTextTask}
                 taskDetail={longTextTask}
+                taskTimeSpent={0}
+                taskTimeTracksById={[]}
                 setTaskDetail={jest.fn()}
                 saveTaskChanges={jest.fn()}
                 handleStatusChange={jest.fn()}
+                handleAssigneeChange={jest.fn()}
+                handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleTaskTimeTrack={jest.fn()}
             />
         );
         expect(screen.getByText(longText.substring(0, 50))).toBeInTheDocument();

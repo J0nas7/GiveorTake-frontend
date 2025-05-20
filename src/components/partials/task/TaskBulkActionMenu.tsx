@@ -193,10 +193,10 @@ const BulkEdit: React.FC<BulkEditProps> =
 
             const updatedTasks = selectedTaskIds.map((taskId) => ({
                 Task_ID: taskId,
-                Backlog_ID: newBacklog, 
-                Task_Status: newStatus, 
-                Task_Due_Date: newDueDate, 
-                Assigned_User_ID: newUserId, 
+                Backlog_ID: newBacklog,
+                Task_Status: newStatus,
+                Task_Due_Date: newDueDate,
+                Assigned_User_ID: newUserId,
             }))
 
             const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks });
@@ -262,16 +262,15 @@ const BulkEdit: React.FC<BulkEditProps> =
                     <select
                         value={newStatus}
                         onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                            const newStatus = event.target.value as Task["Task_Status"]
-                            setNewStatus(newStatus)
+                            const newStatus = event.target.value as unknown as Task["Status_ID"]
+                            setNewStatus(newStatus.toString())
                         }}
                         className="p-2 border rounded bg-gray-200 w-60 h-14"
                     >
                         <option value="">Status</option>
-                        <option value="To Do">To Do</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Waiting for Review">Waiting for Review</option>
-                        <option value="Done">Done</option>
+                        {backlogById.statuses?.map(status => (
+                            <option value={status.Status_ID}>{status.Status_Name}</option>
+                        ))}
                     </select>
                 </Block>
                 <Block>
