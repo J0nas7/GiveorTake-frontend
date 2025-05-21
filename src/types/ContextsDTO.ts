@@ -179,6 +179,8 @@ export type StatusFields =
     "Status_ID" | "Backlog_ID" | "Status_Name" | "Status_Order" | 
     "Status_Is_Default" | "Status_Is_Closed" | "Status_Color" | "Status_CreatedAt" | "Status_UpdatedAt";
 
+export type StatusStates = Status | undefined | false
+
 // Task Time Track Type
 export type TaskTimeTrack = {
     Time_Tracking_ID?: number;

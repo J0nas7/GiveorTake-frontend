@@ -295,6 +295,15 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                     titleAction={
                         renderProject && (
                             <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
+                                {canManageProject && (
+                                    <Link
+                                        href={`/project/${renderProject?.Project_ID}/create-backlog`}
+                                        className="blue-link !inline-flex gap-2 items-center"
+                                    >
+                                        <FontAwesomeIcon icon={faList} />
+                                        <Text variant="span">Create Backlog</Text>
+                                    </Link>
+                                )}
                                 <Link
                                     href={`/time-tracks/project/${renderProject?.Project_ID}`}
                                     className="blue-link !inline-flex gap-2 items-center"

@@ -3,7 +3,7 @@ import React from 'react';
 
 // Internal
 import { 
-    UsersProvider, TeamsProvider, ProjectsProvider, BacklogsProvider, 
+    UsersProvider, TeamsProvider, ProjectsProvider, BacklogsProvider, StatusProvider,
     OrganisationsProvider, TeamUserSeatsProvider,
     TasksProvider, TaskTimeTracksProvider, TaskCommentsProvider, TaskMediaFilesProvider,
 } from "@/contexts"
@@ -16,6 +16,7 @@ const providers = [
     TaskCommentsProvider,
     TaskMediaFilesProvider,
     BacklogsProvider,
+    StatusProvider,
     ProjectsProvider,
     OrganisationsProvider,
     TeamUserSeatsProvider

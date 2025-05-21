@@ -121,7 +121,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
                 `));
                 
                 // Redirect if specified
-                if (deleteConfirm.redirect) router.push(deleteConfirm.redirect)
+                if (deleteConfirm.redirect) window.location.replace(deleteConfirm.redirect);
             } catch (error: any) {
                 console.log(error.message || `An error occurred while deleting the ${resource}.`);
                 // Show error message
