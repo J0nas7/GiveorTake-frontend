@@ -20,6 +20,7 @@ import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 import Image from "next/image";
 import clsx from "clsx";
 import { LoadingState } from "@/core-ui/components/LoadingState";
+import { useURLLink } from "@/hooks";
 
 type BacklogWithSiblingsContainerProps = {
     backlogId: number | undefined
@@ -34,6 +35,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
     const { t } = useTranslation(['backlog'])
     const { readBacklogById } = useBacklogsContext()
     const { readTasksByBacklogId, setTaskDetail, addTask, removeTask } = useTasksContext()
+    const { convertID_NameStringToURLFormat } = useURLLink("-")
 
     // ---- State and other Variables ----
     const [localNewTask, setLocalNewTask] = useState<Task | undefined>(undefined)
@@ -269,6 +271,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
                 setTaskDetail={setTaskDetail}
                 handleCheckboxChange={handleCheckboxChange}
                 handleSelectAllChange={handleSelectAllChange}
+                convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
             />
         </>
     );
@@ -291,6 +294,7 @@ export interface BacklogContainerViewProps {
     setTaskDetail: (task: Task) => void;
     handleCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void
     handleSelectAllChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
@@ -308,175 +312,174 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     handleChangeLocalNewTask,
     setTaskDetail,
     handleCheckboxChange,
-    handleSelectAllChange
-}) => {
-    return (
-        <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
-            {renderBacklog && (
-                <Block className="overflow-x-auto">
-                    <Block className={styles.taskTable}>
-                        <Block className={clsx(
-                            styles.header,
-                            "flex justify-between"
-                        )}>
-                            <Block className="flex gap-4 items-center">
-                                <Text>{renderBacklog.Backlog_Name}</Text>
-                                <Text className="text-sm text-gray-600">{renderBacklog.tasks?.length} tasks</Text>
-                            </Block>
-                            <Block className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-2">
-                                <Link
-                                    href={`/backlog/${renderBacklog.Backlog_ID}`}
-                                    className="blue-link !inline-flex gap-2 items-center"
-                                >
-                                    <FontAwesomeIcon icon={faList} />
-                                    Backlog
-                                </Link>
-                                <Link
-                                    href={`/kanban/${renderBacklog.Backlog_ID}`}
-                                    className="blue-link !inline-flex gap-2 items-center"
-                                >
-                                    <FontAwesomeIcon icon={faWindowRestore} />
-                                    Kanban Board
-                                </Link>
-                                <Link
-                                    href={`/dashboard/${renderBacklog.Backlog_ID}`}
-                                    className="blue-link !inline-flex gap-2 items-center"
-                                >
-                                    <FontAwesomeIcon icon={faGauge} />
-                                    <Text variant="span">Dashboard</Text>
-                                </Link>
-                            </Block>
+    handleSelectAllChange,
+    convertID_NameStringToURLFormat
+}) => (
+    <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
+        {renderBacklog && (
+            <Block className="overflow-x-auto">
+                <Block className={styles.taskTable}>
+                    <Block className={clsx(
+                        styles.header,
+                        "flex justify-between"
+                    )}>
+                        <Block className="flex gap-4 items-center">
+                            <Text>{renderBacklog.Backlog_Name}</Text>
+                            <Text className="text-sm text-gray-600">{renderBacklog.tasks?.length} tasks</Text>
+                        </Block>
+                        <Block className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-2">
+                            <Link
+                                href={`/backlog/${convertID_NameStringToURLFormat(renderBacklog.Backlog_ID ?? 0, renderBacklog.Backlog_Name)}`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faList} />
+                                Backlog
+                            </Link>
+                            <Link
+                                href={`/kanban/${convertID_NameStringToURLFormat(renderBacklog.Backlog_ID ?? 0, renderBacklog.Backlog_Name)}`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faWindowRestore} />
+                                Kanban Board
+                            </Link>
+                            <Link
+                                href={`/dashboard/${convertID_NameStringToURLFormat(renderBacklog.Backlog_ID ?? 0, renderBacklog.Backlog_Name)}`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faGauge} />
+                                <Text variant="span">Dashboard</Text>
+                            </Link>
                         </Block>
                     </Block>
-                    <table className={styles.taskTable}>
-                        <thead>
-                            <tr>
-                                <th>
+                </Block>
+                <table className={styles.taskTable}>
+                    <thead>
+                        <tr>
+                            <th>
+                                <input
+                                    type="checkbox"
+                                    checked={selectAll}
+                                    onChange={handleSelectAllChange}
+                                />
+                            </th>
+                            <th onClick={() => handleSort("2")}>
+                                <Text variant="span">Task Key</Text>
+                                {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("1")}>
+                                <Text variant="span">Task Title</Text>
+                                {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("3")}>
+                                <Text variant="span">Status</Text>
+                                {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("4")}>
+                                <Text variant="span">Assignee</Text>
+                                {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                            <th onClick={() => handleSort("5")}>
+                                <Text variant="span">Created At</Text>
+                                {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colSpan={2}></td>
+                            <td>
+                                <Field
+                                    type="text"
+                                    lbl="New Task"
+                                    innerLabel={true}
+                                    value={localNewTask?.Task_Title ?? ''}
+                                    onChange={(e: string) => handleChangeLocalNewTask("Task_Title", e)}
+                                    onKeyDown={
+                                        (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                                            ifEnter(event)
+                                    }
+                                    disabled={false}
+                                    className="w-full"
+                                />
+                            </td>
+                            <td>
+                                {/* Dropdown to change the status */}
+                                <select
+                                    value={localNewTask?.Status_ID}
+                                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                                        const newStatus = event.target.value as unknown as Task["Status_ID"]
+                                        handleChangeLocalNewTask("Status_ID", newStatus.toString())
+                                    }}
+                                    className="p-2 border rounded"
+                                >
+                                    <option value="">-</option>
+                                    {renderBacklog.statuses?.
+                                        // Status_Order low to high:
+                                        sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                                        .map(status => (
+                                            <option value={status.Status_ID}>{status.Status_Name}</option>
+                                        ))}
+                                </select>
+                            </td>
+                            <td>
+                                {/* Dropdown to change the user assignee */}
+                                <select
+                                    value={localNewTask?.Assigned_User_ID}
+                                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                                        const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
+                                        if (newAssigneeID) handleChangeLocalNewTask("Assigned_User_ID", newAssigneeID.toString())
+                                    }}
+                                    className="p-2 border rounded"
+                                >
+                                    <option value="">Assignee</option>
+                                    {renderBacklog?.project?.team?.user_seats?.map(userSeat => {
+                                        return (
+                                            <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
+                                        )
+                                    })}
+                                </select>
+                            </td>
+                            <td>
+                                <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
+                                    <FontAwesomeIcon icon={faPlus} /> Create
+                                </button>
+                            </td>
+                        </tr>
+                        {sortedTasks.map((task) => (
+                            <tr key={task.Task_ID}>
+                                <td>
                                     <input
                                         type="checkbox"
-                                        checked={selectAll}
-                                        onChange={handleSelectAllChange}
-                                    />
-                                </th>
-                                <th onClick={() => handleSort("2")}>
-                                    <Text variant="span">Task Key</Text>
-                                    {currentSort === "2" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                                </th>
-                                <th onClick={() => handleSort("1")}>
-                                    <Text variant="span">Task Title</Text>
-                                    {currentSort === "1" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                                </th>
-                                <th onClick={() => handleSort("3")}>
-                                    <Text variant="span">Status</Text>
-                                    {currentSort === "3" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                                </th>
-                                <th onClick={() => handleSort("4")}>
-                                    <Text variant="span">Assignee</Text>
-                                    {currentSort === "4" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                                </th>
-                                <th onClick={() => handleSort("5")}>
-                                    <Text variant="span">Created At</Text>
-                                    {currentSort === "5" && <FontAwesomeIcon icon={currentOrder === "asc" ? faSortUp : faSortDown} />}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colSpan={2}></td>
-                                <td>
-                                    <Field
-                                        type="text"
-                                        lbl="New Task"
-                                        innerLabel={true}
-                                        value={localNewTask?.Task_Title ?? ''}
-                                        onChange={(e: string) => handleChangeLocalNewTask("Task_Title", e)}
-                                        onKeyDown={
-                                            (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
-                                                ifEnter(event)
-                                        }
-                                        disabled={false}
-                                        className="w-full"
+                                        value={task.Task_ID}
+                                        checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
+                                        onChange={handleCheckboxChange}
                                     />
                                 </td>
-                                <td>
-                                    {/* Dropdown to change the status */}
-                                    <select
-                                        value={localNewTask?.Status_ID}
-                                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                                            const newStatus = event.target.value as unknown as Task["Status_ID"]
-                                            handleChangeLocalNewTask("Status_ID", newStatus.toString())
-                                        }}
-                                        className="p-2 border rounded"
-                                    >
-                                        <option value="">-</option>
-                                        {renderBacklog.statuses?.
-                                            // Status_Order low to high:
-                                            sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
-                                            .map(status => (
-                                                <option value={status.Status_ID}>{status.Status_Name}</option>
-                                            ))}
-                                    </select>
+                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                    {renderBacklog?.project?.Project_Key}-{task.Task_Key}
                                 </td>
-                                <td>
-                                    {/* Dropdown to change the user assignee */}
-                                    <select
-                                        value={localNewTask?.Assigned_User_ID}
-                                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                                            const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
-                                            if (newAssigneeID) handleChangeLocalNewTask("Assigned_User_ID", newAssigneeID.toString())
-                                        }}
-                                        className="p-2 border rounded"
-                                    >
-                                        <option value="">Assignee</option>
-                                        {renderBacklog?.project?.team?.user_seats?.map(userSeat => {
-                                            return (
-                                                <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
-                                            )
-                                        })}
-                                    </select>
+                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                    {task.Task_Title}
                                 </td>
+                                <td className={styles.status}>
+                                    {renderBacklog.statuses?.find(status => status.Status_ID === task.Status_ID)?.Status_Name}
+                                </td>
+                                {(() => {
+                                    const assignee = renderBacklog?.project?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
+                                    return (
+                                        <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
+                                    )
+                                })()}
                                 <td>
-                                    <button type="submit" onClick={handleCreateTask} className={styles.addButton}>
-                                        <FontAwesomeIcon icon={faPlus} /> Create
-                                    </button>
+                                    {task.Task_CreatedAt && (
+                                        <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
+                                    )}
                                 </td>
                             </tr>
-                            {sortedTasks.map((task) => (
-                                <tr key={task.Task_ID}>
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            value={task.Task_ID}
-                                            checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
-                                            onChange={handleCheckboxChange}
-                                        />
-                                    </td>
-                                    <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                        {renderBacklog?.project?.Project_Key}-{task.Task_Key}
-                                    </td>
-                                    <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                        {task.Task_Title}
-                                    </td>
-                                    <td className={styles.status}>
-                                        {renderBacklog.statuses?.find(status => status.Status_ID === task.Status_ID)?.Status_Name}
-                                    </td>
-                                    {(() => {
-                                        const assignee = renderBacklog?.project?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
-                                        return (
-                                            <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
-                                        )
-                                    })()}
-                                    <td>
-                                        {task.Task_CreatedAt && (
-                                            <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </Block>
-            )}
-        </LoadingState>
-    )
-};
+                        ))}
+                    </tbody>
+                </table>
+            </Block>
+        )}
+    </LoadingState>
+)

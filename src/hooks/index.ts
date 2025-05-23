@@ -4,3 +4,5 @@ export * from './useCookies'
 export * from './useDebounce'
 
 export * from './useTypeAPI'
+
+export * from './useURLLink'

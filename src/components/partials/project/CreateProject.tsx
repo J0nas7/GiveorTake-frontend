@@ -21,13 +21,15 @@ import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from 
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LoadingState } from "@/core-ui/components/LoadingState";
+import { useURLLink } from "@/hooks";
 
 export const CreateProject: React.FC = () => {
     // ---- Hooks ----
     const router = useRouter();
     const { addProject } = useProjectsContext();
     const { teamById, readTeamById } = useTeamsContext()
-    const { teamId } = useParams<{ teamId: string }>(); // Get teamId from URL
+    const { teamLink } = useParams<{ teamLink: string }>(); // Get teamId from URL
+    const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
 
     // ---- State ----
     const [newProject, setNewProject] = useState<Project>({
@@ -58,13 +60,14 @@ export const CreateProject: React.FC = () => {
 
     // Handle form submission
     const handleCreateProject = async () => {
+        if (!teamById) return
         if (!newProject.Project_Name.trim()) {
             alert("Please enter a project name.");
             return;
         }
 
         await addProject(parseInt(teamId), newProject);
-        router.push(`/team/${teamId}`); // Redirect to team page
+        router.push(`/team/${convertID_NameStringToURLFormat(parseInt(teamId), teamById.Team_Name)}`); // Redirect to team page
     };
 
     // ---- Effects ----
@@ -74,7 +77,7 @@ export const CreateProject: React.FC = () => {
 
     useEffect(() => {
         if (teamById && authUser && !canModifyTeamSettings) {
-            router.push(`/team/${teamById.Team_ID}`)
+            router.push(`/team/${convertID_NameStringToURLFormat(parseInt(teamId), teamById.Team_Name)}`); // Redirect to team page
         }
     }, [teamById])
 
@@ -86,6 +89,7 @@ export const CreateProject: React.FC = () => {
             newProject={newProject}
             handleInputChange={handleInputChange}
             handleCreateProject={handleCreateProject}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     )
 }
@@ -96,11 +100,12 @@ type CreateProjectViewProps = {
     newProject: Project
     handleInputChange: (field: ProjectFields, value: string) => void
     handleCreateProject: () => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const CreateProjectView: React.FC<CreateProjectViewProps> = ({
     teamById, canModifyTeamSettings, newProject,
-    handleInputChange, handleCreateProject
+    handleInputChange, handleCreateProject, convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
         <div className="mb-8">
@@ -110,7 +115,7 @@ export const CreateProjectView: React.FC<CreateProjectViewProps> = ({
                     teamById && (
                         <Block className="flex gap-2 w-full">
                             <Link
-                                href={`/team/${teamById.Team_ID}`}
+                                href={`/team/${convertID_NameStringToURLFormat(teamById.Team_ID ?? 0, teamById.Team_Name)}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faUsers} />

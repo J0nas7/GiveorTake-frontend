@@ -21,14 +21,16 @@ import { faBuilding, faLightbulb, faList, faUsers } from '@fortawesome/free-soli
 import { FlexibleBox } from '@/components/ui/flexible-box'
 import Image from 'next/image'
 import { LoadingState } from '@/core-ui/components/LoadingState'
+import { useURLLink } from '@/hooks'
 
 export const TeamDetails = () => {
     // ---- Hooks ----
     const dispatch = useAppDispatch()
+    const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
     const router = useRouter()
     const pathname = usePathname() // Get the current pathname
-    const { teamId } = useParams<{ teamId: string }>() // Get teamId from URL
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext()
+    const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser)
@@ -114,6 +116,7 @@ export const TeamDetails = () => {
             handleTeamChange={handleTeamChange}
             handleSaveChanges={handleSaveChanges}
             handleDeleteTeam={handleDeleteTeam}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     )
 }
@@ -130,6 +133,7 @@ export interface TeamDetailsViewProps {
     handleTeamChange: (field: TeamFields, value: string) => void
     handleSaveChanges: () => Promise<void>
     handleDeleteTeam: () => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
@@ -144,6 +148,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
     handleTeamChange,
     handleSaveChanges,
     handleDeleteTeam,
+    convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
         <FlexibleBox
@@ -175,7 +180,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                         )}
 
                         <Link
-                            href={`/organisation/${renderTeam.organisation?.Organisation_ID}`}
+                            href={`/organisation/${convertID_NameStringToURLFormat(renderTeam.organisation?.Organisation_ID ?? 0, renderTeam.organisation?.Organisation_Name ?? "")}`}
                             className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                         >
                             <FontAwesomeIcon icon={faBuilding} />
@@ -293,11 +298,14 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                     <Card>
                                         <CardContent>
                                             <Block className="flex justify-between items-center flex-col sm:flex-row w-full">
-                                                <Link href={`/project/${project.Project_ID}`} className="blue-link-light">
+                                                <Link 
+                                                    href={`/project/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`} 
+                                                    className="blue-link-light"
+                                                >
                                                     {project.Project_Name}
                                                 </Link>
                                                 <Link
-                                                    href={`/backlogs/${project.Project_ID}`}
+                                                    href={`/backlogs/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`} 
                                                     className="blue-link !inline-flex gap-2 items-center"
                                                 >
                                                     <FontAwesomeIcon icon={faList} />

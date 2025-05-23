@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { faBarsProgress, faFolderOpen } from "@fortawesome/free-solid-svg-icons";
+import { faLightbulb, faList } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -20,12 +20,14 @@ import { LoadingState } from "@/core-ui/components/LoadingState";
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
+import { useURLLink } from "@/hooks";
 
 export const CreateBacklog: React.FC = () => {
     const router = useRouter();
-    const { projectId } = useParams<{ projectId: string }>();
+    const { projectLink } = useParams<{ projectLink: string }>();
     const { projectById, readProjectById } = useProjectsContext();
     const { addBacklog } = useBacklogsContext();
+    const { linkId: projectId, convertID_NameStringToURLFormat } = useURLLink(projectLink)
 
     const authUser = useTypedSelector(selectAuthUser);
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions);
@@ -52,13 +54,14 @@ export const CreateBacklog: React.FC = () => {
     };
 
     const handleCreateBacklog = async () => {
+        if (!projectById) return
         if (!newBacklog.Backlog_Name.trim()) {
             alert("Please enter a backlog name.");
             return;
         }
 
         await addBacklog(parseInt(projectId), newBacklog);
-        router.push(`/project/${projectId}`);
+        router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
     };
 
     useEffect(() => {
@@ -67,7 +70,7 @@ export const CreateBacklog: React.FC = () => {
 
     useEffect(() => {
         if (projectById && authUser && !canModifyProject) {
-            router.push(`/project/${projectId}`);
+            router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
         }
     }, [projectById]);
 
@@ -78,6 +81,7 @@ export const CreateBacklog: React.FC = () => {
             newBacklog={newBacklog}
             handleInputChange={handleInputChange}
             handleCreateBacklog={handleCreateBacklog}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     );
 };
@@ -88,11 +92,12 @@ type CreateBacklogViewProps = {
     newBacklog: Backlog;
     handleInputChange: (field: BacklogFields, value: string | boolean) => void;
     handleCreateBacklog: () => Promise<void>;
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 };
 
 export const CreateBacklogView: React.FC<CreateBacklogViewProps> = ({
     projectById, canModifyProject, newBacklog,
-    handleInputChange, handleCreateBacklog
+    handleInputChange, handleCreateBacklog, convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
         <div className="mb-8">
@@ -102,16 +107,16 @@ export const CreateBacklogView: React.FC<CreateBacklogViewProps> = ({
                     projectById && (
                         <Block className="flex gap-2 w-full">
                             <Link
-                                href={`/project/${projectById.Project_ID}`}
+                                href={`/project/${convertID_NameStringToURLFormat(projectById.Project_ID ?? 0, projectById.Project_Name)}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                             >
-                                <FontAwesomeIcon icon={faFolderOpen} />
+                                <FontAwesomeIcon icon={faLightbulb} />
                                 <Text variant="span">Go to Project</Text>
                             </Link>
                         </Block>
                     )
                 }
-                icon={faBarsProgress}
+                icon={faList}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >

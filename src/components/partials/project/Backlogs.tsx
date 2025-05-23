@@ -15,11 +15,13 @@ import { BacklogWithSiblingsContainer } from './BacklogWithSiblings'
 import Image from 'next/image'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux'
+import { useURLLink } from '@/hooks'
 
 export const BacklogsContainer = () => {
     // ---- Hooks ----
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { projectLink } = useParams<{ projectLink: string }>(); // Get projectId from URL
     const { projectById, readProjectById } = useProjectsContext()
+    const { linkId: projectId, convertID_NameStringToURLFormat } = useURLLink(projectLink)
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser)
@@ -60,6 +62,7 @@ export const BacklogsContainer = () => {
             canAccessProject={canAccessProject}
             parsedPermissions={parsedPermissions}
             accessibleBacklogsCount={accessibleBacklogsCount}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     )
 }
@@ -70,6 +73,7 @@ type BacklogsViewProps = {
     canAccessProject: boolean | undefined
     parsedPermissions: string[] | undefined
     accessibleBacklogsCount: number
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 const BacklogsView: React.FC<BacklogsViewProps> = ({
@@ -77,7 +81,8 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
     authUser,
     canAccessProject,
     parsedPermissions,
-    accessibleBacklogsCount
+    accessibleBacklogsCount,
+    convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
         <FlexibleBox
@@ -90,7 +95,7 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
             titleAction={
                 renderProject && (
                     <Link
-                        href={`/project/${renderProject?.Project_ID}`}
+                        href={`/project/${convertID_NameStringToURLFormat(renderProject?.Project_ID ?? 0, renderProject.Project_Name)}`}
                         className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                     >
                         <FontAwesomeIcon icon={faLightbulb} />

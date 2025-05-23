@@ -370,7 +370,10 @@ export type BacklogsContextType = {
     addBacklog: (parentId: number, object?: Backlog) => Promise<void>;
     saveBacklogChanges: (backlogChanges: Backlog, parentId: number) => Promise<boolean>
     removeBacklog: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
-    finishBacklog: (backlogId: string, moveAction: string, newBacklog: Backlog) => Promise<false | string>;
+    finishBacklog: (backlogId: string, moveAction: string, newBacklog: Backlog) => Promise<false | {
+        id: any;
+        name: any;
+    }>
 };
 
 const BacklogsContext = createContext<BacklogsContextType | undefined>(undefined);
@@ -403,7 +406,12 @@ export const BacklogsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             console.log("finishBacklog", postData)
             const data = await httpPostWithData(`finish-backlog/${backlogId}`, postData)
 
-            if (data.target_backlog_id) return data.target_backlog_id
+            if (data.target_backlog_id) {
+                return {
+                    id: data.target_backlog_id, 
+                    name: data.target_backlog_name
+                }
+            }
 
             throw new Error(`Failed to finishBacklog`);
         } catch (error: any) {

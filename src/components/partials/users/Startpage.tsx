@@ -10,10 +10,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Block, FlexibleBox, Text } from "@/components";
 import { selectAuthUser, useTypedSelector } from "@/redux";
 import { useOrganisationsContext } from "@/contexts";
+import { useURLLink } from "@/hooks";
 
 export const Startpage = () => {
     const authUser = useTypedSelector(selectAuthUser);
     const { organisationsById, readOrganisationsByUserId } = useOrganisationsContext();
+    const { convertID_NameStringToURLFormat } = useURLLink("-")
 
     useEffect(() => {
         if (authUser && authUser.User_ID) readOrganisationsByUserId(authUser.User_ID);
@@ -87,7 +89,7 @@ export const Startpage = () => {
                                                                     {team.projects.map((project) => (
                                                                         <Link
                                                                             key={project.Project_ID}
-                                                                            href={`/backlogs/${project.Project_ID}`}
+                                                                            href={`/backlogs/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`}
                                                                             className="p-3 bg-white rounded-md shadow-sm blue-link inline-block w-full sm:w-1/4"
                                                                         >
                                                                             <Text className="text-blue-500 font-medium">{project.Project_Name}</Text>

@@ -24,16 +24,18 @@ import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 import { Heading } from "@/components/ui/heading";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
+import { useURLLink } from "@/hooks";
 
 export const TimeTracksContainer = () => {
     // ---- Hooks ----
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { projectLink } = useParams<{ projectLink: string }>(); // Get projectLink from URL
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(["timetrack"]);
     const { projectById, readProjectById } = useProjectsContext();
     const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
     const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
+    const { linkId: projectId, linkName, convertID_NameStringToURLFormat } = useURLLink(projectLink)
 
     // ---- State ----
     const urlBacklogIds = searchParams.get("backlogIds")
@@ -243,7 +245,7 @@ export const TimeTracksContainer = () => {
                                 <Text variant="span" className="text-sm font-semibold">Filter Time Entries</Text>
                             </button>
                             <Link
-                                href={`/project/${renderProject.Project_ID}`}
+                                href={`/project/${convertID_NameStringToURLFormat(renderProject.Project_ID ?? 0, linkName)}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faLightbulb} />

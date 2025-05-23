@@ -19,6 +19,7 @@ import { FlexibleBox } from "@/components/ui/flexible-box"
 import clsx from "clsx"
 import Image from "next/image"
 import { LoadingState } from "@/core-ui/components/LoadingState"
+import { useURLLink } from "@/hooks"
 
 const ItemType = { TASK: "task" }
 
@@ -106,11 +107,12 @@ const Column: React.FC<ColumnProps> = ({
     );
 };
 
-const KanbanBoardContainer = () => {
+export const KanbanBoardContainer = () => {
     // ---- Hooks ----
-    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
+    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogId from URL
     const { backlogById, readBacklogById } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask, saveTaskChanges } = useTasksContext()
+    const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
 
     // ---- State and other Variables ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
@@ -187,6 +189,7 @@ const KanbanBoardContainer = () => {
                 archiveTask={archiveTask}
                 setTaskDetail={setTaskDetail}
                 moveTask={moveTask}
+                convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
             />
         </DndProvider>
     )
@@ -201,6 +204,7 @@ export interface KanbanBoardViewProps {
     archiveTask: (task: Task) => Promise<void>
     setTaskDetail: (task: Task) => void
     moveTask: (task: Task, newStatus: number) => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
@@ -211,56 +215,51 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
     canManageBacklog,
     archiveTask,
     setTaskDetail,
-    moveTask
-}) => {
-    return (
-        <Block className="page-content">
-            <FlexibleBox
-                title={`Kanban Board`}
-                subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
-                titleAction={
-                    renderBacklog && (
-                        <Block className="flex gap-2 items-center w-full">
-                            <Link
-                                href={`/project/${renderBacklog?.Project_ID}`}
-                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faLightbulb} />
-                                <Text variant="span">Go to Project</Text>
-                            </Link>
-                        </Block>
-                    )
-                }
-                icon={faWindowRestore}
-                className="no-box w-auto inline-block"
-                numberOfColumns={2}
-            >
-                <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
-                    {renderBacklog && (
-                        <Block className={styles.board}>
-                            {kanbanColumns?.
-                                // Status_Order low to high:
-                                sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
-                                .map(status => (
-                                    <Column
-                                        key={status.Status_ID}
-                                        status={status.Status_ID ?? 0}
-                                        label={status.Status_Name}
-                                        tasks={tasks ? tasks.filter(task => task.Status_ID === status.Status_ID) : undefined}
-                                        canManageBacklog={canManageBacklog}
-                                        archiveTask={archiveTask}
-                                        setTaskDetail={setTaskDetail}
-                                        moveTask={moveTask}
-                                    />
-                                ))}
-                        </Block>
-                    )}
-                </LoadingState>
-            </FlexibleBox>
-        </Block>
-    )
-}
-
-export const KanbanBoard = () => (
-    <KanbanBoardContainer />
+    moveTask,
+    convertID_NameStringToURLFormat
+}) => (
+    <Block className="page-content">
+        <FlexibleBox
+            title={`Kanban Board`}
+            subtitle={renderBacklog ? renderBacklog.Backlog_Name : undefined}
+            titleAction={
+                renderBacklog && (
+                    <Block className="flex gap-2 items-center w-full">
+                        <Link
+                            href={`/project/${convertID_NameStringToURLFormat(renderBacklog?.Project_ID, renderBacklog.project?.Project_Name ?? "")}`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faLightbulb} />
+                            <Text variant="span">Go to Project</Text>
+                        </Link>
+                    </Block>
+                )
+            }
+            icon={faWindowRestore}
+            className="no-box w-auto inline-block"
+            numberOfColumns={2}
+        >
+            <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
+                {renderBacklog && (
+                    <Block className={styles.board}>
+                        {kanbanColumns?.
+                            // Status_Order low to high:
+                            sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                            .map(status => (
+                                <Column
+                                    key={status.Status_ID}
+                                    status={status.Status_ID ?? 0}
+                                    label={status.Status_Name}
+                                    tasks={tasks ? tasks.filter(task => task.Status_ID === status.Status_ID) : undefined}
+                                    canManageBacklog={canManageBacklog}
+                                    archiveTask={archiveTask}
+                                    setTaskDetail={setTaskDetail}
+                                    moveTask={moveTask}
+                                />
+                            ))}
+                    </Block>
+                )}
+            </LoadingState>
+        </FlexibleBox>
+    </Block>
 )

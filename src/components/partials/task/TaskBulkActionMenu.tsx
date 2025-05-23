@@ -1,26 +1,28 @@
 // External
 import React, { useEffect, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faCopy, faEye, faEyeSlash, faPencil, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
-import Link from 'next/link';
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faCopy, faEye, faEyeSlash, faPencil, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons'
+import Link from 'next/link'
 
 // Internal
 import { Block, Field, Heading, Text } from '@/components'
-import { useAxios } from '@/hooks';
-import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/contexts';
-import { Router } from 'next/router';
-import clsx from 'clsx';
-import { Project, Task } from '@/types';
-import { selectSnackMessage, useTypedSelector } from '@/redux';
+import { useAxios, useURLLink } from '@/hooks'
+import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/contexts'
+import { Router } from 'next/router'
+import clsx from 'clsx'
+import { Project, Task } from '@/types'
+import { selectSnackMessage, useTypedSelector } from '@/redux'
 
 export const TaskBulkActionMenu = () => {
     // Hooks
     const router = useRouter()
-    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
+    const { backlogLink, projectLink } = useParams<{ backlogLink: string, projectLink: string }>() // Get backlogLink from URL
     const searchParams = useSearchParams()
     const { httpPostWithData } = useAxios()
     const { readTasksByBacklogId } = useTasksContext()
+    const { linkId: backlogId, linkName: backlogName, convertID_NameStringToURLFormat: backlogURLFormat } = useURLLink(backlogLink)
+    const { linkId: projectId, linkName: projectName, convertID_NameStringToURLFormat: projectURLFormat } = useURLLink(projectLink)
 
     // State
     const snackMessage = useTypedSelector(selectSnackMessage)
@@ -33,27 +35,27 @@ export const TaskBulkActionMenu = () => {
 
     // Methods
     const updateURLParams = (returnUrl?: boolean) => {
-        const url = new URL(window.location.href);
+        const url = new URL(window.location.href)
 
         url.searchParams.delete("taskIds")
 
         if (returnUrl) {
             return url.toString()
         } else {
-            router.push(url.toString(), { scroll: false }); // Prevent full page reload
+            router.push(url.toString(), { scroll: false }) // Prevent full page reload
         }
     }
 
     const handleCopy = async (textToCopy: string) => {
         try {
             // Copy the text to clipboard
-            await navigator.clipboard.writeText(textToCopy);
-            setCopySuccess(true);
+            await navigator.clipboard.writeText(textToCopy)
+            setCopySuccess(true)
             // Clear the success message after a short time
-            setTimeout(() => setCopySuccess(false), 2000);
+            setTimeout(() => setCopySuccess(false), 2000)
         } catch (err) {
-            setCopySuccess(false);
-            console.error("Failed to copy text:", err);
+            setCopySuccess(false)
+            console.error("Failed to copy text:", err)
         }
     }
 
@@ -76,7 +78,7 @@ export const TaskBulkActionMenu = () => {
     }
 
     const handleFocus = (newFocus: boolean) => {
-        const url = new URL(window.location.href);
+        const url = new URL(window.location.href)
         if (newFocus) {
             url.searchParams.set("taskBulkFocus", "1")
         } else {
@@ -93,8 +95,8 @@ export const TaskBulkActionMenu = () => {
     useEffect(() => {
         if (urlTaskIds) {
             // If userIds exist in the URL, use them
-            const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : [];
-            setSelectedTaskIds(taskIdsFromURL);
+            const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : []
+            setSelectedTaskIds(taskIdsFromURL)
         }
     }, [urlTaskIds])
 
@@ -116,7 +118,7 @@ export const TaskBulkActionMenu = () => {
             </Block>
             <Block className="taskplayer-container flex items-center justify-between">
                 <Block className="flex gap-2 items-center">
-                    <Link href={`/backlog/${backlogId}`}>
+                    <Link href={`/backlog/${backlogURLFormat(parseInt(backlogId), backlogName)}`}>
                         <FontAwesomeIcon icon={faXmark} />
                     </Link>
                     <strong>{selectedTaskIds.length} tasks selected</strong>
@@ -174,7 +176,7 @@ const BulkEdit: React.FC<BulkEditProps> =
         setTaskBulkEditing
     }) => {
         // Hooks
-        const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
+        const { backlogId } = useParams<{ backlogId: string }>() // Get backlogId from URL
         const { httpPostWithData } = useAxios()
         const { backlogById, backlogsById, readBacklogById, readBacklogsByProjectId } = useBacklogsContext()
         const { readTasksByBacklogId } = useTasksContext()
@@ -189,7 +191,7 @@ const BulkEdit: React.FC<BulkEditProps> =
          * Methods
          */
         const handleBulkUpdate = async () => {
-            if (!selectedTaskIds.length) return;
+            if (!selectedTaskIds.length) return
 
             const updatedTasks = selectedTaskIds.map((taskId) => ({
                 Task_ID: taskId,
@@ -199,13 +201,13 @@ const BulkEdit: React.FC<BulkEditProps> =
                 Assigned_User_ID: newUserId,
             }))
 
-            const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks });
+            const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks })
 
             if (result.updated_tasks) {
-                await readTasksByBacklogId(parseInt(backlogId), true);
+                await readTasksByBacklogId(parseInt(backlogId), true)
                 setTaskBulkEditing(false)
             }
-        };
+        }
 
         /**
          * Effects

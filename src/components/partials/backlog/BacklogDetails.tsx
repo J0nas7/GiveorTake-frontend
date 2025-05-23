@@ -21,14 +21,16 @@ import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppD
 import { Block, Text, FlexibleBox, Field } from '@/components';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { dir } from 'console';
+import { useURLLink } from '@/hooks';
 
 export const BacklogDetails: React.FC = () => {
     // ---- Hooks ----
     const dispatch = useAppDispatch()
-    const { backlogId } = useParams<{ backlogId: string }>();
+    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const pathname = usePathname();
     const { readBacklogById, backlogById, saveBacklogChanges, removeBacklog } = useBacklogsContext();
     const { moveOrder, assignDefault, assignClosed, addStatus, saveStatusChanges, removeStatus } = useStatusContext()
+    const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser);
@@ -185,7 +187,11 @@ export const BacklogDetails: React.FC = () => {
         if (!renderBacklog || !renderBacklog.Backlog_ID) return
 
         try {
-            await removeBacklog(renderBacklog.Backlog_ID, renderBacklog.Project_ID, `/project/${renderBacklog.Project_ID}`);
+            await removeBacklog(
+                renderBacklog.Backlog_ID, 
+                renderBacklog.Project_ID, 
+                `/project/${convertID_NameStringToURLFormat(renderBacklog.Project_ID, renderBacklog.project?.Project_Name ?? "")}`
+            );
             alert('Backlog deleted.');
             // optionally redirect or clear state
         } catch (err) {
@@ -231,6 +237,7 @@ export const BacklogDetails: React.FC = () => {
             handleAssignDefaultStatus={handleAssignDefaultStatus}
             handleAssignClosedStatus={handleAssignClosedStatus}
             removeStatus={removeStatus}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     );
 };
@@ -254,6 +261,7 @@ interface BacklogDetailsViewProps {
     handleAssignDefaultStatus: (statusId: number) => Promise<void>
     handleAssignClosedStatus: (statusId: number) => Promise<void>
     removeStatus: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 const calculateTaskStats = (backlog: Backlog) => {
@@ -287,7 +295,8 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
     handleMoveStatusChanges,
     handleAssignDefaultStatus,
     handleAssignClosedStatus,
-    removeStatus
+    removeStatus,
+    convertID_NameStringToURLFormat
 }) => {
     const stats = renderBacklog ? calculateTaskStats(renderBacklog) : null;
 
@@ -300,7 +309,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                     canAccessBacklog && renderBacklog && (
                         <Block className="flex gap-2 ml-auto">
                             <Link
-                                href={`/backlog/${renderBacklog?.Backlog_ID}`}
+                                href={`/backlog/${convertID_NameStringToURLFormat(renderBacklog?.Backlog_ID ?? 0, renderBacklog.Backlog_Name)}`}
                                 className="blue-link !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faList} />
@@ -505,7 +514,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                                                 onClick={() => removeStatus(
                                                                     status.Status_ID!,
                                                                     status.Backlog_ID,
-                                                                    `/backlog/${status.Backlog_ID}/edit`
+                                                                    `/backlog/${convertID_NameStringToURLFormat(renderBacklog.Backlog_ID ?? 0, renderBacklog.Backlog_Name)}/edit`
                                                                 )}
                                                             />
                                                         </button>

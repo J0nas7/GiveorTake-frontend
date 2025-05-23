@@ -22,13 +22,15 @@ import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppD
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import Image from 'next/image';
 import { LoadingState } from '@/core-ui/components/LoadingState';
+import { useURLLink } from '@/hooks';
 
 const ProjectDetails: React.FC = () => {
     // ---- Hooks ----
     const dispatch = useAppDispatch()
     const router = useRouter()
-    const { projectId } = useParams<{ projectId: string }>(); // Get projectId from URL
+    const { projectLink } = useParams<{ projectLink: string }>(); // Get projectLink from URL
     const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext()
+    const { linkId: projectId, convertID_NameStringToURLFormat } = useURLLink(projectLink)
 
     // ---- State ----
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
@@ -113,6 +115,7 @@ const ProjectDetails: React.FC = () => {
             handleProjectChange={handleProjectChange}
             handleSaveChanges={handleSaveChanges}
             handleDeleteProject={handleDeleteProject}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     );
 };
@@ -127,6 +130,7 @@ export interface ProjectDetailsViewProps {
     handleProjectChange: (field: ProjectFields, value: string) => void;
     handleSaveChanges: () => Promise<void>
     handleDeleteProject: () => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
@@ -138,7 +142,8 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
     authUser,
     handleProjectChange,
     handleSaveChanges,
-    handleDeleteProject
+    handleDeleteProject,
+    convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
         <FlexibleBox
@@ -148,7 +153,7 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                 renderProject && (
                     <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
                         <Link
-                            href={`/team/${renderProject?.team?.Team_ID}`}
+                            href={`/team/${convertID_NameStringToURLFormat(renderProject?.team?.Team_ID ?? 0, renderProject.team?.Team_Name ?? "")}`}
                             className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                         >
                             <FontAwesomeIcon icon={faUsers} />
@@ -297,7 +302,7 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                             <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
                                 {canManageProject && (
                                     <Link
-                                        href={`/project/${renderProject?.Project_ID}/create-backlog`}
+                                        href={`/project/${convertID_NameStringToURLFormat(renderProject?.Project_ID ?? 0, renderProject.Project_Name)}/create-backlog`}
                                         className="blue-link !inline-flex gap-2 items-center"
                                     >
                                         <FontAwesomeIcon icon={faList} />
@@ -305,14 +310,14 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
                                     </Link>
                                 )}
                                 <Link
-                                    href={`/time-tracks/project/${renderProject?.Project_ID}`}
+                                    href={`/time-tracks/${convertID_NameStringToURLFormat(renderProject?.Project_ID ?? 0, renderProject.Project_Name)}`}
                                     className="blue-link !inline-flex gap-2 items-center"
                                 >
                                     <FontAwesomeIcon icon={faClock} />
                                     <Text variant="span">Time Entries</Text>
                                 </Link>
                                 <Link
-                                    href={`/backlogs/${renderProject.Project_ID}`}
+                                    href={`/backlogs/${convertID_NameStringToURLFormat(renderProject?.Project_ID ?? 0, renderProject.Project_Name)}`}
                                     className="blue-link !inline-flex gap-2 items-center"
                                 >
                                     <FontAwesomeIcon icon={faList} />
@@ -351,6 +356,8 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
     renderProject,
     authUser
 }) => {
+    const { convertID_NameStringToURLFormat } = useURLLink("-")
+
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
     // Determine if the authenticated user can access the backlog:
     const canAccessBacklog = (authUser && backlog && (
@@ -406,21 +413,21 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
 
                             <Block className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-2">
                                 <Link
-                                    href={`/backlog/${backlog.Backlog_ID}-${backlog.Backlog_Name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
+                                    href={`/backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}`}
                                     className="blue-link !inline-flex gap-2 items-center"
                                 >
                                     <FontAwesomeIcon icon={faList} />
                                     Backlog
                                 </Link>
                                 <Link
-                                    href={`/kanban/${backlog.Backlog_ID}`}
+                                    href={`/kanban/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}`}
                                     className="blue-link !inline-flex gap-2 items-center"
                                 >
                                     <FontAwesomeIcon icon={faWindowRestore} />
                                     Kanban Board
                                 </Link>
                                 <Link
-                                    href={`/dashboard/${backlog.Backlog_ID}`}
+                                    href={`/dashboard/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}`}
                                     className="blue-link !inline-flex gap-2 items-center"
                                 >
                                     <FontAwesomeIcon icon={faGauge} />
@@ -455,7 +462,10 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
 
                                 {canManageBacklog && (
                                     <Block className="mt-2 flex flex-col items-end">
-                                        <Link href={`/backlog/${backlog.Backlog_ID}/edit`} className="blue-link-light">
+                                        <Link 
+                                            href={`/backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}/edit`} 
+                                            className="blue-link-light"
+                                        >
                                             Edit Backlog
                                         </Link>
                                         {backlog.Backlog_IsPrimary ? (
@@ -463,7 +473,10 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
                                                 Primary Backlog
                                             </Text>
                                         ) : (
-                                            <Link href={`/finish-backlog/${backlog.Backlog_ID}`} className="blue-link-light red-link-light">
+                                            <Link 
+                                                href={`/finish-backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}`} 
+                                                className="blue-link-light red-link-light"
+                                            >
                                                 Finish Backlog
                                             </Link>
                                         )}

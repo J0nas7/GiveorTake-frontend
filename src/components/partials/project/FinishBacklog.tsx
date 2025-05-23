@@ -12,15 +12,18 @@ import { Card, CardContent } from '@mui/material';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { LoadingState } from '@/core-ui/components/LoadingState';
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux';
+import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
+import { useURLLink } from '@/hooks';
 
 export const FinishBacklog = () => {
     // ---- Hooks ----
+    const dispatch = useAppDispatch()
     const router = useRouter();
-    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
+    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogId from URL
     const { backlogById, readBacklogById, finishBacklog } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId } = useTasksContext()
     const { projectById, readProjectById } = useProjectsContext()
+    const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
 
     // ---- State ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
@@ -53,11 +56,11 @@ export const FinishBacklog = () => {
     const doFinishBacklog = async () => {
         if (!backlogById) return
 
-        const targetBacklogId = await finishBacklog(backlogId, moveAction, newBacklog)
-        if (targetBacklogId) {
-            router.push(`/backlog/${targetBacklogId}`); // Redirect to new backlog page
+        const targetBacklog = await finishBacklog(backlogId, moveAction, newBacklog)
+        if (targetBacklog) {
+            router.push(`/backlog/${convertID_NameStringToURLFormat(targetBacklog.id, targetBacklog.name)}`); // Redirect to new backlog page
         } else {
-            alert("Error happened while finishing backlog. Try again.")
+            dispatch(setSnackMessage("Error happened while finishing backlog. Try again."))
         }
     }
 

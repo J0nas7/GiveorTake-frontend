@@ -20,6 +20,7 @@ import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 import Image from "next/image";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import { BacklogStatusActionMenu } from "../backlog/BacklogStatusActionMenu";
+import { useURLLink } from "@/hooks";
 
 export const BacklogContainer = () => {
     // ---- Hooks ----
@@ -29,13 +30,12 @@ export const BacklogContainer = () => {
     const { t } = useTranslation(['backlog'])
     const { backlogById, readBacklogById } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
-    
+    const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
+
     // ---- State and other Variables ----
     const urlTaskIds = searchParams.get("taskIds")
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
     const urlStatusIds = searchParams.get("statusIds")
-    // backlogLink contains: backlogId - backlogName, in a compressed format
-    const backlogId = backlogLink.split('-')[0]
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
@@ -281,6 +281,7 @@ export const BacklogContainer = () => {
                 handleSelectAllChange={handleSelectAllChange}
                 statusUrlEditing={statusUrlEditing}
                 setStatusUrlEditing={setStatusUrlEditing}
+                convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
             />
         </>
     );
@@ -307,6 +308,7 @@ export interface BacklogContainerViewProps {
     handleSelectAllChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     statusUrlEditing: boolean
     setStatusUrlEditing: React.Dispatch<React.SetStateAction<boolean>>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
@@ -328,7 +330,8 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     handleCheckboxChange,
     handleSelectAllChange,
     statusUrlEditing,
-    setStatusUrlEditing
+    setStatusUrlEditing,
+    convertID_NameStringToURLFormat
 }) => {
     return (
         <Block className="page-content">
@@ -346,7 +349,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                 <Text variant="span">Filter Statuses</Text>
                             </Text>
                             <Link
-                                href={`/project/${renderBacklog?.Project_ID}`}
+                                href={`/project/${convertID_NameStringToURLFormat(renderBacklog?.Project_ID, renderBacklog.project?.Project_Name ?? "")}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faLightbulb} />
