@@ -43,7 +43,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     })
 
     drag(dragRef);
-    
+
     return (
         <div ref={dragRef} className={styles.taskCard} style={{ opacity: isDragging ? 0.5 : 1 }}>
             <Text onClick={() => setTaskDetail(task)} className={styles.taskTitle}>
@@ -116,7 +116,7 @@ const KanbanBoardContainer = () => {
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [kanbanColumns, setKanbanColumns] = useState<Status[] | undefined>(undefined)
-    
+
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
     // Determine if the authenticated user can access the backlog:
@@ -238,18 +238,21 @@ export const KanbanBoardView: React.FC<KanbanBoardViewProps> = ({
                 <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
                     {renderBacklog && (
                         <Block className={styles.board}>
-                            {kanbanColumns?.map(status => (
-                                <Column
-                                    key={status.Status_ID}
-                                    status={status.Status_ID ?? 0}
-                                    label={status.Status_Name}
-                                    tasks={tasks ? tasks.filter(task => task.Status_ID === status.Status_ID) : undefined}
-                                    canManageBacklog={canManageBacklog}
-                                    archiveTask={archiveTask}
-                                    setTaskDetail={setTaskDetail}
-                                    moveTask={moveTask}
-                                />
-                            ))}
+                            {kanbanColumns?.
+                                // Status_Order low to high:
+                                sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                                .map(status => (
+                                    <Column
+                                        key={status.Status_ID}
+                                        status={status.Status_ID ?? 0}
+                                        label={status.Status_Name}
+                                        tasks={tasks ? tasks.filter(task => task.Status_ID === status.Status_ID) : undefined}
+                                        canManageBacklog={canManageBacklog}
+                                        archiveTask={archiveTask}
+                                        setTaskDetail={setTaskDetail}
+                                        moveTask={moveTask}
+                                    />
+                                ))}
                         </Block>
                     )}
                 </LoadingState>

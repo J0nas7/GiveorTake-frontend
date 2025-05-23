@@ -11,7 +11,7 @@ import { faGauge, faLightbulb, faList, faPlus, faSortDown, faSortUp, faWindowRes
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
 import { Block, Text, Field } from "@/components"
 import { useBacklogsContext, useTasksContext } from "@/contexts"
-import { Backlog, BacklogStates, Task, TaskFields } from "@/types";
+import { Backlog, BacklogStates, Status, Task, TaskFields } from "@/types";
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FlexibleBox } from "@/components/ui/flexible-box";
@@ -173,7 +173,11 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
                 const theBacklog = await readBacklogById(backlogId, true)
                 if (theBacklog) {
                     setRenderBacklog(theBacklog)
-                    handleChangeLocalNewTask("Status_ID", "0")
+
+                    const firstStatus: Status | undefined = theBacklog.statuses?.
+                        // Status_Order low to high:
+                        sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
+                    handleChangeLocalNewTask("Status_ID", (firstStatus?.Status_ID ?? "").toString());
 
                     const theTasks = await readTasksByBacklogId(backlogId, undefined, true)
                     if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
@@ -405,9 +409,12 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                         className="p-2 border rounded"
                                     >
                                         <option value="">-</option>
-                                        {renderBacklog.statuses?.map(status => (
-                                            <option value={status.Status_ID}>{status.Status_Name}</option>
-                                        ))}
+                                        {renderBacklog.statuses?.
+                                            // Status_Order low to high:
+                                            sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                                            .map(status => (
+                                                <option value={status.Status_ID}>{status.Status_Name}</option>
+                                            ))}
                                     </select>
                                 </td>
                                 <td>
@@ -450,7 +457,9 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                     <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
                                         {task.Task_Title}
                                     </td>
-                                    <td className={styles.status}>{task.Status_ID}</td>
+                                    <td className={styles.status}>
+                                        {renderBacklog.statuses?.find(status => status.Status_ID === task.Status_ID)?.Status_Name}
+                                    </td>
                                     {(() => {
                                         const assignee = renderBacklog?.project?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
                                         return (

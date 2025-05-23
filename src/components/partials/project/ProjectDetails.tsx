@@ -406,7 +406,7 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
 
                             <Block className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-2">
                                 <Link
-                                    href={`/backlog/${backlog.Backlog_ID}`}
+                                    href={`/backlog/${backlog.Backlog_ID}-${backlog.Backlog_Name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
                                     className="blue-link !inline-flex gap-2 items-center"
                                 >
                                     <FontAwesomeIcon icon={faList} />

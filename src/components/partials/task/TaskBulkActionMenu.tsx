@@ -221,7 +221,6 @@ const BulkEdit: React.FC<BulkEditProps> =
 
         return (
             <Block className="flex flex-col gap-3">
-                dskosl
                 <Block className="flex justify-between">
                     <Heading variant="h3" className="font-bold text-xl">Bulk edit</Heading>
                     <Text className="text-xl">{selectedTaskIds.length} tasks</Text>

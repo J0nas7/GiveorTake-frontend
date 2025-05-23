@@ -28,7 +28,7 @@ export const BacklogDetails: React.FC = () => {
     const { backlogId } = useParams<{ backlogId: string }>();
     const pathname = usePathname();
     const { readBacklogById, backlogById, saveBacklogChanges, removeBacklog } = useBacklogsContext();
-    const { moveOrder, addStatus, saveStatusChanges, removeStatus } = useStatusContext()
+    const { moveOrder, assignDefault, assignClosed, addStatus, saveStatusChanges, removeStatus } = useStatusContext()
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser);
@@ -113,7 +113,7 @@ export const BacklogDetails: React.FC = () => {
         }
     };
 
-    // Save status changes to backend
+    // Handles the movement of a status within the backlog by changing its order.
     const handleMoveStatusChanges = async (statusId: number, direction: "up" | "down") => {
         if (!renderBacklog) return;
         try {
@@ -126,6 +126,38 @@ export const BacklogDetails: React.FC = () => {
         } catch (err) {
             console.error(err);
             dispatch(setSnackMessage("Failed to update status order."))
+        }
+    };
+
+    // Handles the assignment of a default status to a backlog item.
+    const handleAssignDefaultStatus = async (statusId: number) => {
+        if (!renderBacklog) return;
+        try {
+            const saveChanges = await assignDefault(statusId)
+
+            if (saveChanges) {
+                setRenderBacklog(undefined)
+                readBacklogById(parseInt(backlogId))
+            }
+        } catch (err) {
+            console.error(err);
+            dispatch(setSnackMessage("Failed to assign default status."))
+        }
+    };
+
+    // Handles the assignment of a default status to a backlog item.
+    const handleAssignClosedStatus = async (statusId: number) => {
+        if (!renderBacklog) return;
+        try {
+            const saveChanges = await assignClosed(statusId)
+
+            if (saveChanges) {
+                setRenderBacklog(undefined)
+                readBacklogById(parseInt(backlogId))
+            }
+        } catch (err) {
+            console.error(err);
+            dispatch(setSnackMessage("Failed to assign closed status."))
         }
     };
 
@@ -196,6 +228,8 @@ export const BacklogDetails: React.FC = () => {
             ifEnterCreateStatus={ifEnterCreateStatus}
             handleDeleteBacklog={handleDeleteBacklog}
             handleMoveStatusChanges={handleMoveStatusChanges}
+            handleAssignDefaultStatus={handleAssignDefaultStatus}
+            handleAssignClosedStatus={handleAssignClosedStatus}
             removeStatus={removeStatus}
         />
     );
@@ -217,6 +251,8 @@ interface BacklogDetailsViewProps {
     ifEnterCreateStatus: (e: React.KeyboardEvent) => Promise<void> | null
     handleDeleteBacklog: () => Promise<void>;
     handleMoveStatusChanges: (statusId: number, direction: "up" | "down") => Promise<void>
+    handleAssignDefaultStatus: (statusId: number) => Promise<void>
+    handleAssignClosedStatus: (statusId: number) => Promise<void>
     removeStatus: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }
 
@@ -249,6 +285,8 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
     ifEnterCreateStatus,
     handleDeleteBacklog,
     handleMoveStatusChanges,
+    handleAssignDefaultStatus,
+    handleAssignClosedStatus,
     removeStatus
 }) => {
     const stats = renderBacklog ? calculateTaskStats(renderBacklog) : null;
@@ -259,14 +297,23 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                 title="Backlog"
                 subtitle={renderBacklog ? renderBacklog.Backlog_Name : ''}
                 titleAction={
-                    renderBacklog && (
-                        <Link
-                            href={`/project/${renderBacklog?.Project_ID}`}
-                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faLightbulb} />
-                            <Text variant="span">Go to Project</Text>
-                        </Link>
+                    canAccessBacklog && renderBacklog && (
+                        <Block className="flex gap-2 ml-auto">
+                            <Link
+                                href={`/backlog/${renderBacklog?.Backlog_ID}`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faList} />
+                                <Text variant="span">Go to Backlog</Text>
+                            </Link>
+                            <Link
+                                href={`/project/${renderBacklog?.Project_ID}`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faLightbulb} />
+                                <Text variant="span">Go to Project</Text>
+                            </Link>
+                        </Block>
                     )
                 }
                 icon={faList}
@@ -500,11 +547,13 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                             <td>{status.Status_Is_Default ? "Yes" : (
                                                 <input
                                                     type="radio"
+                                                    onClick={() => handleAssignDefaultStatus(status.Status_ID ?? 0)}
                                                 />
                                             )}</td>
                                             <td>{status.Status_Is_Closed ? "Yes" : (
                                                 <input
                                                     type="radio"
+                                                    onClick={() => handleAssignClosedStatus(status.Status_ID ?? 0)}
                                                 />
                                             )}</td>
                                             <td>

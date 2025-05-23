@@ -18,6 +18,8 @@ export type StatusContextType = {
     saveStatusChanges: (statusChanges: Status, parentId: number) => Promise<boolean>
     removeStatus: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     moveOrder: (statusId: number, direction: "up" | "down") => Promise<boolean>
+    assignDefault: (statusId: number) => Promise<boolean>
+    assignClosed: (statusId: number) => Promise<boolean>
 }
 
 const StatusContext = createContext<StatusContextType | undefined>(undefined)
@@ -53,7 +55,33 @@ export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
             throw new Error(`Failed to moveOrder`)
         } catch (error: any) {
-            console.log(error.message || `An error occurred while trying finishBacklog.`)
+            console.log(error.message || `An error occurred while trying moveOrder.`)
+            return false
+        }
+    }
+
+    const assignDefault = async (statusId: number) => {
+        try {
+            const data = await httpPostWithData(`statuses/${statusId}/assign-default`)
+
+            if (data.message == "Default status assigned successfully.") return true
+
+            throw new Error(`Failed to assignDefault`)
+        } catch (error: any) {
+            console.log(error.message || `An error occurred while trying assignDefault.`)
+            return false
+        }
+    }
+
+    const assignClosed = async (statusId: number) => {
+        try {
+            const data = await httpPostWithData(`statuses/${statusId}/assign-closed`)
+
+            if (data.message == "Closed status assigned successfully.") return true
+
+            throw new Error(`Failed to assignClosed`)
+        } catch (error: any) {
+            console.log(error.message || `An error occurred while trying assignClosed.`)
             return false
         }
     }
@@ -71,7 +99,9 @@ export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             addStatus,
             saveStatusChanges,
             removeStatus,
-            moveOrder
+            moveOrder,
+            assignDefault,
+            assignClosed
         }}>
             {children}
         </StatusContext.Provider>

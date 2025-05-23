@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { TFunction, useTranslation } from "next-i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEllipsisV, faLightbulb, faList, faPencil, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
+import { faCheckDouble, faEllipsisV, faLightbulb, faList, faPencil, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import styles from "@/core-ui/styles/modules/Backlog.module.scss"
@@ -19,23 +19,29 @@ import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
 import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 import Image from "next/image";
 import { LoadingState } from "@/core-ui/components/LoadingState";
+import { BacklogStatusActionMenu } from "../backlog/BacklogStatusActionMenu";
 
 export const BacklogContainer = () => {
     // ---- Hooks ----
-    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
+    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(['backlog'])
     const { backlogById, readBacklogById } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
+    
+    // ---- State and other Variables ----
     const urlTaskIds = searchParams.get("taskIds")
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
-
-    // ---- State ----
+    const urlStatusIds = searchParams.get("statusIds")
+    // backlogLink contains: backlogId - backlogName, in a compressed format
+    const backlogId = backlogLink.split('-')[0]
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
+    const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
+    const [statusUrlEditing, setStatusUrlEditing] = useState<boolean>(false)
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
     // Determine if the authenticated user can access the backlog:
@@ -61,7 +67,10 @@ export const BacklogContainer = () => {
             Backlog_ID: parseInt(backlogId),
             Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
             Task_Title: newTask?.Task_Title || "",
-            Status_ID: newTask?.Status_ID || renderBacklog.statuses && renderBacklog.statuses[0]?.Status_ID || 0,
+            Status_ID: newTask?.Status_ID || renderBacklog.statuses && renderBacklog.statuses?.
+                // Status_Order low to high:
+                sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
+                ?.Status_ID || 0,
             Assigned_User_ID: newTask?.Assigned_User_ID
         }
 
@@ -151,12 +160,14 @@ export const BacklogContainer = () => {
     useEffect(() => {
         readTasksByBacklogId(parseInt(backlogId))
         readBacklogById(parseInt(backlogId))
-    }, [backlogId])
+    }, [backlogLink])
     useEffect(() => {
-        if (backlogId) {
+        if (backlogLink) {
             setRenderBacklog(backlogById)
             if (backlogById) {
-                const firstStatus: Status | undefined = backlogById.statuses?.[0];
+                const firstStatus: Status | undefined = backlogById.statuses?.
+                    // Status_Order low to high:
+                    sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
                 handleChangeNewTask("Status_ID", (firstStatus?.Status_ID ?? "").toString());
                 document.title = `Backlog: ${backlogById?.Backlog_Name} - GiveOrTake`;
             }
@@ -173,6 +184,23 @@ export const BacklogContainer = () => {
             setSelectedTaskIds([]);
         }
     }, [urlTaskIds]);
+
+    // Sync selected backlog IDs with URL or default to all backlogs
+    useEffect(() => {
+        if (!renderBacklog) return
+
+        if (urlStatusIds) {
+            // If statusIds exist in the URL, use them
+            const statusIdsFromURL = urlStatusIds ? urlStatusIds.split(",") : [];
+            setSelectedStatusIds(statusIdsFromURL);
+        } else if (renderBacklog?.statuses?.length) {
+            // If no statusIds in URL, select all statuses by default
+            const allStatusIds = renderBacklog?.statuses
+                .map((status: Status) => status.Status_ID?.toString())
+                .filter((statusId) => statusId !== undefined) // Remove undefined values
+            setSelectedStatusIds(allStatusIds)
+        }
+    }, [urlStatusIds, renderBacklog])
 
     // ---- Special: Sorting ----
     const currentSort = searchParams.get("sort") || "Task_ID";
@@ -224,6 +252,13 @@ export const BacklogContainer = () => {
 
     return (
         <>
+            <BacklogStatusActionMenu
+                statusUrlEditing={statusUrlEditing}
+                renderBacklog={renderBacklog}
+                selectedTaskIds={selectedTaskIds}
+                selectedStatusIds={selectedStatusIds}
+                setSelectedStatusIds={setSelectedStatusIds}
+            />
             <TaskBulkActionMenu />
             <BacklogContainerView
                 renderBacklog={renderBacklog}
@@ -233,6 +268,7 @@ export const BacklogContainer = () => {
                 currentOrder={currentOrder}
                 t={t}
                 selectedTaskIds={selectedTaskIds}
+                selectedStatusIds={selectedStatusIds}
                 selectAll={selectAll}
                 canAccessBacklog={canAccessBacklog}
                 canManageBacklog={canManageBacklog}
@@ -243,6 +279,8 @@ export const BacklogContainer = () => {
                 setTaskDetail={setTaskDetail}
                 handleCheckboxChange={handleCheckboxChange}
                 handleSelectAllChange={handleSelectAllChange}
+                statusUrlEditing={statusUrlEditing}
+                setStatusUrlEditing={setStatusUrlEditing}
             />
         </>
     );
@@ -256,6 +294,7 @@ export interface BacklogContainerViewProps {
     currentOrder: string;
     t: TFunction
     selectedTaskIds: string[]
+    selectedStatusIds: string[]
     selectAll: boolean
     canAccessBacklog: boolean | undefined
     canManageBacklog: boolean | undefined
@@ -266,6 +305,8 @@ export interface BacklogContainerViewProps {
     setTaskDetail: (task: Task) => void;
     handleCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void
     handleSelectAllChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    statusUrlEditing: boolean
+    setStatusUrlEditing: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
@@ -275,6 +316,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     currentOrder,
     newTask,
     selectedTaskIds,
+    selectedStatusIds,
     selectAll,
     canAccessBacklog,
     canManageBacklog,
@@ -284,7 +326,9 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     handleChangeNewTask,
     setTaskDetail,
     handleCheckboxChange,
-    handleSelectAllChange
+    handleSelectAllChange,
+    statusUrlEditing,
+    setStatusUrlEditing
 }) => {
     return (
         <Block className="page-content">
@@ -294,6 +338,13 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                 titleAction={
                     renderBacklog && (
                         <Block className="flex gap-2 items-center w-full">
+                            <Text
+                                className="blue-link !inline-flex gap-2 items-center cursor-pointer"
+                                onClick={() => setStatusUrlEditing(!statusUrlEditing)}
+                            >
+                                <FontAwesomeIcon icon={faCheckDouble} />
+                                <Text variant="span">Filter Statuses</Text>
+                            </Text>
                             <Link
                                 href={`/project/${renderBacklog?.Project_ID}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
@@ -371,9 +422,12 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                                 }}
                                                 className="p-2 border rounded"
                                             >
-                                                {renderBacklog.statuses?.map(status => (
-                                                    <option value={status.Status_ID}>{status.Status_Name}</option>
-                                                ))}
+                                                {renderBacklog.statuses?.
+                                                    // Status_Order low to high:
+                                                    sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                                                    .map(status => (
+                                                        <option value={status.Status_ID}>{status.Status_Name}</option>
+                                                    ))}
                                             </select>
                                         </td>
                                         <td>
@@ -400,38 +454,46 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                             </button>
                                         </td>
                                     </tr>
-                                    {sortedTasks.map((task) => (
-                                        <tr key={task.Task_ID}>
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    value={task.Task_ID}
-                                                    checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
-                                                    onChange={handleCheckboxChange}
-                                                />
-                                            </td>
-                                            <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                                {renderBacklog?.project?.Project_Key}-{task.Task_Key}
-                                            </td>
-                                            <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
-                                                {task.Task_Title}
-                                            </td>
-                                            <td className={styles.status}>
-                                                {renderBacklog.statuses?.find(status => status.Status_ID === task.Status_ID)?.Status_Name}
-                                            </td>
-                                            {(() => {
-                                                const assignee = renderBacklog?.project?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
-                                                return (
-                                                    <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
-                                                )
-                                            })()}
-                                            <td>
-                                                {task.Task_CreatedAt && (
-                                                    <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {sortedTasks.
+                                        filter(task => {
+                                            if (selectedStatusIds.length) {
+                                                return selectedStatusIds.includes(task.Status_ID.toString())
+                                            } else {
+                                                return true
+                                            }
+                                        })
+                                        .map((task) => (
+                                            <tr key={task.Task_ID}>
+                                                <td>
+                                                    <input
+                                                        type="checkbox"
+                                                        value={task.Task_ID}
+                                                        checked={task.Task_ID ? selectedTaskIds.includes(task.Task_ID.toString()) : false}
+                                                        onChange={handleCheckboxChange}
+                                                    />
+                                                </td>
+                                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                                    {renderBacklog?.project?.Project_Key}-{task.Task_Key}
+                                                </td>
+                                                <td onClick={() => setTaskDetail(task)} className="cursor-pointer hover:underline">
+                                                    {task.Task_Title}
+                                                </td>
+                                                <td className={styles.status}>
+                                                    {renderBacklog.statuses?.find(status => status.Status_ID === task.Status_ID)?.Status_Name}
+                                                </td>
+                                                {(() => {
+                                                    const assignee = renderBacklog?.project?.team?.user_seats?.find(userSeat => userSeat.User_ID === task.Assigned_User_ID)?.user
+                                                    return (
+                                                        <td>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</td>
+                                                    )
+                                                })()}
+                                                <td>
+                                                    {task.Task_CreatedAt && (
+                                                        <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </Block>
