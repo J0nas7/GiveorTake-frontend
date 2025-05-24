@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStop } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
-import { Block } from '@/components/ui/block-text'
+import { Block, Text } from '@/components/ui/block-text'
 import { selectAuthUserTaskTimeTrack, selectSnackMessage, useAppDispatch, useAuthActions, useTypedSelector } from '@/redux';
 import { useTasksContext, useTaskTimeTrackContext } from '@/contexts';
 import { TaskTimeTrack } from '@/types';
@@ -14,7 +14,7 @@ import { TaskTimeTrack } from '@/types';
 export const TaskTimeTrackPlayer = () => {
     // Hooks
     const { latestUniqueTaskTimeTracksByProject, getLatestUniqueTaskTimeTracksByProject, handleTaskTimeTrack } = useTaskTimeTrackContext()
-    const { taskDetail } = useTasksContext()
+    const { taskDetail, setTaskDetail } = useTasksContext()
     const { fetchIsLoggedInStatus } = useAuthActions()
     const dispatch = useAppDispatch()
     
@@ -51,9 +51,13 @@ export const TaskTimeTrackPlayer = () => {
                                 <TimeSpentDisplay startTime={taskTimeTrack.Time_Tracking_Start_Time} />
                             ) : null}
                         </Block>
-                        <Link href={`/task/${taskTimeTrack.task?.backlog?.project?.Project_Key}/${taskTimeTrack.task?.Task_Key}`} className="blue-link-light h-12 overflow-y-hidden break-all">
+                        <Text 
+                            // href={`/task/${taskTimeTrack.task?.backlog?.project?.Project_Key}/${taskTimeTrack.task?.Task_Key}`} 
+                            onClick={() => setTaskDetail(taskTimeTrack.task)}
+                            className="blue-link-light h-12 overflow-y-hidden break-all cursor-pointer"
+                        >
                             {taskTimeTrack.task?.Task_Title}
-                        </Link>
+                        </Text>
                         {latestUniqueTaskTimeTracksByProject && latestUniqueTaskTimeTracksByProject.length && (
                             <Block variant="span" className="inline">
                                 {/* Dropdown to change the task */}

@@ -24,12 +24,12 @@ import { useURLLink } from "@/hooks";
 
 export const BacklogContainer = () => {
     // ---- Hooks ----
-    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(['backlog'])
     const { backlogById, readBacklogById } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
+    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
 
     // ---- State and other Variables ----
@@ -255,9 +255,7 @@ export const BacklogContainer = () => {
             <BacklogStatusActionMenu
                 statusUrlEditing={statusUrlEditing}
                 renderBacklog={renderBacklog}
-                selectedTaskIds={selectedTaskIds}
                 selectedStatusIds={selectedStatusIds}
-                setSelectedStatusIds={setSelectedStatusIds}
             />
             <TaskBulkActionMenu />
             <BacklogContainerView

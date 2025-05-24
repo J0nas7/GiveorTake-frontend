@@ -1,44 +1,28 @@
 // External
-import React, { useEffect, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Router } from 'next/router';
+import React from 'react'
+import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
 // Internal
 import { Block, Text } from '@/components'
-import { useAxios } from '@/hooks';
-import { useBacklogsContext } from '@/contexts';
-import { BacklogStates, Project, Status, Task } from '@/types';
-import { selectSnackMessage, useTypedSelector } from '@/redux';
+import { BacklogStates, Status } from '@/types';
 
 interface BacklogStatusActionMenuProps {
     statusUrlEditing: boolean
     renderBacklog: BacklogStates
     selectedStatusIds: string[]
-    selectedTaskIds: string[]
-    setSelectedStatusIds: React.Dispatch<React.SetStateAction<string[]>>
 }
 
 export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = ({
     statusUrlEditing,
     renderBacklog,
     selectedStatusIds,
-    selectedTaskIds,
-    setSelectedStatusIds
 }) => {
     // Hooks
     const router = useRouter()
-    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
-    const searchParams = useSearchParams()
-    const { backlogById, readBacklogById } = useBacklogsContext()
-
-    // State
-    const snackMessage = useTypedSelector(selectSnackMessage)
-    const urlStatusIds = searchParams.get("statusIds")
 
     // Methods
     const updateURLParams = (
-        newTaskIds: string[] | undefined | string,
         newStatusIds: string[] | undefined | string,
         returnUrl?: boolean
     ) => {
@@ -46,22 +30,7 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
 
         const url = new URL(window.location.href);
 
-        // taskIds
-        /*if (newTaskIds === undefined) {
-            url.searchParams.delete("taskIds")
-        } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
-            if (newTaskIds.length > 0) {
-                if (renderBacklog.tasks && renderBacklog.tasks.length > newTaskIds.length) {
-                    url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
-                } else {
-                    url.searchParams.delete("taskIds"); // Remove if all are selected, as that is default 
-                }
-            } else {
-                url.searchParams.set("taskIds", "");
-            }
-        }*/
-
-        // taskIds
+        // statusIds
         if (newStatusIds === undefined) {
             url.searchParams.delete("statusIds")
         } else if (Array.isArray(newStatusIds)) { // Handle statusIds (convert array to a comma-separated string)
@@ -98,7 +67,7 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
                 .filter((id): id is string => id !== "");
         }
 
-        updateURLParams(selectedTaskIds, updatedStatusIds);
+        updateURLParams(updatedStatusIds);
     }
 
     if (!statusUrlEditing) return null

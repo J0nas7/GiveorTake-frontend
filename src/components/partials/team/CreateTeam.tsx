@@ -10,7 +10,7 @@ import { useOrganisationsContext, useTeamsContext } from "@/contexts";
 import { OrganisationStates, Team, TeamFields } from "@/types";
 import { Block, Text } from "@/components/ui/block-text";
 import { FlexibleBox } from "@/components/ui/flexible-box";
-import { faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faBuilding, faUsers } from "@fortawesome/free-solid-svg-icons";
 import { Heading } from "@/components/ui/heading";
 import { Field } from "@/components/ui/input-field";
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
@@ -19,6 +19,9 @@ import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import { LoadingState } from "@/core-ui/components/LoadingState";
+import { useURLLink } from "@/hooks";
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const CreateTeam = () => {
     // ---- Hooks ----
@@ -26,7 +29,8 @@ export const CreateTeam = () => {
     const authUser = useTypedSelector(selectAuthUser)
     const { addTeam } = useTeamsContext()
     const { organisationById, readOrganisationById } = useOrganisationsContext()
-    const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
+    const { organisationLink } = useParams<{ organisationLink: string }>() // Get organisationLink from URL
+    const { linkId: organisationId, convertID_NameStringToURLFormat } = useURLLink(organisationLink)
 
     // ---- State ----
     // State to hold the new team details:
@@ -81,6 +85,7 @@ export const CreateTeam = () => {
             newTeam={newTeam}
             handleInputChange={handleInputChange}
             handleCreateTeam={handleCreateTeam}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     );
 };
@@ -91,16 +96,28 @@ type CreateTeamViewProps = {
     newTeam: Team
     handleInputChange: (field: TeamFields, value: string) => void
     handleCreateTeam: () => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const CreateTeamView: React.FC<CreateTeamViewProps> = ({
-    organisationById, canModifyOrganisationSettings, newTeam, 
-    handleInputChange, handleCreateTeam
+    organisationById, canModifyOrganisationSettings, newTeam,
+    handleInputChange, handleCreateTeam, convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
         <Block className="mb-8">
             <FlexibleBox
                 title="Create New Team"
+                titleAction={
+                    organisationById && (
+                        <Link
+                            href={`/organisation/${convertID_NameStringToURLFormat(organisationById.Organisation_ID ?? 0, organisationById.Organisation_Name)}`}
+                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                        >
+                            <FontAwesomeIcon icon={faBuilding} />
+                            <Text variant="span">Go to Organisation</Text>
+                        </Link>
+                    )
+                }
                 icon={faUsers}
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
@@ -150,6 +167,6 @@ export const CreateTeamView: React.FC<CreateTeamViewProps> = ({
                     </Block>
                 </LoadingState>
             </FlexibleBox>
-        </Block>
-    </Block>
+        </Block >
+    </Block >
 )

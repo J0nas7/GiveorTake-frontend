@@ -22,12 +22,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CreatedAtToTimeSince } from '../task/TaskTimeTrackPlayer';
 import Image from 'next/image';
 import { LoadingState } from '@/core-ui/components/LoadingState';
+import { useURLLink } from '@/hooks';
 
 const OrganisationDetails: React.FC = () => {
     // ---- Hooks ----
     const router = useRouter()
-    const { organisationId } = useParams<{ organisationId: string }>(); // Get organisationId from URL
     const { organisationById, readOrganisationById, saveOrganisationChanges, removeOrganisation } = useOrganisationsContext()
+    const { organisationLink } = useParams<{ organisationLink: string }>() // Get organisationLink from URL
+    const { linkId: organisationId, convertID_NameStringToURLFormat } = useURLLink(organisationLink)
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser) // Redux
@@ -89,6 +91,7 @@ const OrganisationDetails: React.FC = () => {
             handleOrganisationChange={handleOrganisationChange}
             handleSaveChanges={handleSaveChanges}
             handleDeleteOrganisation={handleDeleteOrganisation}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     );
 };
@@ -99,6 +102,7 @@ type OrganisationDetailsViewProps = {
     handleOrganisationChange: (field: OrganisationFields, value: string) => void;
     handleSaveChanges: () => Promise<void>
     handleDeleteOrganisation: () => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = ({
@@ -107,6 +111,7 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
     handleOrganisationChange,
     handleSaveChanges,
     handleDeleteOrganisation,
+    convertID_NameStringToURLFormat
 }) => {
     return (
         <Block className="page-content">
@@ -116,7 +121,10 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                 titleAction={
                     <Block className="flex gap-3 w-full">
                         {renderOrganisation && canModifyOrganisationSettings && (
-                            <Link href={`/organisation/${renderOrganisation.Organisation_ID}/create-team`} className="blue-link !inline-flex gap-2 items-center">
+                            <Link 
+                                href={`/organisation/${convertID_NameStringToURLFormat(renderOrganisation.Organisation_ID ?? 0, renderOrganisation.Organisation_Name)}/create-team`} 
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
                                 <FontAwesomeIcon icon={faUsers} />
                                 <Text variant="span">Create Team</Text>
                             </Link>
@@ -215,7 +223,7 @@ export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = (
                             <Grid item xs={12} sm={6} md={4} key={team.Team_ID}>
                                 <Card>
                                     <CardContent>
-                                        <Link href={`/team/${team.Team_ID}`} className="blue-link-light">
+                                        <Link href={`/team/${convertID_NameStringToURLFormat(team.Team_ID ?? 0, team.Team_Name)}`} className="blue-link-light">
                                             {team.Team_Name}
                                         </Link>
                                         <Typography variant="body2" color="textSecondary" paragraph>

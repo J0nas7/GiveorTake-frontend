@@ -34,6 +34,7 @@ import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, 
 import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
 import { Router } from "next/router";
 import { env } from "@/env.urls";
+import { useURLLink } from "@/hooks";
 
 interface CardProps {
     children: React.ReactNode;
@@ -847,7 +848,6 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail
 }
 
 const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { projectId, taskId } = useParams<{ projectId: string, taskId: string }>(); // Get projectId, taskId from URL
     const { readTasksByBacklogId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
 
@@ -1170,9 +1170,10 @@ export const TaskDetailWithModal = () => {
 }
 
 export const TaskDetailWithoutModal = () => {
-    const { projectKey, taskKey } = useParams<{ projectKey: string, taskKey: string }>(); // Get taskId from URL
     const { taskByKeys, readTaskByKeys, setTaskDetail } = useTasksContext()
     const taskDetailRef = useRef<HTMLDivElement>(null);
+    const { projectKey, taskLink } = useParams<{ projectKey: string, taskLink: string }>(); // Get projectKey and taskLink from URL
+    const { linkId: taskKey, convertID_NameStringToURLFormat } = useURLLink(taskLink)
 
     const [renderTask, setRenderTask] = useState<Task | undefined>(undefined)
 

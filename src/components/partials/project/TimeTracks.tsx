@@ -17,7 +17,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 // Internal
 import styles from "@/core-ui/styles/modules/TimeTracks.module.scss"
 import { Block, Text } from "@/components/ui/block-text";
-import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
+import { useProjectsContext, useTasksContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
 import { Backlog, Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
@@ -35,6 +35,7 @@ export const TimeTracksContainer = () => {
     const { projectById, readProjectById } = useProjectsContext();
     const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
     const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
+    const { setTaskDetail } = useTasksContext()
     const { linkId: projectId, linkName, convertID_NameStringToURLFormat } = useURLLink(projectLink)
 
     // ---- State ----
@@ -266,20 +267,29 @@ export const TimeTracksContainer = () => {
                                     timeTracks={renderTimeTracks}
                                     startDate={startDate}
                                     endDate={endDate}
+                                    setTaskDetail={setTaskDetail}
                                 />
                             </Block>
                             <Block className="w-full p-4 bg-white rounded-lg shadow-md">
-                                <TimeTracksPeriodSum timeTracks={sortedByLatest} />
+                                <TimeTracksPeriodSum
+                                    timeTracks={sortedByLatest}
+                                    setTaskDetail={setTaskDetail}
+                                />
                             </Block>
                             <Block className="flex flex-col lg:flex-row gap-4">
                                 <Block className="w-full lg:w-1/4 p-4 bg-white rounded-lg shadow-md">
-                                    <TimeSpentPerTask renderProject={renderProject} sortedByDuration={sortedByDuration} />
+                                    <TimeSpentPerTask 
+                                        renderProject={renderProject} 
+                                        sortedByDuration={sortedByDuration}
+                                        setTaskDetail={setTaskDetail}
+                                    />
                                 </Block>
 
                                 {/* List of Time Tracks */}
                                 <Block className="w-full lg:w-3/4 p-4 bg-white rounded-lg shadow-md">
                                     <LatestTimeLogs
                                         sortedByLatest={sortedByLatest}
+                                        setTaskDetail={setTaskDetail}
                                     />
                                 </Block>
                             </Block>
@@ -654,9 +664,10 @@ interface TimeTracksSubComponentsProps {
     timeTracks: TaskTimeTrack[] | undefined
     startDate?: string
     endDate?: string
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
 }
 
-export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks, startDate, endDate }) => {
+export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks, startDate, endDate, setTaskDetail }) => {
     const { t } = useTranslation(["timetrack"]);
     const startDateWithoutTime = new Date(startDate ? startDate : '')
     const endDateWithoutTime = new Date(endDate ? endDate : '')
@@ -708,7 +719,7 @@ export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks
     );
 };
 
-export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks }) => {
+export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks, setTaskDetail }) => {
     const { t } = useTranslation(["timetrack"]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [daysInMonth, setDaysInMonth] = useState<string[]>([])
@@ -834,9 +845,14 @@ export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ tim
                                                 <Text variant="small" className="text-xs">
                                                     ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                                 </Text>{" "}
-                                                <Link key={index} href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} className={clsx(styles["time-entry"], "inline blue-link-light")}>
+                                                <Text 
+                                                    key={index} 
+                                                    // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} 
+                                                    onClick={() => setTaskDetail(track.task)}
+                                                    className={clsx(styles["time-entry"], "inline blue-link-light cursor-pointer")}
+                                                >
                                                     {track.task?.Task_Title}
-                                                </Link>
+                                                </Text>
                                             </>
                                         ))}
 
@@ -860,7 +876,7 @@ export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ tim
     );
 };
 
-export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks }) => {
+export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks, setTaskDetail }) => {
     const { t } = useTranslation(["timetrack"]);
 
     if (!timeTracks || timeTracks.length === 0) {
@@ -917,9 +933,13 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
                                         <Text variant="small" className="text-xs">
                                             ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                         </Text>{" "}
-                                        <Link href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} className="blue-link-light inline text-gray-700">
+                                        <Text
+                                            // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} 
+                                            onClick={() => setTaskDetail(track.task)}
+                                            className="blue-link-light inline text-gray-700 cursor-pointer"
+                                        >
                                             {track.task?.Task_Title}
-                                        </Link>
+                                        </Text>
                                         {/* ⏳ Time Spent */}
                                         <SecondsToTimeDisplay totalSeconds={track.Time_Tracking_Duration || 0} />
                                     </li>
@@ -936,9 +956,10 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
 interface TimeSpentPerTaskProps {
     renderProject: Project | undefined
     sortedByDuration: TaskTimeTrack[] | undefined
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
 }
 
-export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProject, sortedByDuration }) => {
+export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProject, sortedByDuration, setTaskDetail }) => {
     const { t } = useTranslation(["timetrack"]);
     const [chartData, setChartData] = useState<{ labels: string[]; taskKeys: string[]; datasets: any[] }>({
         labels: [],
@@ -1004,12 +1025,19 @@ export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProjec
                             const taskHours = chartData.datasets[0].data[index] as number;
                             const percentage = ((taskHours / totalHours) * 100).toFixed(2);
                             const taskKey = chartData.taskKeys[index]
+                            const task = sortedByDuration?.filter((track) => {
+                                return track.task?.Task_Key ?? "" === taskKey
+                            })[0].task
 
                             return (
                                 <li key={index} className="flex flex-col">
                                     <div className="flex justify-between text-sm font-medium">
                                         <Text variant="span">
-                                            <Link href={`/task/${renderProject?.Project_Key}/${taskKey}`} className="blue-link-light inline">
+                                            <Block
+                                                // href={`/task/${renderProject?.Project_Key}/${taskKey}`}
+                                                onClick={() => setTaskDetail(task)}
+                                                className="blue-link-light inline cursor-pointer"
+                                            >
                                                 <Text variant="small" className="text-xs">
                                                     ({renderProject?.Project_Key}-{taskKey})
                                                 </Text>{" "}
@@ -1017,7 +1045,7 @@ export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProjec
                                                 <Text variant="span" className="text-gray-400 inline">
                                                     <SecondsToTimeDisplay totalSeconds={taskHours * 3600} />
                                                 </Text>
-                                            </Link>
+                                            </Block>
                                         </Text>
                                         <Text variant="span">{percentage}%</Text>
                                     </div>
@@ -1036,10 +1064,11 @@ export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProjec
 
 interface LatestTimeLogsProps {
     sortedByLatest: TaskTimeTrack[] | undefined
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
 }
 
 export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
-    sortedByLatest
+    sortedByLatest, setTaskDetail
 }) => {
     const { t } = useTranslation(["timetrack"]);
 
@@ -1117,9 +1146,13 @@ export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
                                     <Text variant="small">
                                         ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                     </Text>{" "}
-                                    <Link href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} className="inline blue-link">
+                                    <Text 
+                                        // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} 
+                                        onClick={() => setTaskDetail(track.task)}
+                                        className="inline blue-link cursor-pointer"
+                                    >
                                         {track.task?.Task_Title}
-                                    </Link>{" "}
+                                    </Text>{" "}
                                     lasting{" "}
                                     {track.Time_Tracking_Duration ? (
                                         <SecondsToTimeDisplay totalSeconds={track.Time_Tracking_Duration} />

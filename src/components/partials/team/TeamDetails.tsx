@@ -26,10 +26,10 @@ import { useURLLink } from '@/hooks'
 export const TeamDetails = () => {
     // ---- Hooks ----
     const dispatch = useAppDispatch()
-    const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
     const router = useRouter()
     const pathname = usePathname() // Get the current pathname
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext()
+    const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
     const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
 
     // ---- State ----

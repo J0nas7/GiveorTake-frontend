@@ -55,7 +55,7 @@ export const Startpage = () => {
                                 <Block key={organisation.Organisation_ID} className="bg-white p-5 rounded-lg shadow-md">
                                     {/* Organisation Name */}
                                     <Link
-                                        href={`/organisation/${organisation.Organisation_ID}`}
+                                        href={`/organisation/${convertID_NameStringToURLFormat(organisation.Organisation_ID ?? 0, organisation.Organisation_Name)}`}
                                         className="blue-link-light"
                                     >
                                         <Text className="text-xl font-bold">{organisation.Organisation_Name}</Text>
@@ -72,7 +72,7 @@ export const Startpage = () => {
                                                 {organisation.teams.map((team) => (
                                                     <Block key={team.Team_ID} className="p-4 border-l-4 border-blue-500 bg-gray-50 rounded-md">
                                                         {/* Team Name */}
-                                                        <Link href={`/team/${team.Team_ID}`} className="blue-link-light">
+                                                        <Link href={`/team/${convertID_NameStringToURLFormat(team.Team_ID ?? 0, team.Team_Name)}`} className="blue-link-light">
                                                             <Text className="text-lg font-medium">{team.Team_Name}</Text>
                                                         </Link>
                                                         <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{

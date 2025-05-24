@@ -168,7 +168,7 @@ const SearchBar = () => {
                     <div key={task.Task_ID} className="space-y-2">
                         <p className="font-semibold">{task.Task_Title}</p>
                         <p className="text-sm text-gray-500">Assigned To: {task.Assigned_User_ID}</p>
-                        <p className="text-xs text-gray-400">Status: {task.Task_Status}</p>
+                        <p className="text-xs text-gray-400">Status: {task.status?.Status_Name}</p>
                     </div>
                 );
             default:
@@ -199,7 +199,7 @@ const SearchBar = () => {
                 break
             case "GT_Tasks":
                 const task: Task = item
-                router.push(`/task/${task.project?.Project_Key}/${task.Task_Key}`)
+                router.push(`/task/${task.backlog?.project?.Project_Key}/${task.Task_Key}`)
                 clearSearch()
                 break
             default:

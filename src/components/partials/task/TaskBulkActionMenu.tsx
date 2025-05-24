@@ -176,7 +176,8 @@ const BulkEdit: React.FC<BulkEditProps> =
         setTaskBulkEditing
     }) => {
         // Hooks
-        const { backlogId } = useParams<{ backlogId: string }>() // Get backlogId from URL
+        const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
+        const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
         const { httpPostWithData } = useAxios()
         const { backlogById, backlogsById, readBacklogById, readBacklogsByProjectId } = useBacklogsContext()
         const { readTasksByBacklogId } = useTasksContext()

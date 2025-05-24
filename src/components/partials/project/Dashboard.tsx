@@ -1,35 +1,37 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { useParams } from "next/navigation";
+import { useParams } from "next/navigation"
 import { TFunction, useTranslation } from "next-i18next"
 
 // External chart library
-import { Pie, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2'
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 
 // Internal components and hooks
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
 import { Block, Text, Heading } from "@/components"
 import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
 import { Backlog, BacklogStates, Project, Status, Task } from "@/types"
-import Link from "next/link";
-import { FlexibleBox } from "@/components/ui/flexible-box";
-import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons";
-import Image from "next/image";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { LoadingState } from "@/core-ui/components/LoadingState";
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
+import Link from "next/link"
+import { FlexibleBox } from "@/components/ui/flexible-box"
+import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons"
+import Image from "next/image"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { LoadingState } from "@/core-ui/components/LoadingState"
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux"
+import { useURLLink } from "@/hooks"
 
 // Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
+ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 const DashboardContainer = () => {
     // ---- Hooks ----
-    const { backlogId } = useParams<{ backlogId: string }>(); // Get backlogId from URL
-    const { t } = useTranslation(['dashboard']);
-    const { tasksById, readTasksByBacklogId } = useTasksContext();
-    const { backlogById, readBacklogById } = useBacklogsContext();
+    const { t } = useTranslation(['dashboard'])
+    const { tasksById, readTasksByBacklogId } = useTasksContext()
+    const { backlogById, readBacklogById } = useBacklogsContext()
+    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
+    const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
 
     // ---- State ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
@@ -73,7 +75,7 @@ const DashboardContainer = () => {
 
     // ---- Special: Dashboard Calculations ----
     // Ensure tasks is always an array
-    const safeTasks = Array.isArray(renderTasks) ? renderTasks : [];
+    const safeTasks = Array.isArray(renderTasks) ? renderTasks : []
 
     // Categorize tasks based on their related status properties
     const taskStatuses = {
@@ -84,40 +86,40 @@ const DashboardContainer = () => {
                 !task.status?.Status_Is_Closed
         ),
         done: safeTasks.filter(task => task.status?.Status_Is_Closed),
-    };
+    }
 
     // KPI Calculations
-    const totalTasks = safeTasks.length;
-    const todoTasks = taskStatuses.todo.length;
-    const inProgressTasks = taskStatuses.inProgress.length;
-    const completedTasks = taskStatuses.done.length;
+    const totalTasks = safeTasks.length
+    const todoTasks = taskStatuses.todo.length
+    const inProgressTasks = taskStatuses.inProgress.length
+    const completedTasks = taskStatuses.done.length
 
     // Task completion percentage
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
     // Overdue Tasks Calculation
     const overdueTasks = useMemo(() => {
-        const today = new Date().toISOString().split("T")[0];
+        const today = new Date().toISOString().split("T")[0]
         return safeTasks.filter(task =>
             task.Task_Due_Date &&
             typeof task.Task_Due_Date === "string" &&
             task.Task_Due_Date < today &&
             task.status?.Status_Is_Closed !== true
-        ).length;
-    }, [safeTasks]);
+        ).length
+    }, [safeTasks])
 
     // Chart data for task status overview
     const chartData = useMemo(() => {
         const statuses: { [key: string]: string } | undefined = backlogById ?
             backlogById.statuses?.reduce((acc, status) => {
-                acc[status.Status_ID ?? 0] = status.Status_Name;
-                return acc;
-            }, {} as { [key: string]: string }) : undefined;
+                acc[status.Status_ID ?? 0] = status.Status_Name
+                return acc
+            }, {} as { [key: string]: string }) : undefined
 
-        const statusLabels = statuses ? Object.entries(statuses).map(([id, name]) => name) : [];
+        const statusLabels = statuses ? Object.entries(statuses).map(([id, name]) => name) : []
         const statusCounts = statuses ? Object.entries(statuses).map(([id, name]) =>
             (backlogById && backlogById.tasks?.filter(task => task.Status_ID === parseInt(id)).length) || 0
-        ) : [];
+        ) : []
 
         return {
             labels: statusLabels,
@@ -127,8 +129,8 @@ const DashboardContainer = () => {
                     backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
                 }
             ]
-        };
-    }, [taskStatuses]);
+        }
+    }, [taskStatuses])
 
     // Bar chart data for task completion over time (e.g., weeks)
     const barChartData = {
@@ -149,7 +151,7 @@ const DashboardContainer = () => {
                 borderWidth: 1
             }
         ]
-    };
+    }
 
     // ---- Render ----
     return (
@@ -177,21 +179,21 @@ type DashboardContainerViewProps = {
     overdueTasks: number
     inProgressTasks: number
     chartData: {
-        labels: string[];
+        labels: string[]
         datasets: {
-            data: number[];
-            backgroundColor: string[];
-        }[];
+            data: number[]
+            backgroundColor: string[]
+        }[]
     }
     barChartData: {
-        labels: string[];
+        labels: string[]
         datasets: {
-            label: string;
-            data: number[];
-            backgroundColor: string;
-            borderColor: string;
-            borderWidth: number;
-        }[];
+            label: string
+            data: number[]
+            backgroundColor: string
+            borderColor: string
+            borderWidth: number
+        }[]
     }
     t: TFunction
 }
@@ -288,7 +290,7 @@ const DashboardContainerView: React.FC<DashboardContainerViewProps> = ({
 )
 
 interface ProgressBarProps {
-    completed: number; // Completion percentage (0 - 100)
+    completed: number // Completion percentage (0 - 100)
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ completed }) => {
@@ -301,7 +303,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ completed }) => {
                 <span className={styles.progressText}>{completed}%</span>
             </div>
         </div>
-    );
+    )
 }
 
 export const Dashboard = () => (
