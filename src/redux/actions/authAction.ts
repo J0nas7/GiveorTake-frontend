@@ -3,7 +3,7 @@ import { Dispatch } from 'redux'
 
 // Internal
 import { useAxios, useCookies } from '@/hooks'
-import { setAuthUser, setAuthUserOrganisation, setAuthUserSeat, setAuthUserTaskTimeTrack, setIsLoggedIn } from '../slices/authSlice'
+import { setAuthUser, setAuthUserOrganisation, setAuthUserSeat, setAuthUserSeatPermissions, setAuthUserTaskTimeTrack, setIsLoggedIn } from '../slices/authSlice'
 
 export const useAuthActions = () => {
     const { deleteTheCookie } = useCookies()
@@ -36,6 +36,10 @@ export const useAuthActions = () => {
                 
                 if (Array.isArray(data.userSeats) && data.userSeats.length) {
                     dispatch(setAuthUserSeat({ "data": data.userSeats[0] }))
+
+                    if (data.permissions) {
+                        dispatch(setAuthUserSeatPermissions(data.permissions))
+                    }
                 }
                 
                 dispatch(setAuthUserOrganisation({ "data": data.userOrganisation }))

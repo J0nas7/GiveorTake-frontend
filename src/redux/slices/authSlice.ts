@@ -57,22 +57,25 @@ export const authSlice = createSlice({
         },
         setAuthUserSeat: (state: AuthState, action: PayloadAction<any>) => {
             const data = action.payload.data
-            const Seat_Permissions = data.Seat_Permissions
             state.authUserSeat = data
+            
+            // const Seat_Permissions = data.Seat_Permissions
+            // let parsedPermissions: string[] = [];
 
-            let parsedPermissions: string[] = [];
+            // if (Array.isArray(Seat_Permissions)) {
+            //     parsedPermissions = Seat_Permissions;
+            // } else if (typeof Seat_Permissions === 'string') {
+            //     try {
+            //         parsedPermissions = JSON.parse(Seat_Permissions);
+            //     } catch (e) {
+            //         console.error("Failed to parse Seat_Permissions:", e);
+            //     }
+            // }
 
-            if (Array.isArray(Seat_Permissions)) {
-                parsedPermissions = Seat_Permissions;
-            } else if (typeof Seat_Permissions === 'string') {
-                try {
-                    parsedPermissions = JSON.parse(Seat_Permissions);
-                } catch (e) {
-                    console.error("Failed to parse Seat_Permissions:", e);
-                }
-            }
-
-            state.authUserSeatPermissions = parsedPermissions
+            // state.authUserSeatPermissions = parsedPermissions
+        },
+        setAuthUserSeatPermissions: (state: AuthState, action: PayloadAction<any>) => {
+            state.authUserSeatPermissions = action.payload
         },
         setAuthUserOrganisation: (state: AuthState, action: PayloadAction<any>) => {
             state.authUserOrganisation = action.payload.data
@@ -106,6 +109,7 @@ export const {
     setIsLoggedIn,
     setAuthUser,
     setAuthUserSeat,
+    setAuthUserSeatPermissions,
     setAuthUserOrganisation,
     setAuthUserTaskTimeTrack,
     setSnackMessage,

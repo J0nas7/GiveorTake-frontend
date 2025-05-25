@@ -12,7 +12,7 @@ import { faChair, faPlus, faShield, faUser, faUserPlus, faUsers } from '@fortawe
 
 // Internal
 import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
-import { Backlog, Project, Role, Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
+import { Backlog, Permission, Project, Role, RoleFields, Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
 import { Block, Heading, Text } from '@/components';
 import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { useAxios, useURLLink } from '@/hooks';
@@ -27,13 +27,15 @@ const TeamRolesSeatsManager: React.FC = () => {
     const { t } = useTranslation(['team'])
     const {
         teamUserSeatsById,
-        rolesAndPermissionsByTeamId,
         readTeamUserSeatsByTeamId,
         addTeamUserSeat,
         saveTeamUserSeatChanges,
         removeTeamUserSeat,
+
+        rolesAndPermissionsByTeamId,
         readRolesAndPermissionsByTeamId,
-        removeRolesAndPermissionsByRoleId
+        removeRolesAndPermissionsByRoleId,
+        saveTeamRoleChanges
     } = useTeamUserSeatsContext();
     const { teamById, readTeamById } = useTeamsContext();
     const { addUser } = useUsersContext(); // Assuming you have a `UsersContext` for adding new users
@@ -60,7 +62,7 @@ const TeamRolesSeatsManager: React.FC = () => {
 
     // ---- Methods ----
     // Handles saving changes made to the selected seat
-    const handleSaveChanges = async () => {
+    const handleSeatChanges = async () => {
         if (selectedSeat) {
             const saveChanges = await saveTeamUserSeatChanges(selectedSeat, parseInt(teamId))
 
@@ -68,7 +70,18 @@ const TeamRolesSeatsManager: React.FC = () => {
                 saveChanges ? "Seat changes saved successfully!" : "Failed to save seat changes."
             ))
         }
-    };
+    }
+
+    // Handles saving changes made to the selected role
+    const handleRoleChanges = async () => {
+        if (selectedRole) {
+            const saveChanges = await saveTeamRoleChanges(selectedRole, parseInt(teamId))
+
+            dispatch(setSnackMessage(
+                saveChanges ? "Role changes saved successfully!" : "Failed to save role changes."
+            ))
+        }
+    }
 
     // Handles the removal of a team user seat.
     const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(seatId, parseInt(teamId), "/team/" + teamId + "/roles-seats");
@@ -89,6 +102,16 @@ const TeamRolesSeatsManager: React.FC = () => {
         if (selectedSeat) {
             setSelectedSeat((prevSeat) => ({
                 ...prevSeat!,
+                [field]: value,
+            }));
+        }
+    };
+
+    // Handles changes to a specific field of the selected team user seat.
+    const handleRoleChange = (field: RoleFields, value: string) => {
+        if (selectedRole) {
+            setSelectedRole((prevRole) => ({
+                ...prevRole!,
                 [field]: value,
             }));
         }
@@ -117,27 +140,37 @@ const TeamRolesSeatsManager: React.FC = () => {
     };
 
     // Toggles a permission for the selected seat by adding or removing it from the permissions list.
-    const togglePermission = (permission: string, isChecked: boolean) => null
-    /*const togglePermission = (permission: string, isChecked: boolean) => {
+    const togglePermission = async (permission: string, isChecked: boolean) => {
         setSelectedRole((prevRole) => {
-            if (!prevRole) return prevRole;
+            if (!prevRole) return prevRole
 
-            const updatedPermissions = isChecked
-                ? [
-                    ...(Array.isArray(prevRole.Seat_Permissions)
-                        ? prevRole.Seat_Permissions
-                        : JSON.parse(prevRole.Seat_Permissions || "[]")), // Parse JSON if it's a string
-                    permission
-                ]
-                : (
-                    (Array.isArray(prevRole.Seat_Permissions)
-                        ? prevRole.Seat_Permissions
-                        : JSON.parse(prevRole.Seat_Permissions || "[]"))
-                ).filter((perm: string) => perm !== permission);
+            const currentPermissions = prevRole.permissions || []
 
-            return { ...prevRole, Seat_Permissions: JSON.stringify(updatedPermissions) };
-        });
-    };*/
+            const isAlreadyIncluded = currentPermissions.some(p => p.Permission_Key === permission)
+
+            let updatedPermissions: Permission[]
+
+            if (isChecked) {
+                // Add permission if not already included
+                if (!isAlreadyIncluded) {
+                    const newPermission: Permission = {
+                        Permission_Key: permission,
+                        Team_ID: renderTeam ? renderTeam.Team_ID ?? 0 : 0
+                    }
+                    updatedPermissions = [...currentPermissions, newPermission]
+                } else {
+                    updatedPermissions = currentPermissions
+                }
+            } else {
+                // Remove the permission
+                updatedPermissions = currentPermissions.filter(p => p.Permission_Key !== permission)
+            }
+
+            console.log("updatedPermissions", isChecked, permission, updatedPermissions)
+
+            return { ...prevRole, permissions: updatedPermissions }
+        })
+    }
 
     // ---- Effects ----
     useEffect(() => {
@@ -220,8 +253,10 @@ const TeamRolesSeatsManager: React.FC = () => {
             handleSelectRole={handleSelectRole}
             handleRemoveSeat={handleRemoveSeat}
             handleRemoveRole={handleRemoveRole}
-            handleSaveChanges={handleSaveChanges}
+            handleSeatChanges={handleSeatChanges}
+            handleRoleChanges={handleRoleChanges}
             handleSeatChange={handleSeatChange}
+            handleRoleChange={handleRoleChange}
             setSelectedSeat={setSelectedSeat}
             setDisplayInviteForm={setDisplayInviteForm}
             setSelectedRole={setSelectedRole}
@@ -251,13 +286,15 @@ export interface TeamRolesSeatsViewProps {
     handleSelectRole: (role: Role) => void
     handleRemoveSeat: (seatId: number) => void;
     handleRemoveRole: (roleId: number) => void
-    handleSaveChanges: () => void;
+    handleSeatChanges: () => void;
+    handleRoleChanges: () => Promise<void>
     handleSeatChange: (field: TeamUserSeatFields, value: string) => void;
+    handleRoleChange: (field: RoleFields, value: string) => void
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
     setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
     setSelectedRole: React.Dispatch<React.SetStateAction<Role | undefined>>
     setDisplayNewRoleForm: React.Dispatch<React.SetStateAction<boolean>>
-    togglePermission: (permission: string, isChecked: boolean) => void
+    togglePermission: (permission: string, isChecked: boolean) => Promise<void>
     convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
@@ -280,8 +317,10 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
     handleSelectRole,
     handleRemoveSeat,
     handleRemoveRole,
-    handleSaveChanges,
+    handleSeatChanges,
+    handleRoleChanges,
     handleSeatChange,
+    handleRoleChange,
     setSelectedSeat,
     setDisplayInviteForm,
     setSelectedRole,
@@ -348,17 +387,9 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                                                 {role.Role_Name}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Permissions:
+                                                Permissions: {role.permissions?.length}
                                             </Typography>
-                                            <Grid container spacing={2}>
-                                                {role.permissions?.map(permission => (
-                                                    <Grid item xs={12} sm={6} md={4} key={permission.Permission_ID}>
-                                                        <Text variant="span" className="bg-gray-300 p-1 rounded-md">
-                                                            {permission.Permission_Key}
-                                                        </Text>
-                                                    </Grid>
-                                                ))}
-                                            </Grid>
+                                            
                                             {canManageTeamMembers && (
                                                 <div className="flex justify-between mt-4">
                                                     <button
@@ -445,6 +476,7 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                 {selectedSeat ? (
                     <SelectedSeatForm
                         selectedSeat={selectedSeat}
+                        rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
                         handleSeatChange={handleSeatChange}
                         t={t}
                         availablePermissions={availablePermissions}
@@ -452,7 +484,7 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                         renderTeam={renderTeam}
                         setSelectedSeat={setSelectedSeat}
                         setDisplayInviteForm={setDisplayInviteForm}
-                        handleSaveChanges={handleSaveChanges}
+                        handleSeatChanges={handleSeatChanges}
                     />
                 ) : displayInviteForm ? (
                     <InviteUserForm
@@ -465,7 +497,16 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                         setDisplayInviteForm={setDisplayInviteForm}
                     />
                 ) : selectedRole ? (
-                    <></>
+                    <SelectedRoleForm
+                        selectedRole={selectedRole}
+                        handleRoleChange={handleRoleChange}
+                        t={t}
+                        availablePermissions={availablePermissions}
+                        togglePermission={togglePermission}
+                        renderTeam={renderTeam}
+                        setSelectedRole={setSelectedRole}
+                        handleRoleChanges={handleRoleChanges}
+                    />
                 ) : null}
             </>
         )}
@@ -474,18 +515,20 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
 
 export interface SelectedSeatFormProps {
     selectedSeat: TeamUserSeat
+    rolesAndPermissionsByTeamId: Role[] | undefined
     handleSeatChange: (field: TeamUserSeatFields, value: string) => void
     t: TFunction
     availablePermissions: string[]
-    togglePermission: (permission: string, isChecked: boolean) => void
+    togglePermission: (permission: string, isChecked: boolean) => Promise<void>
     renderTeam: Team
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
     setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
-    handleSaveChanges: () => void
+    handleSeatChanges: () => void
 }
 
 const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
     selectedSeat,
+    rolesAndPermissionsByTeamId,
     handleSeatChange,
     t,
     availablePermissions,
@@ -493,7 +536,7 @@ const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
     renderTeam,
     setSelectedSeat,
     setDisplayInviteForm,
-    handleSaveChanges
+    handleSeatChanges
 }) => (
     <FlexibleBox
         title={t('team:seatsManager:editUserSeat')}
@@ -505,16 +548,20 @@ const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
         <Card className="shadow-lg rounded-lg mt-4">
             <CardContent className="p-4">
                 <Grid container spacing={3}>
-                    {/* Role Input */}
+                    {/* Role Select */}
                     <Grid item xs={12} sm={6}>
-                        <TextField
-                            label={t('team:seatsManager:userRole')}
-                            variant="outlined"
-                            fullWidth
-                            value={selectedSeat.role?.Role_Name}
-                            onChange={(e) => handleSeatChange("Role_ID", e.target.value)}
-                            className="bg-white"
-                        />
+                        <FormControl fullWidth>
+                            <InputLabel>{t('team:seatsManager:userRole')}</InputLabel>
+                            <Select
+                                value={selectedSeat.Role_ID}
+                                onChange={(e) => handleSeatChange('Role_ID', e.target.value.toString())}
+                                className="bg-white"
+                            >
+                                {Array.isArray(rolesAndPermissionsByTeamId) && rolesAndPermissionsByTeamId.map((role) => (
+                                    <MenuItem value={role.Role_ID}>{role.Role_Name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                     </Grid>
 
                     {/* Status Dropdown */}
@@ -534,87 +581,6 @@ const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
                     </Grid>
                 </Grid>
 
-                {/* Permissions Section */}
-                <Box mt={4}>
-                    <Typography variant="subtitle1" gutterBottom>
-                        {t('team:seatsManager:permissions')}
-                    </Typography>
-
-                    <Grid container spacing={2}>
-                        {availablePermissions.map((permission) => (
-                            <Grid item key={permission} xs={6} sm={4}>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            // checked={selectedSeat.Seat_Permissions?.includes(permission) || false}
-                                            onChange={(e) => togglePermission(permission, e.target.checked)}
-                                        />
-                                    }
-                                    label={permission}
-                                />
-                            </Grid>
-                        ))}
-
-                        {renderTeam?.projects?.map((project: Project) => {
-                            // Define permissions for each project and its associated backlogs
-                            const permissions = [
-                                {
-                                    key1: `accessProject.${project.Project_ID}`,
-                                    label1: `Access Project: ${project.Project_Name}`,
-                                    key2: `manageProject.${project.Project_ID}`,
-                                    label2: `Manage Project: ${project.Project_Name}`,
-                                }
-                            ];
-
-                            // Add permissions for each backlog within the project
-                            project.backlogs?.map((backlog: Backlog) => {
-                                permissions.push(
-                                    {
-                                        key1: `accessBacklog.${backlog.Backlog_ID}`,
-                                        label1: `Access Backlog: ${backlog.Backlog_Name}`,
-                                        key2: `manageBacklog.${backlog.Backlog_ID}`,
-                                        label2: `Manage Backlog: ${backlog.Backlog_Name}`,
-                                    }
-                                );
-                            });
-
-                            // Map through permissions and render checkboxes for each permission
-                            return permissions.map(permission => (
-                                <Grid item key={permission.key1} xs={6} sm={4}>
-                                    {/* Checkbox for the first permission */}
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                // checked={selectedSeat.Seat_Permissions?.includes(permission.key1) || false}
-                                                onChange={(e) => {
-                                                    // Toggle the first permission and ensure the second permission is unchecked if the first is unchecked
-                                                    togglePermission(permission.key1, e.target.checked);
-                                                    if (!e.target.checked) togglePermission(permission.key2, e.target.checked);
-                                                }}
-                                            />
-                                        }
-                                        label={permission.label1}
-                                    />
-                                    {/* Checkbox for the second permission */}
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                // checked={selectedSeat.Seat_Permissions?.includes(permission.key2) || false}
-                                                onChange={(e) => {
-                                                    // Toggle the second permission and ensure the first permission is checked if the second is checked
-                                                    if (e.target.checked) togglePermission(permission.key1, e.target.checked);
-                                                    togglePermission(permission.key2, e.target.checked);
-                                                }}
-                                            />
-                                        }
-                                        label={permission.label2}
-                                    />
-                                </Grid>
-                            ));
-                        })}
-                    </Grid>
-                </Box>
-
                 {/* Action Buttons */}
                 <Box mt={4} className="flex gap-4 justify-end">
                     <button
@@ -628,7 +594,7 @@ const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
                     </button>
                     <button
                         className="button-blue px-6 py-2"
-                        onClick={handleSaveChanges}
+                        onClick={handleSeatChanges}
                     >
                         {t('team:seatsManager:saveChanges')}
                     </button>
@@ -820,5 +786,183 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
         </FlexibleBox>
     );
 }
+
+export interface SelectedRoleFormProps {
+    selectedRole: Role
+    handleRoleChange: (field: RoleFields, value: string) => void
+    t: (key: string) => string
+    availablePermissions: string[]
+    togglePermission: (permission: string, isChecked: boolean) => Promise<void>
+    renderTeam: Team
+    setSelectedRole: React.Dispatch<React.SetStateAction<Role | undefined>>
+    handleRoleChanges: () => void
+}
+
+const SelectedRoleForm: React.FC<SelectedRoleFormProps> = ({
+    selectedRole,
+    handleRoleChange,
+    t,
+    availablePermissions,
+    togglePermission,
+    renderTeam,
+    setSelectedRole,
+    handleRoleChanges
+}) => (
+    <FlexibleBox
+        title={t('team:rolesManager:editRole')}
+        subtitle={selectedRole?.Role_Name}
+        icon={faShield}
+        className="no-box w-auto inline-block"
+        numberOfColumns={2}
+    >
+        <Card className="shadow-lg rounded-lg mt-4">
+            <CardContent className="p-4">
+                <Grid container spacing={3}>
+                    {/* Role Name */}
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            label={t('team:rolesManager:roleName')}
+                            variant="outlined"
+                            fullWidth
+                            value={selectedRole.Role_Name}
+                            onChange={(e) => handleRoleChange('Role_Name', e.target.value)}
+                            className="bg-white"
+                        />
+                    </Grid>
+
+                    {/* Role Description */}
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            label={t('team:rolesManager:roleDescription')}
+                            variant="outlined"
+                            fullWidth
+                            value={selectedRole.Role_Description || ''}
+                            onChange={(e) => handleRoleChange('Role_Description', e.target.value)}
+                            className="bg-white"
+                        />
+                    </Grid>
+                </Grid>
+
+                {/* Permissions */}
+                <Box mt={4}>
+                    <Typography variant="subtitle1" gutterBottom>
+                        {t('team:rolesManager:permissions')}
+                    </Typography>
+
+                    <Grid container spacing={2}>
+                        {availablePermissions.map((permission) => {
+                            const checked = selectedRole.permissions ?
+                                selectedRole.permissions.filter(perm =>
+                                    permission === perm.Permission_Key
+                                ).length > 0 : false
+                            return (
+                                <Grid item key={permission} xs={6} sm={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={checked}
+                                                onChange={(e) => togglePermission(permission, e.target.checked)}
+                                            />
+                                        }
+                                        label={permission}
+                                    />
+                                </Grid>
+                            )
+                        })}
+
+                        {renderTeam?.projects?.map((project: Project) => {
+                            const checkedAccess = selectedRole.permissions ?
+                                selectedRole.permissions.filter(permission =>
+                                    `accessProject.${project.Project_ID}` === permission.Permission_Key
+                                ).length > 0 : false
+                            const checkedManage = selectedRole.permissions ?
+                                selectedRole.permissions.filter(permission =>
+                                    `manageProject.${project.Project_ID}` === permission.Permission_Key
+                                ).length > 0 : false
+
+                            const permissions = [
+                                {
+                                    key1: `accessProject.${project.Project_ID}`,
+                                    label1: `Access Project: ${project.Project_Name}`,
+                                    checked1: checkedAccess,
+                                    key2: `manageProject.${project.Project_ID}`,
+                                    label2: `Manage Project: ${project.Project_Name}`,
+                                    checked2: checkedManage,
+                                }
+                            ];
+
+                            project.backlogs?.map((backlog: Backlog) => {
+                                const checkedAccess = selectedRole.permissions ?
+                                    selectedRole.permissions.filter(permission =>
+                                        `accessBacklog.${backlog.Backlog_ID}` === permission.Permission_Key
+                                    ).length > 0 : false
+                                const checkedManage = selectedRole.permissions ?
+                                    selectedRole.permissions.filter(permission =>
+                                        `manageBacklog.${backlog.Backlog_ID}` === permission.Permission_Key
+                                    ).length > 0 : false
+
+                                permissions.push(
+                                    {
+                                        key1: `accessBacklog.${backlog.Backlog_ID}`,
+                                        label1: `Access Backlog: ${backlog.Backlog_Name}`,
+                                        checked1: checkedAccess,
+                                        key2: `manageBacklog.${backlog.Backlog_ID}`,
+                                        label2: `Manage Backlog: ${backlog.Backlog_Name}`,
+                                        checked2: checkedManage
+                                    }
+                                );
+                            });
+
+                            return permissions.map(permission => (
+                                <Grid item key={permission.key1} xs={6} sm={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={permission.checked1}
+                                                onChange={async (e) => {
+                                                    await togglePermission(permission.key1, e.target.checked);
+                                                    if (!e.target.checked) togglePermission(permission.key2, false);
+                                                }}
+                                            />
+                                        }
+                                        label={permission.label1}
+                                    />
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={permission.checked2}
+                                                onChange={async (e) => {
+                                                    togglePermission(permission.key2, e.target.checked);
+                                                    if (e.target.checked) await togglePermission(permission.key1, true);
+                                                }}
+                                            />
+                                        }
+                                        label={permission.label2}
+                                    />
+                                </Grid>
+                            ));
+                        })}
+                    </Grid>
+                </Box>
+
+                {/* Action Buttons */}
+                <Box mt={4} className="flex gap-4 justify-end">
+                    <button
+                        className="blue-link-light"
+                        onClick={() => setSelectedRole(undefined)}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className="button-blue px-6 py-2"
+                        onClick={handleRoleChanges}
+                    >
+                        {t('team:rolesManager:saveRole')}
+                    </button>
+                </Box>
+            </CardContent>
+        </Card>
+    </FlexibleBox>
+)
 
 export default TeamRolesSeatsManager;

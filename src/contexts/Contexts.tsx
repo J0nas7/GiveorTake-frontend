@@ -1,7 +1,7 @@
 "use client"
 
 // External
-import React, { createContext, useContext, useState } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
 
 // Internal
 import { useResourceContext } from "@/contexts"
@@ -32,8 +32,9 @@ import {
     BacklogStates,
     Role
 } from "@/types"
-import { useAxios } from "@/hooks";
-import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
+import { useAxios, useTypeAPI } from "@/hooks";
+import { selectAuthUser, selectAuthUserTaskTimeTrack, selectDeleteConfirm, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
+import { usePathname } from "next/navigation";
 export * from './StatusContext'
 
 // Context for Users
@@ -244,6 +245,7 @@ export type TeamUserSeatsContextType = {
     rolesAndPermissionsByTeamId: Role[] | undefined
     readRolesAndPermissionsByTeamId: (teamId: number) => Promise<boolean>
     removeRolesAndPermissionsByRoleId: (itemId: number, parentId: number) => Promise<void>
+    saveTeamRoleChanges: (itemChanges: Role, parentId: number) => Promise<boolean>
 };
 
 const TeamUserSeatsContext = createContext<TeamUserSeatsContextType | undefined>(undefined);
@@ -267,19 +269,23 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
         "teams"
     )
 
-    const { httpGetRequest, httpDeleteRequest } = useAxios()
+    const { httpGetRequest } = useAxios()
+    const pathname = usePathname()
 
-    const [rolesAndPermissionsByTeamId, setRolesAndPermissionsByTeamId] = useState<Role[]|undefined>(undefined)
+    const { updateItem: updateRole, deleteItem: deleteRole } = useTypeAPI<Role, "Role_ID">("team-roles", "Role_ID", "teams")
+    const deleteConfirm = useTypedSelector(selectDeleteConfirm)
+
+    const [rolesAndPermissionsByTeamId, setRolesAndPermissionsByTeamId] = useState<Role[] | undefined>(undefined)
 
     const readRolesAndPermissionsByTeamId = async (teamId: number) => {
         try {
             const data = await httpGetRequest(`teams/${teamId}/team-roles-permissions`)
-            
+
             if (!data.message) {
                 setRolesAndPermissionsByTeamId(data)
                 return true
             }
-            
+
             throw new Error(`Failed to readRolesAndPermissionsByTeamId`);
         } catch (error: any) {
             console.log(error.message || `An error occurred while trying readRolesAndPermissionsByTeamId.`);
@@ -288,9 +294,16 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const removeRolesAndPermissionsByRoleId = async (itemId: number, parentId: number) => {
-        const response = await httpDeleteRequest(`remove-roles-and-permissions/${itemId}`)
+        const deleteItem = await deleteRole(itemId, pathname)
+    }
 
-        const data = await readRolesAndPermissionsByTeamId(parentId) // Refresh items after deletion
+    const saveTeamRoleChanges = async (itemChanges: Role, parentId: number) => {
+        console.log("itemChanges", itemChanges)
+        const updatedItem = await updateRole(itemChanges)
+
+        if (updatedItem) await readRolesAndPermissionsByTeamId(parentId) // Refresh items after update
+
+        return updatedItem
     }
 
     return (
@@ -308,7 +321,8 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
             // teamUserSeatError,
             rolesAndPermissionsByTeamId,
             readRolesAndPermissionsByTeamId,
-            removeRolesAndPermissionsByRoleId
+            removeRolesAndPermissionsByRoleId,
+            saveTeamRoleChanges
         }}>
             {children}
         </TeamUserSeatsContext.Provider>
