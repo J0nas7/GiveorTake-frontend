@@ -31,7 +31,7 @@ export default function SignInPage() {
         
         handleLoginSubmit(userEmail, userPassword)
             .then((loginResult) => {
-                if (loginResult) router.push('/')
+                // if (loginResult) router.push('/')
             })
             .finally(() => {
                 setLoginPending(false)

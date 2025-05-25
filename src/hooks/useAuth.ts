@@ -2,7 +2,7 @@
 
 // External
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 // Internal
 import { useAxios, useCookies } from './'
@@ -36,9 +36,10 @@ const errorCodes: Errors = {
 
 export const useAuth = () => {
     // Hooks
+    const router = useRouter()
+    const searchParams = useSearchParams()
     const { httpPostWithData, httpGetRequest } = useAxios()
     const { getTheCookie, setTheCookie, deleteTheCookie } = useCookies()
-    const router = useRouter()
 
     // Redux
     const dispatch = useAppDispatch()
@@ -60,8 +61,9 @@ export const useAuth = () => {
             // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))
             dispatch(setIsLoggedIn({ "data": true }))
             dispatch(setAuthUser({ "data": newAuthUser }))
-
-            router.push("/")
+            
+            let ref = searchParams.get("ref")
+            router.push(ref ?? "/")
         }
 
         return true

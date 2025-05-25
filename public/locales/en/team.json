@@ -1,6 +1,6 @@
 {
-    "seatsManager": {
-        "manageTeamUserSeats": "Manage Team User Seats",
+    "rolesSeatsManager": {
+        "manageTeamRolesSeats": "Manage Team Roles & Seats",
         "teamUserSeats": "Team User Seats",
         "length0_iamowner": "There are no users on any seats. You are the organisation owner.",
         "edit": "Edit",
@@ -25,6 +25,7 @@
         "searchUser": "Search User",
         "userNotFound": "User not found. Please try again.",
         "invalidEmail": "Please enter a valid email address.",
+        "selectedRole": "Selected role",
         "userFound": "User found",
         "sendInvite": "Send Invite",
         "createSeatError": "Failed to send invitation",

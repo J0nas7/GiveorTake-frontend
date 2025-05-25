@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencil, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faPencil, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop, faXmark, faLightbulb } from "@fortawesome/free-solid-svg-icons";
 
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 import "quill-mention/dist/quill.mention.css";
@@ -764,6 +764,8 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
 const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
     const router = useRouter()
     const { taskDetail, setTaskDetail, removeTask, readTasksByBacklogId } = useTasksContext()
+    const { taskLink } = useParams<{ taskLink: string }>()
+    const { convertID_NameStringToURLFormat } = useURLLink(taskLink)
 
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
@@ -800,6 +802,8 @@ const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
             taskDetail={taskDetail}
             archiveTask={archiveTask}
             shareTask={shareTask}
+            setTaskDetail={setTaskDetail}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     );
 };
@@ -809,9 +813,13 @@ interface CtaButtonsViewProps {
     taskDetail: Task | undefined
     archiveTask: (task: Task) => Promise<void>
     shareTask: () => Promise<void>
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
-export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail, archiveTask, shareTask }) => {
+export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ 
+    task, taskDetail, archiveTask, shareTask, setTaskDetail, convertID_NameStringToURLFormat
+}) => {
     return (
         <Block className={styles.ctaButtons}>
             <button
@@ -835,14 +843,33 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ task, taskDetail
                 <Text variant="span">Share</Text>
             </button>
             {taskDetail !== undefined && (
-                <Link href={`/task/${taskDetail.backlog?.project?.Project_Key}/${taskDetail.Task_Key}`} className={clsx(
-                    "blue-link",
-                    styles.ctaButton
-                )}>
+                <Link
+                    href={`/task/${taskDetail.backlog?.project?.Project_Key}/${convertID_NameStringToURLFormat(taskDetail.Task_Key ?? 0, taskDetail.Task_Title)}`}
+                    className={clsx(
+                        "blue-link",
+                        styles.ctaButton
+                    )}
+                >
                     <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
                     <Text variant="span">Open in URL</Text>
                 </Link>
             )}
+
+            <Block className="flex ml-auto gap-2">
+                <Link
+                    onClick={() => setTaskDetail(undefined)}
+                    href={`/project/${convertID_NameStringToURLFormat(task.backlog?.project?.Project_ID ?? 0, task.backlog?.project?.Project_Name ?? "")}`}
+                    className="blue-link !inline-flex gap-2 items-center"
+                >
+                    <FontAwesomeIcon icon={faLightbulb} />
+                    <Text variant="span">Go to Project</Text>
+                </Link>
+                {taskDetail !== undefined && (
+                    <button onClick={() => setTaskDetail(undefined)} className="blue-link">
+                        <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                )}
+            </Block>
         </Block>
     )
 }
@@ -1090,34 +1117,18 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ theTask }) => {
     if (!theTask) return null
 
     return (
-        <>
-            <Block className="flex justify-between">
-                <Link
-                    onClick={() => setTaskDetail(undefined)}
-                    href={`/project/${theTask.backlog?.project?.Project_ID}`}
-                    className="blue-link"
-                >
-                    &laquo; Go to Project
-                </Link>
-                {taskDetail !== undefined && (
-                    <button onClick={() => setTaskDetail(undefined)} className="blue-link">
-                        <FontAwesomeIcon icon={faXmark} />
-                    </button>
-                )}
+        <Block className={styles.content}>
+            <Block className={styles.leftPanel}>
+                <TitleArea task={theTask} />
+                <DescriptionArea task={theTask} />
+                <MediaFilesArea task={theTask} />
+                <CommentsArea task={theTask} />
             </Block>
-            <Block className={styles.content}>
-                <Block className={styles.leftPanel}>
-                    <TitleArea task={theTask} />
-                    <DescriptionArea task={theTask} />
-                    <MediaFilesArea task={theTask} />
-                    <CommentsArea task={theTask} />
-                </Block>
-                <Block className={styles.rightPanel}>
-                    <CtaButtons task={theTask} />
-                    <TaskDetailsArea task={theTask} />
-                </Block>
+            <Block className={styles.rightPanel}>
+                <CtaButtons task={theTask} />
+                <TaskDetailsArea task={theTask} />
             </Block>
-        </>
+        </Block>
     );
 };
 

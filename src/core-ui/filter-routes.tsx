@@ -37,7 +37,7 @@ export const OnlyPublicRoutes = ({ children }: { children: React.ReactNode }) =>
     const pathIsProtected = publicRoutes.indexOf(pathname) === -1
     
     if (isBrowser() && isLoggedIn === false && pathIsProtected) {
-        router.push("/sign-in")
+        router.push(`/sign-in?ref=${encodeURIComponent(pathname)}`)
     }
     
     useEffect(() => {

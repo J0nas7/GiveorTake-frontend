@@ -169,6 +169,15 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                 <Text variant="span">Seats</Text>
                             </Link>
                         )}
+                        {canManageTeamMembers && (
+                            <Link
+                                href={`${pathname}/roles-seats`}
+                                className="blue-link !inline-flex gap-2 items-center"
+                            >
+                                <FontAwesomeIcon icon={faUsers} />
+                                <Text variant="span">Roles & Seats</Text>
+                            </Link>
+                        )}
                         {canModifyTeamSettings && (
                             <Link
                                 href={`${pathname}/create-project`}

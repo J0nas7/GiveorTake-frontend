@@ -115,23 +115,72 @@ export type BacklogStates = Backlog | undefined | false
 export type TeamUserSeat = {
     Seat_ID?: number;
     Team_ID: number;
-    User_ID?: number;
-    Seat_Role: string;
+    User_ID: number;
+    Role_ID: number;
     Seat_Status: string;
     Seat_Role_Description?: string;
-    Seat_Permissions?: string[] | string;
+    Seat_Expiration?: string;
     Seat_CreatedAt?: string;
     Seat_UpdatedAt?: string;
     Seat_DeletedAt?: string;
 
     // Relationships
-    team?: Team
-    user?: User
+    team?: Team;
+    user?: User;
+    role?: Role;
 };
 
 export type TeamUserSeatFields =
-    "Seat_ID" | "Team_ID" | "User_ID" | "Seat_Role" | "Seat_Status" |
-    "Seat_Role_Description" | "Seat_Permissions" | "Seat_CreatedAt" | "Seat_UpdatedAt" | "Seat_DeletedAt";
+    "Seat_ID" | "Team_ID" | "User_ID" | "Role_ID" | 
+    "Seat_Status" | "Seat_Role_Description" | "Seat_Expiration" | 
+    "Seat_CreatedAt" | "Seat_UpdatedAt" | "Seat_DeletedAt"
+
+// Role Type
+export type Role = {
+    Role_ID?: number;
+    Team_ID: number;
+    Role_Name: string;
+    Role_Description?: string;
+    Role_CreatedAt?: string;
+    Role_UpdatedAt?: string;
+    Role_DeletedAt?: string;
+
+    // Relationships
+    permissions?: Permission[];
+};
+
+export type RoleFields =
+    "Role_ID" | "Team_ID" | "Role_Name" | "Role_Description" |
+    "Role_CreatedAt" | "Role_UpdatedAt" | "Role_DeletedAt";
+
+// Permission Type
+export type Permission = {
+    Permission_ID?: number;
+    Team_ID: number;
+    Permission_Key: string;
+    Permission_Description?: string;
+    Permission_CreatedAt?: string;
+    Permission_UpdatedAt?: string;
+    Permission_DeletedAt?: string;
+};
+
+export type PermissionFields =
+    "Permission_ID" | "Team_ID" | "Permission_Key" | "Permission_Description" |
+    "Permission_CreatedAt" | "Permission_UpdatedAt" | "Permission_DeletedAt";
+
+// RolePermission Type
+export type RolePermission = {
+    Role_Permission_ID?: number;
+    Role_ID: number;
+    Permission_ID: number;
+    Role_Permission_CreatedAt?: string;
+    Role_Permission_UpdatedAt?: string;
+    Role_Permission_DeletedAt?: string;
+};
+
+export type RolePermissionFields =
+    "Role_Permission_ID" | "Role_ID" | "Permission_ID" |
+    "Role_Permission_CreatedAt" | "Role_Permission_UpdatedAt" | "Role_Permission_DeletedAt";
 
 // Task Type
 export type Task = {
@@ -175,8 +224,8 @@ export type Status = {
     backlog?: Backlog;
 };
 
-export type StatusFields = 
-    "Status_ID" | "Backlog_ID" | "Status_Name" | "Status_Order" | 
+export type StatusFields =
+    "Status_ID" | "Backlog_ID" | "Status_Name" | "Status_Order" |
     "Status_Is_Default" | "Status_Is_Closed" | "Status_Color" | "Status_CreatedAt" | "Status_UpdatedAt";
 
 export type StatusStates = Status | undefined | false
