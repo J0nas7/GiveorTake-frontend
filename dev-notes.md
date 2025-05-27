@@ -1,4 +1,4 @@
-Implement dependency injection into UserDetails, by abstracting the TSX out of it, into a UserDetailsView.
+Implement dependency injection into the component, by abstracting the TSX out of it, into a ComponentNameView.
 
 
 Create testing of UserDetailsView, including UserDetailsViewProps variables being undefined/null.

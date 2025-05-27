@@ -50,7 +50,7 @@ const TeamRolesSeatsManager: React.FC = () => {
     const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
     const [selectedSeat, setSelectedSeat] = useState<TeamUserSeat | undefined>(undefined);
     const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
-    const [displayInviteForm, setDisplayInviteForm] = useState<boolean>(false);
+    const [displayInviteForm, setDisplayInviteForm] = useState<string>("");
     const [displayNewRoleForm, setDisplayNewRoleForm] = useState<boolean>(false);
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions); // Redux
     // Determine if the authenticated user can manage team members
@@ -84,7 +84,11 @@ const TeamRolesSeatsManager: React.FC = () => {
     }
 
     // Handles the removal of a team user seat.
-    const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(seatId, parseInt(teamId), "/team/" + teamId + "/roles-seats");
+    const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(
+        seatId, 
+        parseInt(teamId), 
+        `/team/${teamLink}/roles-seats`
+    );
 
     // Handles the removal of a team role.
     const handleRemoveRole = (roleId: number) => {
@@ -195,16 +199,21 @@ const TeamRolesSeatsManager: React.FC = () => {
             return
         }
 
-        if (urlSeatId === "new") {
-            setDisplayInviteForm(true)
-            setDisplayNewRoleForm(false)
-            setSelectedSeat(undefined)
-            setSelectedRole(undefined)
-        } else if (urlSeatId && renderUserSeats.length) {
+        if (urlSeatId && !isNaN(Number(urlSeatId)) && renderUserSeats.length) {
             const seat = renderUserSeats.find(seat => seat.Seat_ID === parseInt(urlSeatId))
-            setDisplayInviteForm(false)
+            setDisplayInviteForm("")
             setDisplayNewRoleForm(false)
             setSelectedSeat(seat)
+            setSelectedRole(undefined)
+        } else if (urlSeatId &&
+            (
+                urlSeatId === "new" ||
+                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(urlSeatId)
+            )
+        ) {
+            setDisplayInviteForm(urlSeatId)
+            setDisplayNewRoleForm(false)
+            setSelectedSeat(undefined)
             setSelectedRole(undefined)
         }
     }, [urlSeatId, renderUserSeats])
@@ -219,13 +228,13 @@ const TeamRolesSeatsManager: React.FC = () => {
         }
 
         if (urlRoleId === "new") {
-            setDisplayInviteForm(false)
+            setDisplayInviteForm("")
             setDisplayNewRoleForm(true)
             setSelectedSeat(undefined)
             setSelectedRole(undefined)
         } else if (urlRoleId && rolesAndPermissionsByTeamId && rolesAndPermissionsByTeamId.length) {
             const role = rolesAndPermissionsByTeamId.find(role => role.Role_ID === parseInt(urlRoleId))
-            setDisplayInviteForm(false)
+            setDisplayInviteForm("")
             setDisplayNewRoleForm(false)
             setSelectedSeat(undefined)
             setSelectedRole(role)
@@ -272,7 +281,7 @@ export interface TeamRolesSeatsViewProps {
     renderTeam: TeamStates;
     authUser: User | undefined;
     selectedSeat: TeamUserSeat | undefined;
-    displayInviteForm: boolean | undefined
+    displayInviteForm: string | undefined
     selectedRole: Role | undefined
     teamId: string
     t: TFunction
@@ -291,7 +300,7 @@ export interface TeamRolesSeatsViewProps {
     handleSeatChange: (field: TeamUserSeatFields, value: string) => void;
     handleRoleChange: (field: RoleFields, value: string) => void
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
-    setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string>>
     setSelectedRole: React.Dispatch<React.SetStateAction<Role | undefined>>
     setDisplayNewRoleForm: React.Dispatch<React.SetStateAction<boolean>>
     togglePermission: (permission: string, isChecked: boolean) => Promise<void>
@@ -389,20 +398,20 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                                             <Typography variant="body2" color="textSecondary">
                                                 Permissions: {role.permissions?.length}
                                             </Typography>
-                                            
+
                                             {canManageTeamMembers && (
                                                 <div className="flex justify-between mt-4">
                                                     <button
                                                         onClick={() => handleSelectRole(role)}
                                                         className="blue-link w-[48%]"
                                                     >
-                                                        {t('team:seatsManager:edit')}
+                                                        {t('team:rolesSeatsManager:edit')}
                                                     </button>
                                                     <button
                                                         onClick={() => role.Role_ID && handleRemoveRole(role.Role_ID)}
                                                         className="blue-link w-[48%]"
                                                     >
-                                                        {t('team:seatsManager:remove')}
+                                                        {t('team:rolesSeatsManager:remove')}
                                                     </button>
                                                 </div>
                                             )}
@@ -424,7 +433,7 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                     <Card className="shadow-lg rounded-lg mb-4">
                         <CardContent>
                             {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
-                                <Block>{t('team:seatsManager:length0_iamowner')}</Block>
+                                <Block>{t('team:rolesSeatsManager:length0_iamowner')}</Block>
                             ) : (
                                 <Grid container spacing={3}>
                                     {Array.isArray(renderUserSeats) && renderUserSeats.map((seat) => (
@@ -436,10 +445,10 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                                                             {seat.user?.User_FirstName} {seat.user?.User_Surname}
                                                         </Typography>
                                                         <Typography variant="body2" color="textSecondary">
-                                                            {t('team:seatsManager:role')}: {seat.role?.Role_Name}
+                                                            {t('team:rolesSeatsManager:role')}: {seat.role?.Role_Name}
                                                         </Typography>
                                                         <Typography variant="body2" color="textSecondary">
-                                                            {t('team:seatsManager:status')}: {seat.Seat_Status}
+                                                            {t('team:rolesSeatsManager:status')}: {seat.Seat_Status}
                                                         </Typography>
 
                                                         {canManageTeamMembers && (
@@ -448,13 +457,13 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                                                                     onClick={() => handleSelectSeat(seat)}
                                                                     className="blue-link w-[48%]"
                                                                 >
-                                                                    {t('team:seatsManager:edit')}
+                                                                    {t('team:rolesSeatsManager:edit')}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
                                                                     className="blue-link w-[48%]"
                                                                 >
-                                                                    {t('team:seatsManager:remove')}
+                                                                    {t('team:rolesSeatsManager:remove')}
                                                                 </button>
                                                             </div>
                                                         )}
@@ -486,10 +495,11 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                         setDisplayInviteForm={setDisplayInviteForm}
                         handleSeatChanges={handleSeatChanges}
                     />
-                ) : displayInviteForm ? (
+                ) : displayInviteForm && displayInviteForm !== "" ? (
                     <InviteUserForm
                         teamId={teamId}
                         t={t}
+                        displayInviteForm={displayInviteForm}
                         rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
                         addTeamUserSeat={addTeamUserSeat}
                         readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
@@ -505,6 +515,7 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                         togglePermission={togglePermission}
                         renderTeam={renderTeam}
                         setSelectedRole={setSelectedRole}
+                        setDisplayNewRoleForm={setDisplayNewRoleForm}
                         handleRoleChanges={handleRoleChanges}
                     />
                 ) : null}
@@ -522,7 +533,7 @@ export interface SelectedSeatFormProps {
     togglePermission: (permission: string, isChecked: boolean) => Promise<void>
     renderTeam: Team
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
-    setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string>>
     handleSeatChanges: () => void
 }
 
@@ -539,7 +550,7 @@ const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
     handleSeatChanges
 }) => (
     <FlexibleBox
-        title={t('team:seatsManager:editUserSeat')}
+        title={t('team:rolesSeatsManager:editUserSeat')}
         subtitle={`${selectedSeat.user?.User_FirstName} ${selectedSeat.user?.User_Surname}`}
         icon={faUser}
         className="no-box w-auto inline-block"
@@ -551,7 +562,7 @@ const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
                     {/* Role Select */}
                     <Grid item xs={12} sm={6}>
                         <FormControl fullWidth>
-                            <InputLabel>{t('team:seatsManager:userRole')}</InputLabel>
+                            <InputLabel>{t('team:rolesSeatsManager:userRole')}</InputLabel>
                             <Select
                                 value={selectedSeat.Role_ID}
                                 onChange={(e) => handleSeatChange('Role_ID', e.target.value.toString())}
@@ -567,36 +578,37 @@ const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
                     {/* Status Dropdown */}
                     <Grid item xs={12} sm={6}>
                         <FormControl fullWidth>
-                            <InputLabel>{t('team:seatsManager:status')}</InputLabel>
+                            <InputLabel>{t('team:rolesSeatsManager:status')}</InputLabel>
                             <Select
                                 value={selectedSeat.Seat_Status}
                                 onChange={(e) => handleSeatChange('Seat_Status', e.target.value)}
                                 className="bg-white"
                             >
-                                <MenuItem value="Active">{t('team:seatsManager:active')}</MenuItem>
-                                <MenuItem value="Inactive">{t('team:seatsManager:inactive')}</MenuItem>
-                                <MenuItem value="Pending">{t('team:seatsManager:pending')}</MenuItem>
+                                <MenuItem value="Active">{t('team:rolesSeatsManager:active')}</MenuItem>
+                                <MenuItem value="Inactive">{t('team:rolesSeatsManager:inactive')}</MenuItem>
+                                <MenuItem value="Pending">{t('team:rolesSeatsManager:pending')}</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
                 </Grid>
 
                 {/* Action Buttons */}
-                <Box mt={4} className="flex gap-4 justify-end">
-                    <button
+                <Box mt={4} className="flex gap-4 items-center justify-end">
+                    <Link
                         className="blue-link-light"
+                        href="?"
                         onClick={() => {
                             setSelectedSeat(undefined)
-                            setDisplayInviteForm(false)
+                            setDisplayInviteForm("")
                         }}
                     >
                         Cancel
-                    </button>
+                    </Link>
                     <button
                         className="button-blue px-6 py-2"
                         onClick={handleSeatChanges}
                     >
-                        {t('team:seatsManager:saveChanges')}
+                        {t('team:rolesSeatsManager:saveChanges')}
                     </button>
                 </Box>
             </CardContent>
@@ -608,22 +620,26 @@ export interface InviteUserFormProps {
     teamId: string
     t: TFunction
     rolesAndPermissionsByTeamId: Role[] | undefined
+    displayInviteForm: string | undefined
     addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
-    setDisplayInviteForm: React.Dispatch<React.SetStateAction<boolean>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string>>
 }
 
 const InviteUserForm: React.FC<InviteUserFormProps> = ({
     teamId,
     t,
     rolesAndPermissionsByTeamId,
+    displayInviteForm,
     addTeamUserSeat,
     readTeamUserSeatsByTeamId,
     setSelectedSeat,
     setDisplayInviteForm
 }) => {
     // Hooks
+    const dispatch = useAppDispatch();
+    const router = useRouter()
     const { httpPostWithData } = useAxios();
 
     // Internal variables
@@ -634,11 +650,13 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
     const [error, setError] = useState<string | null>(null);
 
     const handleSearchUser = async () => {
+        if (!displayInviteForm) return
+
         // Email validation
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-        if (!emailRegex.test(email)) {
-            setError(t("team:seatsManager:invalidEmail"));
+        if (!emailRegex.test(displayInviteForm)) {
+            setError(t("team:rolesSeatsManager:invalidEmail"));
             return;
         }
 
@@ -648,11 +666,11 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
         setRole(undefined);
 
         try {
-            const data = await httpPostWithData("users/userByEmail", { email });
-            console.log(data)
+            const postData = { email: displayInviteForm }
+            const data = await httpPostWithData("users/userByEmail", postData);
 
             if (data.message) {
-                throw new Error(t("team:seatsManager:userNotFound"));
+                throw new Error(t("team:rolesSeatsManager:userNotFound"));
                 return;
             }
 
@@ -672,7 +690,7 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
 
     const handleSendInvite = async () => {
         if (!user) {
-            setError(t("team:seatsManager:userNotFound"));
+            setError(t("team:rolesSeatsManager:userNotFound"));
             return;
         }
 
@@ -692,16 +710,33 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
             await readTeamUserSeatsByTeamId(parseInt(teamId))
 
             // Show success message
-            alert(`${t("team:seatsManager:inviteSent")} ${email}`);
+            dispatch(setSnackMessage(t("team:rolesSeatsManager:inviteSent")))
+
+            setEmail("")
+            setLoading(true);
+            setError(null);
+            setUser(undefined);
+            setRole(undefined);
+            
+            setDisplayInviteForm("new")
+
+            router.push("?seatId=new")
         } catch (err) {
             console.error("Failed to create seat:", err);
-            setError(t("team:seatsManager:createSeatError"));
+            setError(t("team:rolesSeatsManager:createSeatError"));
         }
     };
+    
+    useEffect(() => {
+        if (displayInviteForm && displayInviteForm !== "new") {
+            setEmail(displayInviteForm);
+            handleSearchUser();
+        }
+    }, [displayInviteForm]);
 
     return (
         <FlexibleBox
-            title={t("team:seatsManager:searchAndInviteUser")}
+            title={t("team:rolesSeatsManager:searchAndInviteUser")}
             icon={faUserPlus}
             className="no-box w-auto inline-block"
             numberOfColumns={2}
@@ -711,7 +746,7 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
                     <Grid container spacing={3}>
                         <Grid item xs={12}>
                             <TextField
-                                label={t("team:seatsManager:email")}
+                                label={t("team:rolesSeatsManager:email")}
                                 variant="outlined"
                                 fullWidth
                                 value={email}
@@ -721,29 +756,29 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
                         </Grid>
                     </Grid>
 
-                    <Box mt={4} className="flex gap-4 justify-end">
-                        <button
+                    <Box mt={4} className="flex gap-4 items-center justify-end">
+                        <Link
                             className="blue-link-light"
+                            href="?"
                             onClick={() => {
-                                setDisplayInviteForm(false)
+                                setDisplayInviteForm("")
                                 setSelectedSeat(undefined)
                             }}
                         >
                             Cancel
-                        </button>
-                        <button
-                            onClick={handleSearchUser}
-                            disabled={loading}
+                        </Link>
+                        <Link
+                            href={`?seatId=${encodeURIComponent(email)}`}
                             className="button-blue px-6 py-2"
                         >
-                            {t("team:seatsManager:searchUser")}
-                        </button>
+                            {t("team:rolesSeatsManager:searchUser")}
+                        </Link>
                     </Box>
 
                     {error && <Typography color="error" mt={2}>{error}</Typography>}
                     {user && (
                         <Box mt={4}>
-                            <Typography>{t("team:seatsManager:userFound")}</Typography>
+                            <Typography>{t("team:rolesSeatsManager:userFound")}</Typography>
                             <Block variant="span">
                                 Name: {user.User_FirstName + " " + user.User_Surname}
                             </Block>
@@ -770,14 +805,12 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
                         <Box mt={4}>
                             <Typography>{t("team:rolesSeatsManager:selectedRole")}</Typography>
                             <Block>Name: {role.Role_Name}</Block>
-                            <Block>Permissions: {role.permissions?.map(permission => (
-                                <Text>{permission.Permission_Key}</Text>
-                            ))}</Block>
+                            <Block>Permissions: {role.permissions?.length}</Block>
                             <button
                                 onClick={handleSendInvite}
                                 className="button-blue mt-2 px-6 py-2"
                             >
-                                {t("team:seatsManager:sendInvite")}
+                                {t("team:rolesSeatsManager:sendInvite")}
                             </button>
                         </Box>
                     )}
@@ -795,6 +828,7 @@ export interface SelectedRoleFormProps {
     togglePermission: (permission: string, isChecked: boolean) => Promise<void>
     renderTeam: Team
     setSelectedRole: React.Dispatch<React.SetStateAction<Role | undefined>>
+    setDisplayNewRoleForm: React.Dispatch<React.SetStateAction<boolean>>
     handleRoleChanges: () => void
 }
 
@@ -806,6 +840,7 @@ const SelectedRoleForm: React.FC<SelectedRoleFormProps> = ({
     togglePermission,
     renderTeam,
     setSelectedRole,
+    setDisplayNewRoleForm,
     handleRoleChanges
 }) => (
     <FlexibleBox
@@ -946,13 +981,17 @@ const SelectedRoleForm: React.FC<SelectedRoleFormProps> = ({
                 </Box>
 
                 {/* Action Buttons */}
-                <Box mt={4} className="flex gap-4 justify-end">
-                    <button
+                <Box mt={4} className="flex gap-4 items-center justify-end">
+                    <Link
                         className="blue-link-light"
-                        onClick={() => setSelectedRole(undefined)}
+                        href="?"
+                        onClick={() => {
+                            setSelectedRole(undefined)
+                            setDisplayNewRoleForm(false)
+                        }}
                     >
                         Cancel
-                    </button>
+                    </Link>
                     <button
                         className="button-blue px-6 py-2"
                         onClick={handleRoleChanges}

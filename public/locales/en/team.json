@@ -1,7 +1,8 @@
 {
     "rolesSeatsManager": {
         "manageTeamRolesSeats": "Manage Team Roles & Seats",
-        "teamUserSeats": "Team User Seats",
+        "rolesHeadline": "Team Roles",
+        "seatsHeadline": "Seat Members",
         "length0_iamowner": "There are no users on any seats. You are the organisation owner.",
         "edit": "Edit",
         "remove": "Remove",
