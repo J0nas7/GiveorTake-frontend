@@ -2,21 +2,42 @@
 
 // External
 import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { faBuilding, faHouseChimney, faPlus, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Internal
 import { Block, FlexibleBox, Text } from "@/components";
-import { selectAuthUser, useTypedSelector } from "@/redux";
-import { useOrganisationsContext } from "@/contexts";
+import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from "@/redux";
+import { useOrganisationsContext, useTeamUserSeatsContext } from "@/contexts";
 import { useURLLink } from "@/hooks";
+import { TeamUserSeat } from "@/types";
 
 export const Startpage = () => {
-    const authUser = useTypedSelector(selectAuthUser);
+    // Hooks
+    const dispatch = useAppDispatch()
+    const router = useRouter()
     const { organisationsById, readOrganisationsByUserId } = useOrganisationsContext();
+    const { saveTeamUserSeatChanges, removeTeamUserSeat } = useTeamUserSeatsContext()
     const { convertID_NameStringToURLFormat } = useURLLink("-")
 
+    // State
+    const authUser = useTypedSelector(selectAuthUser);
+
+    // Methods
+    const approvePending = async (mySeat: TeamUserSeat) => {
+        mySeat.Seat_Status = "Active"; // Set the seat status to active
+        const saveChanges = await saveTeamUserSeatChanges(mySeat, mySeat.Team_ID)
+    
+        dispatch(setSnackMessage(
+            saveChanges ? "Seat approved successfully!" : "Failed to approve seat. Try again."
+        ))
+
+        router.push("/")
+    }
+
+    // Effects
     useEffect(() => {
         if (authUser && authUser.User_ID) readOrganisationsByUserId(authUser.User_ID);
         document.title = "Welcome - GiveOrTake";
@@ -52,19 +73,37 @@ export const Startpage = () => {
                     <Block className="space-y-6">
                         {organisationsById?.length ? (
                             organisationsById.map((organisation) => {
-                                const seatStatus = organisation.teams && organisation.teams[0].user_seats?.find(seat => seat.User_ID === authUser?.User_ID)?.Seat_Status
+                                const seat = organisation.teams && organisation.teams[0].user_seats?.find(seat => seat.User_ID === authUser?.User_ID)
 
-                                if (seatStatus === "Inactive") return null; // Skip inactive seats
+                                if (seat?.Seat_Status === "Inactive") return null; // Skip inactive seats
 
-                                if (seatStatus === "Pending") {
+                                if (seat && seat?.Seat_Status === "Pending") {
                                     return (
                                         <Block key={organisation.Organisation_ID} className="bg-yellow-100 p-5 rounded-lg shadow-md">
                                             <Text className="text-xl font-bold text-yellow-800">{organisation.Organisation_Name}</Text>
                                             <Text className="text-sm text-yellow-700">Your access is pending your approval.</Text>
+                                            <Block className="mt-2 flex gap-2 items-center">
+                                                <button
+                                                    className="blue-link"
+                                                    onClick={() => approvePending(seat)}
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    className="blue-link-light red-link-light"
+                                                    onClick={() => removeTeamUserSeat(
+                                                        seat.Seat_ID ?? 0,
+                                                        seat.Team_ID,
+                                                        "/"
+                                                    )}
+                                                >
+                                                    Decline
+                                                </button>
+                                            </Block>
                                         </Block>
                                     );
                                 }
-                                
+
                                 return (
                                     <Block key={organisation.Organisation_ID} className="bg-white p-5 rounded-lg shadow-md">
                                         {/* Organisation Name */}

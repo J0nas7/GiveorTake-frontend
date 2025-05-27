@@ -9,7 +9,7 @@ import { useCookies } from './'
 
 export const useAxios = () => {
     // Hooks
-    const { getTheCookie, deleteTheCookie } = useCookies()
+    const { getTheCookie, setTheCookie, deleteTheCookie } = useCookies()
     //const { getCurrentToken, getAuthContext, doLogout } = useAuthContext()
 
     // Redux (This function is not supported in React Server Components. Please only use this export in a Client Component.)
@@ -100,12 +100,12 @@ export const useAxios = () => {
         ) {
             try {
                 // Request a new JWT access token
-                /*const getToken = await axiosAction("get", "refreshJWT", "refreshToken")
-                const newToken = getToken.authorisation?.newAccessToken
+                const getToken = await axiosAction("get", "/auth/refreshJWT", "refreshToken")
+                const newToken = getToken.accessToken
                 if (newToken) {
                     // Re-try original axios request with new token
                     try {
-                        //setTheCookie("accessToken", newToken)
+                        setTheCookie("accessToken", newToken)
                         const { data: tryAgain } = await axiosAction(actionType, apiEndPoint, newToken, postContent)
                         console.log("useAxios refreshJWTAndTryAgain() success", tryAgain)
                         return tryAgain
@@ -113,9 +113,9 @@ export const useAxios = () => {
                         newE = e
                         console.log("tryAgain E", e)
                     }
-                } else {*/
-                return false
-                //}
+                } else {
+                    return false
+                }
             } catch (e: unknown) {
                 newE = e
                 console.log("getToken E", e)
@@ -130,7 +130,7 @@ export const useAxios = () => {
 
         if (errorContext.response?.data?.error && tokenName === "accessToken") {
             const refreshProps = { errorContext, actionType, apiEndPoint, tokenName, postContent }
-            //const send = await refreshJWTAndTryAgain(refreshProps)
+            const send = await refreshJWTAndTryAgain(refreshProps)
 
             /*console.log("handleError send", send)
             if (send.response?.data || !send) {
@@ -157,7 +157,7 @@ export const useAxios = () => {
         }
         return send
     }
-
+    
     const httpPutWithData = async (apiEndPoint: string, putContent?: postContent, tokenName: string = 'accessToken') => {
         const actionType = "put"
         let send = await axiosAction(actionType, apiEndPoint, tokenName, putContent)
@@ -171,7 +171,7 @@ export const useAxios = () => {
         }
         return send
     }
-
+    
     const httpGetRequest = async (apiEndPoint: string, tokenName: string = 'accessToken') => {
         const actionType = "get"
         let send = await axiosAction(actionType, apiEndPoint, tokenName)
@@ -185,7 +185,7 @@ export const useAxios = () => {
         }
         return send
     }
-
+    
     const httpDeleteRequest = async (apiEndPoint: string, tokenName: string = 'accessToken') => {
         const actionType = 'delete'
         let send = await axiosAction(actionType, apiEndPoint, tokenName)
@@ -199,7 +199,7 @@ export const useAxios = () => {
         }
         return send
     }
-
+    
     return {
         httpPostWithData,
         httpPutWithData,
