@@ -16,22 +16,23 @@ import Image from 'next/image'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux'
 import { useURLLink } from '@/hooks'
+import useRoleAccess from '@/hooks/useRoleAccess'
 
 export const BacklogsContainer = () => {
     // ---- Hooks ----
     const { projectLink } = useParams<{ projectLink: string }>(); // Get projectId from URL
     const { projectById, readProjectById } = useProjectsContext()
     const { linkId: projectId, convertID_NameStringToURLFormat } = useURLLink(projectLink)
+    const { canAccessProject, canManageProject } = useRoleAccess(
+        projectById ? projectById.team?.organisation?.User_ID : undefined,
+        "project",
+        projectById ? projectById.Project_ID : 0
+    )
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser)
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
-    // Determine if the authenticated user can access the project:
-    const canAccessProject = (authUser && renderProject && (
-        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessProject.${renderProject.Project_ID}`)
-    ))
     // Calculate the number of accessible backlogs for the authenticated user
     const accessibleBacklogsCount = renderProject && renderProject.backlogs?.filter(
         (backlog) =>

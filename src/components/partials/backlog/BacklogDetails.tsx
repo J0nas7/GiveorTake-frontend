@@ -22,6 +22,7 @@ import { Block, Text, FlexibleBox, Field } from '@/components';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { dir } from 'console';
 import { useURLLink } from '@/hooks';
+import useRoleAccess from '@/hooks/useRoleAccess';
 
 export const BacklogDetails: React.FC = () => {
     // ---- Hooks ----
@@ -31,6 +32,11 @@ export const BacklogDetails: React.FC = () => {
     const { readBacklogById, backlogById, saveBacklogChanges, removeBacklog } = useBacklogsContext();
     const { moveOrder, assignDefault, assignClosed, addStatus, saveStatusChanges, removeStatus } = useStatusContext()
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
+    const { canAccessBacklog, canManageBacklog } = useRoleAccess(
+        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        "backlog",
+        backlogById ? backlogById.Backlog_ID : 0
+    )
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser);
@@ -43,17 +49,6 @@ export const BacklogDetails: React.FC = () => {
         Status_Color: '',
     });
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined);
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can access the backlog:
-    const canAccessBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
-    ))
-    // Determine if the authenticated user can manage the backlog:
-    const canManageBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
-    ))
 
     // ---- Methods ----
     // Handle Input Change for text fields

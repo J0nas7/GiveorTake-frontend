@@ -21,6 +21,7 @@ import { LoadingState } from "@/core-ui/components/LoadingState";
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
 import { useURLLink } from "@/hooks";
+import useRoleAccess from "@/hooks/useRoleAccess";
 
 export const CreateBacklog: React.FC = () => {
     const router = useRouter();
@@ -28,9 +29,13 @@ export const CreateBacklog: React.FC = () => {
     const { projectById, readProjectById } = useProjectsContext();
     const { addBacklog } = useBacklogsContext();
     const { linkId: projectId, convertID_NameStringToURLFormat } = useURLLink(projectLink)
+    const { canManageProject } = useRoleAccess(
+        projectById ? projectById.team?.organisation?.User_ID : undefined,
+        "project",
+        projectById ? projectById.Project_ID : 0
+    )
 
     const authUser = useTypedSelector(selectAuthUser);
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions);
 
     const [newBacklog, setNewBacklog] = useState<Backlog>({
         Project_ID: parseInt(projectId),
@@ -39,12 +44,7 @@ export const CreateBacklog: React.FC = () => {
         Backlog_IsPrimary: false,
         Backlog_StartDate: "",
         Backlog_EndDate: "",
-    });
-
-    const canModifyProject = (authUser && projectById && (
-        projectById?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes("Modify Team Settings")
-    ));
+    })
 
     const handleInputChange = (field: BacklogFields, value: string | boolean) => {
         setNewBacklog((prev) => ({
@@ -69,7 +69,7 @@ export const CreateBacklog: React.FC = () => {
     }, [projectId]);
 
     useEffect(() => {
-        if (projectById && authUser && !canModifyProject) {
+        if (projectById && authUser && !canManageProject) {
             router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
         }
     }, [projectById]);
@@ -77,7 +77,7 @@ export const CreateBacklog: React.FC = () => {
     return (
         <CreateBacklogView
             projectById={projectById}
-            canModifyProject={canModifyProject}
+            canManageProject={canManageProject}
             newBacklog={newBacklog}
             handleInputChange={handleInputChange}
             handleCreateBacklog={handleCreateBacklog}
@@ -88,7 +88,7 @@ export const CreateBacklog: React.FC = () => {
 
 type CreateBacklogViewProps = {
     projectById: ProjectStates;
-    canModifyProject: boolean | undefined;
+    canManageProject: boolean | undefined
     newBacklog: Backlog;
     handleInputChange: (field: BacklogFields, value: string | boolean) => void;
     handleCreateBacklog: () => Promise<void>;
@@ -96,7 +96,7 @@ type CreateBacklogViewProps = {
 };
 
 export const CreateBacklogView: React.FC<CreateBacklogViewProps> = ({
-    projectById, canModifyProject, newBacklog,
+    projectById, canManageProject, newBacklog,
     handleInputChange, handleCreateBacklog, convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
@@ -120,7 +120,7 @@ export const CreateBacklogView: React.FC<CreateBacklogViewProps> = ({
                 className="no-box w-auto inline-block"
                 numberOfColumns={2}
             >
-                <LoadingState singular="Project" renderItem={projectById} permitted={canModifyProject}>
+                <LoadingState singular="Project" renderItem={projectById} permitted={canManageProject}>
                     <div className="bg-white shadow-md rounded-xl p-6">
                         <Heading variant="h2" className="mb-4">Backlog Details</Heading>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

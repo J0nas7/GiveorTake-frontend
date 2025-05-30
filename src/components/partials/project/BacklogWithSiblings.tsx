@@ -21,6 +21,7 @@ import Image from "next/image";
 import clsx from "clsx";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import { useURLLink } from "@/hooks";
+import useRoleAccess from "@/hooks/useRoleAccess";
 
 type BacklogWithSiblingsContainerProps = {
     backlogId: number | undefined
@@ -45,19 +46,12 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
-
-    const authUser = useTypedSelector(selectAuthUser)
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can access the backlog:
-    const canAccessBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
-    ))
-    // Determine if the authenticated user can manage the backlog:
-    const canManageBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
-    ))
+    
+    const { canAccessBacklog } = useRoleAccess(
+        renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
+        "backlog",
+        renderBacklog ? renderBacklog.Backlog_ID : 0
+    )
 
     // ---- Methods ----
     // Handles changes to the local new task state by updating specific fields or merging an object.

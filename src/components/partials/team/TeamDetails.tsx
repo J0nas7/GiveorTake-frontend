@@ -22,6 +22,7 @@ import { FlexibleBox } from '@/components/ui/flexible-box'
 import Image from 'next/image'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import { useURLLink } from '@/hooks'
+import useRoleAccess from '@/hooks/useRoleAccess'
 
 export const TeamDetails = () => {
     // ---- Hooks ----
@@ -31,21 +32,13 @@ export const TeamDetails = () => {
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext()
     const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
     const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
-
+    const { canManageTeamMembers, canModifyTeamSettings } = useRoleAccess(teamById ? teamById.organisation?.User_ID : undefined)
+    
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser)
     const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
-    // Determine if the authenticated user can modify team settings
-    const canModifyTeamSettings = (authUser && renderTeam && (
-        renderTeam.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes("Modify Team Settings")
-    ))
-    // Determine if the authenticated user can manage team members
-    const canManageTeamMembers = (authUser && renderTeam && (
-        renderTeam.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes("Manage Team Members")
-    ))
+
     const accessibleProjectsCount = renderTeam && renderTeam.projects?.filter(
         (project) =>
             authUser &&

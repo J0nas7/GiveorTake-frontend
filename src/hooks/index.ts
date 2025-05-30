@@ -6,3 +6,4 @@ export * from './useDebounce'
 export * from './useTypeAPI'
 
 export * from './useURLLink'
+export * from './useRoleAccess'

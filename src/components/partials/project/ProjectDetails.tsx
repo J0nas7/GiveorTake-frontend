@@ -23,6 +23,7 @@ import { FlexibleBox } from '@/components/ui/flexible-box';
 import Image from 'next/image';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { useURLLink } from '@/hooks';
+import useRoleAccess from '@/hooks/useRoleAccess';
 
 const ProjectDetails: React.FC = () => {
     // ---- Hooks ----
@@ -31,21 +32,16 @@ const ProjectDetails: React.FC = () => {
     const { projectLink } = useParams<{ projectLink: string }>(); // Get projectLink from URL
     const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext()
     const { linkId: projectId, convertID_NameStringToURLFormat } = useURLLink(projectLink)
+    const { canAccessProject, canManageProject } = useRoleAccess(
+        projectById ? projectById.team?.organisation?.User_ID : undefined,
+        "project",
+        projectById ? projectById.Project_ID : 0
+    )
 
     // ---- State ----
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
-    // Determine if the authenticated user can access the project:
-    const canAccessProject = (authUser && renderProject && (
-        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessProject.${renderProject.Project_ID}`)
-    ))
-    // Determine if the authenticated user can manage the project:
-    const canManageProject = (authUser && renderProject && (
-        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`manageProject.${renderProject.Project_ID}`)
-    ))
     // Calculate the number of accessible backlogs for the authenticated user
     const accessibleBacklogsCount = renderProject && renderProject.backlogs?.filter(
         (backlog) =>
@@ -356,19 +352,15 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
     renderProject,
     authUser
 }) => {
+    // Hooks
     const { convertID_NameStringToURLFormat } = useURLLink("-")
+    const { canAccessBacklog, canManageBacklog } = useRoleAccess(
+        renderProject.team?.organisation?.User_ID,
+        "backlog",
+        backlog ? backlog.Backlog_ID : 0
+    )
 
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
-    // Determine if the authenticated user can access the backlog:
-    const canAccessBacklog = (authUser && backlog && (
-        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`)
-    ))
-    // Determine if the authenticated user can manage the backlog:
-    const canManageBacklog = (authUser && backlog && (
-        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`manageBacklog.${backlog.Backlog_ID}`)
-    ))
+    // State
     const [calculateStatusCounter, setCalculateStatusCounter] = useState<{
         name: string;
         counter: number | undefined;

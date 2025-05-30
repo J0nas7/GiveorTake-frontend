@@ -125,7 +125,7 @@ export default authSlice.reducer
 export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn
 export const selectAuthUser = (state: RootState) => state.auth.authUser
 export const selectAuthUserSeat = (state: RootState) => state.auth.authUserSeat
-export const selectAuthUserSeatPermissions = (state: RootState) => state.auth.authUserSeatPermissions
+export const selectAuthUserSeatPermissions = (state: RootState) => state.auth?.authUserSeatPermissions ?? []; // Return empty array if undefined
 export const selectAuthUserOrganisation = (state: RootState) => state.auth.authUserOrganisation
 export const selectAuthUserTaskTimeTrack = (state: RootState) => state.auth.authUserTaskTimeTrack
 export const selectSnackMessage = (state: RootState) => state.auth.snackMessage

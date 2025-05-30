@@ -25,6 +25,7 @@ import { Heading } from "@/components/ui/heading";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
 import { useURLLink } from "@/hooks";
+import useRoleAccess from "@/hooks/useRoleAccess";
 
 export const TimeTracksContainer = () => {
     // ---- Hooks ----
@@ -37,6 +38,11 @@ export const TimeTracksContainer = () => {
     const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
     const { setTaskDetail } = useTasksContext()
     const { linkId: projectId, linkName, convertID_NameStringToURLFormat } = useURLLink(projectLink)
+    const { canAccessProject, canManageProject } = useRoleAccess(
+        projectById ? projectById.team?.organisation?.User_ID : undefined,
+        "project",
+        projectById ? projectById.Project_ID : 0
+    )
 
     // ---- State ----
     const urlBacklogIds = searchParams.get("backlogIds")
@@ -47,15 +53,7 @@ export const TimeTracksContainer = () => {
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined);
-    const [renderTimeTracks, setRenderTimeTracks] = useState<TaskTimeTrack[] | undefined>(undefined);
-
-    const authUser = useTypedSelector(selectAuthUser)
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can access the project:
-    const canAccessProject = (authUser && renderProject && (
-        renderProject.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessProject.${renderProject.Project_ID}`)
-    ))
+    const [renderTimeTracks, setRenderTimeTracks] = useState<TaskTimeTrack[] | undefined>(undefined)
 
     // Extract all tasks from the project's backlogs
     const allProjectTasks = renderProject && renderProject?.backlogs

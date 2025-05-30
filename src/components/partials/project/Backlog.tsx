@@ -21,6 +21,7 @@ import Image from "next/image";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import { BacklogStatusActionMenu } from "../backlog/BacklogStatusActionMenu";
 import { useURLLink } from "@/hooks";
+import useRoleAccess from "@/hooks/useRoleAccess";
 
 export const BacklogContainer = () => {
     // ---- Hooks ----
@@ -31,6 +32,11 @@ export const BacklogContainer = () => {
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
     const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
+    const { canAccessBacklog, canManageBacklog } = useRoleAccess(
+        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        "backlog",
+        backlogById ? backlogById.Backlog_ID : 0
+    )
 
     // ---- State and other Variables ----
     const urlTaskIds = searchParams.get("taskIds")
@@ -42,18 +48,6 @@ export const BacklogContainer = () => {
     const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
     const [statusUrlEditing, setStatusUrlEditing] = useState<boolean>(false)
-    const authUser = useTypedSelector(selectAuthUser)
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can access the backlog:
-    const canAccessBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
-    ))
-    // Determine if the authenticated user can manage the backlog:
-    const canManageBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
-    ))
 
     // ---- Methods ----
     // Handles the 'Enter' key press event to trigger task creation.

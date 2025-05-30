@@ -22,15 +22,16 @@ import { LoadingState } from "@/core-ui/components/LoadingState";
 import { useURLLink } from "@/hooks";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import useRoleAccess from "@/hooks/useRoleAccess";
 
 export const CreateTeam = () => {
     // ---- Hooks ----
     const router = useRouter();
-    const authUser = useTypedSelector(selectAuthUser)
     const { addTeam } = useTeamsContext()
     const { organisationById, readOrganisationById } = useOrganisationsContext()
     const { organisationLink } = useParams<{ organisationLink: string }>() // Get organisationLink from URL
     const { linkId: organisationId, convertID_NameStringToURLFormat } = useURLLink(organisationLink)
+    const { canModifyOrganisationSettings } = useRoleAccess(organisationById ? organisationById.User_ID : undefined)
 
     // ---- State ----
     // State to hold the new team details:
@@ -39,12 +40,6 @@ export const CreateTeam = () => {
         Team_Name: "",
         Team_Description: "",
     })
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can modify organisation settings:
-    const canModifyOrganisationSettings = (authUser && organisationById && (
-        organisationById.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes("Modify Organisation Settings")
-    ))
 
     // ---- Methods ----
     // Updates the state of the new team object with the provided field and value

@@ -23,6 +23,7 @@ import { CreatedAtToTimeSince } from '../task/TaskTimeTrackPlayer';
 import Image from 'next/image';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { useURLLink } from '@/hooks';
+import useRoleAccess from '@/hooks/useRoleAccess';
 
 const OrganisationDetails: React.FC = () => {
     // ---- Hooks ----
@@ -30,16 +31,10 @@ const OrganisationDetails: React.FC = () => {
     const { organisationById, readOrganisationById, saveOrganisationChanges, removeOrganisation } = useOrganisationsContext()
     const { organisationLink } = useParams<{ organisationLink: string }>() // Get organisationLink from URL
     const { linkId: organisationId, convertID_NameStringToURLFormat } = useURLLink(organisationLink)
+    const { canModifyOrganisationSettings } = useRoleAccess(organisationById ? organisationById.User_ID : undefined)
 
     // ---- State ----
-    const authUser = useTypedSelector(selectAuthUser) // Redux
     const [renderOrganisation, setRenderOrganisation] = useState<OrganisationStates>(undefined)
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can modify organisation settings:
-    const canModifyOrganisationSettings = (authUser && renderOrganisation && (
-        renderOrganisation.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes("Modify Organisation Settings")
-    ))
 
     // ---- Methods ----
     // Handles changes to HTML input fields and updates the organisation state.

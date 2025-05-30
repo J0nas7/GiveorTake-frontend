@@ -17,11 +17,12 @@ import { Field } from "@/components/ui/input-field";
 // Dynamically import ReactQuill with SSR disabled
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
+import { selectAuthUser, useTypedSelector } from "@/redux";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import { useURLLink } from "@/hooks";
+import useRoleAccess from "@/hooks/useRoleAccess";
 
 export const CreateProject: React.FC = () => {
     // ---- Hooks ----
@@ -30,6 +31,7 @@ export const CreateProject: React.FC = () => {
     const { teamById, readTeamById } = useTeamsContext()
     const { teamLink } = useParams<{ teamLink: string }>(); // Get teamId from URL
     const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
+    const { canModifyTeamSettings } = useRoleAccess(teamById ? teamById.organisation?.User_ID : undefined)
 
     // ---- State ----
     const [newProject, setNewProject] = useState<Project>({
@@ -42,12 +44,6 @@ export const CreateProject: React.FC = () => {
         Project_End_Date: "",
     });
     const authUser = useTypedSelector(selectAuthUser)
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determines if the authenticated user has permission to modify team settings.
-    const canModifyTeamSettings = (authUser && teamById && (
-        teamById.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes("Modify Team Settings")
-    ))
 
     // ---- Methods ----
     // Handle input changes

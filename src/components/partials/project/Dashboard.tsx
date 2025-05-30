@@ -21,6 +21,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { LoadingState } from "@/core-ui/components/LoadingState"
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux"
 import { useURLLink } from "@/hooks"
+import useRoleAccess from "@/hooks/useRoleAccess"
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
@@ -32,23 +33,15 @@ const DashboardContainer = () => {
     const { backlogById, readBacklogById } = useBacklogsContext()
     const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
+    const { canAccessBacklog, canManageBacklog } = useRoleAccess(
+        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        "backlog",
+        backlogById ? backlogById.Backlog_ID : 0
+    )
 
     // ---- State ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
-
-    const authUser = useTypedSelector(selectAuthUser)
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can access the backlog:
-    const canAccessBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
-    ))
-    // Determine if the authenticated user can manage the backlog:
-    const canManageBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
-    ))
 
     // ---- Effects ----
     // Sync renderTasks state with tasksById changes

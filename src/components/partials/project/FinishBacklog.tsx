@@ -14,6 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { useURLLink } from '@/hooks';
+import useRoleAccess from '@/hooks/useRoleAccess';
 
 export const FinishBacklog = () => {
     // ---- Hooks ----
@@ -24,6 +25,11 @@ export const FinishBacklog = () => {
     const { tasksById, readTasksByBacklogId } = useTasksContext()
     const { projectById, readProjectById } = useProjectsContext()
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
+    const { canManageBacklog } = useRoleAccess(
+        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        "backlog",
+        backlogById ? backlogById.Backlog_ID : 0
+    )
 
     // ---- State ----
     const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
@@ -37,19 +43,6 @@ export const FinishBacklog = () => {
         Project_ID: 0,
         Backlog_IsPrimary: false,
     })
-
-    const authUser = useTypedSelector(selectAuthUser)
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    // Determine if the authenticated user can access the backlog:
-    const canAccessBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`accessBacklog.${renderBacklog.Backlog_ID}`)
-    ))
-    // Determine if the authenticated user can manage the backlog:
-    const canManageBacklog = (authUser && renderBacklog && (
-        renderBacklog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes(`manageBacklog.${renderBacklog.Backlog_ID}`)
-    ))
 
     // ---- Methods ----
     // Handles the finishing of the current backlog and redirects accordingly

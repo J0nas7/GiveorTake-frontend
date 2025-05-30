@@ -18,6 +18,7 @@ import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppD
 import { useAxios, useURLLink } from '@/hooks';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import { LoadingState } from '@/core-ui/components/LoadingState';
+import useRoleAccess from '@/hooks/useRoleAccess';
 
 const TeamUserSeatsManager: React.FC = () => {
     // ---- Hooks ----
@@ -36,6 +37,7 @@ const TeamUserSeatsManager: React.FC = () => {
     const { addUser } = useUsersContext(); // Assuming you have a `UsersContext` for adding new users
     const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
     const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
+    const { canManageTeamMembers } = useRoleAccess(teamById ? teamById.organisation?.User_ID : undefined)
 
     // ---- State ----
     const urlSeatId = searchParams.get("seatId")
@@ -44,12 +46,6 @@ const TeamUserSeatsManager: React.FC = () => {
     const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
     const [selectedSeat, setSelectedSeat] = useState<TeamUserSeat | undefined>(undefined);
     const [displayInviteForm, setDisplayInviteForm] = useState<boolean>(false);
-    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions); // Redux
-    // Determine if the authenticated user can manage team members
-    const canManageTeamMembers = (authUser && renderTeam && (
-        renderTeam.organisation?.User_ID === authUser.User_ID ||
-        parsedPermissions?.includes("Manage Team Members")
-    ));
     const availablePermissions = ["Modify Organisation Settings", "Modify Team Settings", "Manage Team Members"]
     // New User Form State
     const [newUserDetails, setNewUserDetails] = useState({
