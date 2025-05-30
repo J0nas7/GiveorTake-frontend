@@ -245,6 +245,7 @@ export type TeamUserSeatsContextType = {
     rolesAndPermissionsByTeamId: Role[] | undefined
     readRolesAndPermissionsByTeamId: (teamId: number) => Promise<boolean>
     removeRolesAndPermissionsByRoleId: (itemId: number, parentId: number) => Promise<void>
+    addRole: (parentId: number, object?: Role | undefined) => Promise<void>
     saveTeamRoleChanges: (itemChanges: Role, parentId: number) => Promise<boolean>
 };
 
@@ -272,7 +273,7 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
     const { httpGetRequest } = useAxios()
     const pathname = usePathname()
 
-    const { updateItem: updateRole, deleteItem: deleteRole } = useTypeAPI<Role, "Role_ID">("team-roles", "Role_ID", "teams")
+    const { postItem: postRole, updateItem: updateRole, deleteItem: deleteRole } = useTypeAPI<Role, "Role_ID">("team-roles", "Role_ID", "teams")
     const deleteConfirm = useTypedSelector(selectDeleteConfirm)
 
     const [rolesAndPermissionsByTeamId, setRolesAndPermissionsByTeamId] = useState<Role[] | undefined>(undefined)
@@ -295,6 +296,13 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const removeRolesAndPermissionsByRoleId = async (itemId: number, parentId: number) => {
         const deleteItem = await deleteRole(itemId, pathname)
+    }
+
+    const addRole = async (parentId: number, object?: Role | undefined) => {
+        console.log("new role", object)
+        if (object) await postRole(object)
+
+        await readRolesAndPermissionsByTeamId(parentId) // Refresh items after create
     }
 
     const saveTeamRoleChanges = async (itemChanges: Role, parentId: number) => {
@@ -322,6 +330,7 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
             rolesAndPermissionsByTeamId,
             readRolesAndPermissionsByTeamId,
             removeRolesAndPermissionsByRoleId,
+            addRole,
             saveTeamRoleChanges
         }}>
             {children}

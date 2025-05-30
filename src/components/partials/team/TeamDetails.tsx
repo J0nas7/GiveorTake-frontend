@@ -162,15 +162,6 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                     <Block className="flex flex-col sm:flex-row gap-2 w-full">
                         {canManageTeamMembers && (
                             <Link
-                                href={`${pathname}/seats`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faUsers} />
-                                <Text variant="span">Seats</Text>
-                            </Link>
-                        )}
-                        {canManageTeamMembers && (
-                            <Link
                                 href={`${pathname}/roles-seats`}
                                 className="blue-link !inline-flex gap-2 items-center"
                             >
