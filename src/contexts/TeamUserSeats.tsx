@@ -1,14 +1,13 @@
 "use client"
 
 // External
-import { createContext, useContext, useState } from "react";
 import { usePathname } from "next/navigation";
+import React, { createContext, useContext, useState } from "react";
 
 // Internal
+import { useAxios, useTypeAPI } from "@/hooks";
 import { Role, TeamUserSeat, TeamUserSeatFields } from "@/types";
 import { useResourceContext } from "./";
-import { useAxios, useTypeAPI } from "@/hooks";
-import { selectDeleteConfirm, useTypedSelector } from "@/redux";
 
 // Context for Team User Seats
 export type TeamUserSeatsContextType = {
@@ -53,7 +52,6 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
     const pathname = usePathname()
 
     const { postItem: postRole, updateItem: updateRole, deleteItem: deleteRole } = useTypeAPI<Role, "Role_ID">("team-roles", "Role_ID", "teams")
-    const deleteConfirm = useTypedSelector(selectDeleteConfirm)
 
     const [rolesAndPermissionsByTeamId, setRolesAndPermissionsByTeamId] = useState<Role[] | undefined>(undefined)
 
@@ -73,9 +71,7 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     }
 
-    const removeRolesAndPermissionsByRoleId = async (itemId: number, parentId: number) => {
-        const deleteItem = await deleteRole(itemId, pathname)
-    }
+    const removeRolesAndPermissionsByRoleId = async (itemId: number, parentId: number) => await deleteRole(itemId, pathname)
 
     const addRole = async (parentId: number, object?: Role | undefined) => {
         console.log("new role", object)

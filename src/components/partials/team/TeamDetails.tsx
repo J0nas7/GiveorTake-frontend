@@ -1,28 +1,26 @@
 "use client"
 
 // External
-import React, { useEffect, useState } from 'react'
+import { faBuilding, faLightbulb, faList, faUsers } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Box, Card, CardContent, Grid, TextField, Typography } from '@mui/material'
 import Link from 'next/link'
 import { useParams, usePathname, useRouter } from "next/navigation"
-import { TextField, Card, CardContent, Typography, Grid, Box } from '@mui/material'
+import React, { useEffect, useState } from 'react'
 
 // Dynamically import ReactQuill with SSR disabled
-import "react-quill/dist/quill.snow.css" // Import the Quill styles
 import dynamic from "next/dynamic"
+import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false })
 
 // Internal
+import { Block, FlexibleBox, Text } from '@/components'
 import { useTeamsContext } from '@/contexts/'
-import { Team, TeamFields, TeamStates, User } from '@/types'
-import { Block, Heading, Text } from '@/components'
-import { selectAuthUser, selectAuthUserSeatPermissions, selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBuilding, faLightbulb, faList, faUsers } from '@fortawesome/free-solid-svg-icons'
-import { FlexibleBox } from '@/components/ui/flexible-box'
-import Image from 'next/image'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import { useURLLink } from '@/hooks'
 import useRoleAccess from '@/hooks/useRoleAccess'
+import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux'
+import { TeamFields, TeamStates, User } from '@/types'
 
 export const TeamDetails = () => {
     // ---- Hooks ----
@@ -33,7 +31,7 @@ export const TeamDetails = () => {
     const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
     const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
     const { canManageTeamMembers, canModifyTeamSettings } = useRoleAccess(teamById ? teamById.organisation?.User_ID : undefined)
-    
+
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser)
     const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
@@ -291,14 +289,14 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                     <Card>
                                         <CardContent>
                                             <Block className="flex justify-between items-center flex-col sm:flex-row w-full">
-                                                <Link 
-                                                    href={`/project/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`} 
+                                                <Link
+                                                    href={`/project/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`}
                                                     className="blue-link-light"
                                                 >
                                                     {project.Project_Name}
                                                 </Link>
                                                 <Link
-                                                    href={`/backlogs/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`} 
+                                                    href={`/backlogs/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`}
                                                     className="blue-link !inline-flex gap-2 items-center"
                                                 >
                                                     <FontAwesomeIcon icon={faList} />

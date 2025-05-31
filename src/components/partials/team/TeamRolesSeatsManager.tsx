@@ -1,24 +1,24 @@
 "use client"
 
 // External
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { TextField, Card, CardContent, Typography, Grid, Box, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Checkbox } from '@mui/material';
-import { useTranslation } from 'react-i18next';
+import { faChair, faShield, faUser, faUserPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Card, CardContent, Checkbox, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { TFunction } from 'next-i18next';
 import Link from 'next/link';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChair, faPlus, faShield, faUser, faUserPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Internal
-import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
-import { Backlog, Permission, Project, Role, RoleFields, Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
-import { Block, Heading, Text } from '@/components';
-import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
-import { useAxios, useURLLink } from '@/hooks';
+import { Block, Text } from '@/components';
 import { FlexibleBox } from '@/components/ui/flexible-box';
+import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/contexts';
 import { LoadingState } from '@/core-ui/components/LoadingState';
+import { useAxios, useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
+import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
+import { Backlog, Permission, Project, Role, RoleFields, Team, TeamStates, TeamUserSeat, TeamUserSeatFields, User } from '@/types';
 
 const TeamRolesSeatsManager: React.FC = () => {
     // ---- Hooks ----
@@ -57,7 +57,7 @@ const TeamRolesSeatsManager: React.FC = () => {
     const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
     const [displayInviteForm, setDisplayInviteForm] = useState<string>("");
     const [displayNewRoleForm, setDisplayNewRoleForm] = useState<boolean>(false);
-    
+
     const availablePermissions = ["Modify Organisation Settings", "Modify Team Settings", "Manage Team Members"]
 
     // ---- Methods ----
@@ -690,7 +690,6 @@ const InviteUserForm: React.FC<InviteUserFormProps> = ({
 
             if (data.message) {
                 throw new Error(t("team:rolesSeatsManager:userNotFound"));
-                return;
             }
 
             setUser(data);

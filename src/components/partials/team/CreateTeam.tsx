@@ -1,28 +1,24 @@
 "use client";
 
 // External
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-
-// Internal
-import { useOrganisationsContext, useTeamsContext } from "@/contexts";
-import { OrganisationStates, Team, TeamFields } from "@/types";
-import { Block, Text } from "@/components/ui/block-text";
-import { FlexibleBox } from "@/components/ui/flexible-box";
 import { faBuilding, faUsers } from "@fortawesome/free-solid-svg-icons";
-import { Heading } from "@/components/ui/heading";
-import { Field } from "@/components/ui/input-field";
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
+import dynamic from "next/dynamic";
+import "react-quill/dist/quill.snow.css"; // Import Quill styles
 // Dynamically import ReactQuill with SSR disabled
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
-import "react-quill/dist/quill.snow.css"; // Import Quill styles
+
+// Internal
+import { Block, Field, FlexibleBox, Heading, Text } from "@/components";
+import { useOrganisationsContext, useTeamsContext } from "@/contexts";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import { useURLLink } from "@/hooks";
-import Link from "next/link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import useRoleAccess from "@/hooks/useRoleAccess";
+import { OrganisationStates, Team, TeamFields } from "@/types";
 
 export const CreateTeam = () => {
     // ---- Hooks ----
