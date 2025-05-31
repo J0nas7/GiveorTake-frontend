@@ -159,6 +159,7 @@ const DashboardContainer = () => {
             chartData={chartData}
             barChartData={barChartData}
             t={t}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
         />
     )
 }
@@ -189,11 +190,13 @@ type DashboardContainerViewProps = {
         }[]
     }
     t: TFunction
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 const DashboardContainerView: React.FC<DashboardContainerViewProps> = ({
     renderBacklog, canAccessBacklog, totalTasks, completedTasks, completionRate,
-    overdueTasks, inProgressTasks, chartData, barChartData, t
+    overdueTasks, inProgressTasks, chartData, barChartData, t, 
+    convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">
         <FlexibleBox
@@ -202,7 +205,7 @@ const DashboardContainerView: React.FC<DashboardContainerViewProps> = ({
             titleAction={
                 renderBacklog && (
                     <Link
-                        href={`/project/${renderBacklog?.Project_ID}`}
+                        href={`/project/${convertID_NameStringToURLFormat(renderBacklog?.Project_ID, renderBacklog.project?.Project_Name ?? "")}`}
                         className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                     >
                         <FontAwesomeIcon icon={faLightbulb} />
