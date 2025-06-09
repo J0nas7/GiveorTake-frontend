@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react';
 
 export const useURLLink = (URLLink: string) => {
     useEffect(() => {
@@ -7,15 +7,15 @@ export const useURLLink = (URLLink: string) => {
 
     const linkId = URLLink?.split('-')[0]
     const linkName = URLLink?.substring(URLLink.indexOf('-') + 1)
-    
-    const convertID_NameStringToURLFormat = (id: number, name: string) => {
-        name = name.replace(/[^a-zA-Z0-9\- ]/g, '').replace(/\s+/g, '-').toLowerCase()
 
-        return `${id}-${name}`
+    const convertID_NameStringToURLFormat = (id: number, name: string) => {
+        name = (name ?? '').replace(/[^a-zA-Z0-9\- ]/g, '').replace(/\s+/g, '-').toLowerCase();
+
+        return `${id}-${name}`;
     }
-    
+
     return {
-        linkId, 
+        linkId,
         linkName,
         convertID_NameStringToURLFormat
     };

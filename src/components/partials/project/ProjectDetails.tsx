@@ -1,29 +1,27 @@
 "use client"
 
 // External
-import React, { useEffect, useState } from 'react';
-import { useParams } from "next/navigation";
-import { TextField, Card, CardContent, Typography, Box, Grid } from '@mui/material';
-import Link from 'next/link';
 import { faClock, faGauge, faLightbulb, faList, faUsers, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useRouter } from 'next/navigation';
+import { Box, Card, CardContent, Grid, TextField, Typography } from '@mui/material';
+import Link from 'next/link';
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
 
 // Dynamically import ReactQuill with SSR disabled
-import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 import dynamic from "next/dynamic";
+import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal
-import { useProjectsContext } from '@/contexts/';
-import { BacklogStates, Project, ProjectFields, ProjectStates, Task, User } from '@/types';
-import { Block, Heading, Text } from '@/components';
-import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
+import { Block, Text } from '@/components';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import Image from 'next/image';
+import { useProjectsContext } from '@/contexts/';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
+import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
+import { BacklogStates, Project, ProjectFields, ProjectStates, User } from '@/types';
 
 const ProjectDetails: React.FC = () => {
     // ---- Hooks ----
@@ -35,8 +33,9 @@ const ProjectDetails: React.FC = () => {
     const { canAccessProject, canManageProject } = useRoleAccess(
         projectById ? projectById.team?.organisation?.User_ID : undefined,
         "project",
-        projectById ? projectById.Project_ID : 0
+        parseInt(projectId)
     )
+    console.log("projectById", projectById)
 
     // ---- State ----
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
@@ -371,7 +370,7 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
 
         const statuses = backlog.statuses
         const tasks = backlog.tasks
-        
+
         const calculateStatusCounter = statuses?.map(status => {
             const numberOfSuchTasks = tasks?.filter(task => task.Status_ID === status.Status_ID).length
 
@@ -454,8 +453,8 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
 
                                 {canManageBacklog && (
                                     <Block className="mt-2 flex flex-col items-end">
-                                        <Link 
-                                            href={`/backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}/edit`} 
+                                        <Link
+                                            href={`/backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}/edit`}
                                             className="blue-link-light"
                                         >
                                             Edit Backlog
@@ -465,8 +464,8 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
                                                 Primary Backlog
                                             </Text>
                                         ) : (
-                                            <Link 
-                                                href={`/finish-backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}`} 
+                                            <Link
+                                                href={`/finish-backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}`}
                                                 className="blue-link-light red-link-light"
                                             >
                                                 Finish Backlog

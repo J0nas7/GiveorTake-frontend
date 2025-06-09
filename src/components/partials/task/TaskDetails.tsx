@@ -1,14 +1,14 @@
 "use client"
 
 // External
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { faArrowUpFromBracket, faArrowUpRightFromSquare, faLightbulb, faPaperPlane, faPencil, faPlay, faStop, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencil, faPaperPlane, faArrowUpRightFromSquare, faTrashCan, faArrowUpFromBracket, faPlay, faStop, faXmark, faLightbulb } from "@fortawesome/free-solid-svg-icons";
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import "react-quill/dist/quill.snow.css"; // Import the Quill styles
-import "quill-mention/dist/quill.mention.css";
 import dynamic from "next/dynamic";
+import "quill-mention/dist/quill.mention.css";
+import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 // Dynamically import ReactQuill with SSR disabled
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 // Import Quill & register mention module in useEffect
@@ -23,18 +23,17 @@ const loadQuill = async () => {
 };
 
 // Internal components and hooks
-import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
-import { useProjectsContext, useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
-import { Task, TaskComment, TaskMediaFile, TaskTimeTrack, TeamUserSeat, User } from "@/types";
-import Link from "next/link";
 import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
-import clsx from "clsx";
-import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux";
-import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
-import { Router } from "next/router";
+import { useProjectsContext, useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
+import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { env } from "@/env.urls";
 import { useURLLink } from "@/hooks";
+import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from "@/redux";
+import { Task, TaskComment, TaskMediaFile, TaskTimeTrack, TeamUserSeat, User } from "@/types";
+import clsx from "clsx";
+import Link from "next/link";
+import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from "./TaskTimeTrackPlayer";
 
 interface CardProps {
     children: React.ReactNode;
@@ -817,7 +816,7 @@ interface CtaButtonsViewProps {
     convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
-export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({ 
+export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
     task, taskDetail, archiveTask, shareTask, setTaskDetail, convertID_NameStringToURLFormat
 }) => {
     return (
@@ -917,6 +916,14 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
         if (newBacklogID) handleTaskChanges("Backlog_ID", newBacklogID.toString())
     }
 
+    const handleDueDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newDueDate = event.target.value;
+        // Validate date string (YYYY-MM-DD)
+        if (newDueDate && !isNaN(Date.parse(newDueDate))) {
+            handleTaskChanges("Task_Due_Date", newDueDate);
+        }
+    }
+
     const handleTaskChanges = async (field: keyof Task, value: string) => {
         // Update the task change (this will update it in the database)
         await saveTaskChanges(
@@ -949,6 +956,7 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
             handleStatusChange={handleStatusChange}
             handleAssigneeChange={handleAssigneeChange}
             handleBacklogChange={handleBacklogChange}
+            handleDueDateChange={handleDueDateChange}
             handleTaskChanges={handleTaskChanges}
             handleTaskTimeTrack={handleTaskTimeTrack}
         />
@@ -965,6 +973,7 @@ interface TaskDetailsViewProps {
     handleStatusChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleAssigneeChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleBacklogChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+    handleDueDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void
     handleTaskChanges: (field: keyof Task, value: string) => void
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
 }
@@ -979,6 +988,7 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     handleStatusChange,
     handleAssigneeChange,
     handleBacklogChange,
+    handleDueDateChange,
     handleTaskChanges,
     handleTaskTimeTrack,
 }) => {
@@ -992,6 +1002,57 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     return (
         <Card className={styles.detailsSection}>
             <Heading variant="h2" className="font-bold">Task Details</Heading>
+            {task.Task_Due_Date && (
+                <Block className="mb-4 text-xs font-semibold">
+                    <p>Days left:</p>
+                    <Block className="relative w-full bg-yellow-400 rounded-lg">
+                        {(() => {
+                            if (!task.Task_Due_Date || !task.Task_CreatedAt) return "";
+                            const due = new Date(task.Task_Due_Date);
+                            const created = new Date(task.Task_CreatedAt);
+                            const now = new Date();
+                            // Set time to midnight for accurate comparison
+                            now.setHours(0);
+                            now.setMinutes(0);
+                            now.setSeconds(0);
+                            const diffCreatedMs = due.getTime() - created.getTime();
+                            const diffCreatedDays = Math.ceil(diffCreatedMs / (1000 * 60 * 60 * 24));
+                            const daysElapsed = Math.ceil((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+                            return (
+                                <Block
+                                    className="absolute bg-yellow-500 rounded-lg h-6"
+                                    style={{
+                                        width: `${Math.floor(daysElapsed / diffCreatedDays * 100)}%`,
+                                        maxWidth: "100%",
+                                    }}
+                                />
+                            )
+                        })()}
+                        <Block className="relative z-10 text-black text-center py-1 px-2">
+                            {(() => {
+                                if (!task.Task_Due_Date || !task.Task_CreatedAt) return "";
+                                const due = new Date(task.Task_Due_Date);
+                                const now = new Date();
+                                // Set time to midnight for accurate comparison
+                                now.setHours(0);
+                                now.setMinutes(0);
+                                now.setSeconds(0);
+                                const created = new Date(task.Task_CreatedAt);
+
+                                if (due < now) {
+                                    return "Task is overdue!";
+                                }
+
+                                const diffMs = due.getTime() - created.getTime();
+                                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                                const diffNowMs = due.getTime() - now.getTime();
+                                const diffNowDays = Math.ceil(diffNowMs / (1000 * 60 * 60 * 24));
+                                return `${diffNowDays} out of ${diffDays} day${diffNowDays !== 1 ? "s" : ""} left`;
+                            })()}
+                        </Block>
+                    </Block>
+                </Block>
+            )}
             {/* Task Status */}
             <p>
                 <strong>Status:</strong>{" "}
@@ -1003,6 +1064,7 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     ))}
                 </select>
             </p>
+            {/* Assigned To */}
             <p>
                 <strong>Assigned To:</strong>{" "}
                 {/* Dropdown to change the user assignee */}
@@ -1019,14 +1081,17 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     ))}
                 </select>
             </p>
+            {/* Team */}
             <p>
                 <strong>Team:</strong>{" "}
                 {task.backlog?.project?.team?.Team_Name}
             </p>
+            {/* Project */}
             <p>
                 <strong>Project:</strong>{" "}
                 {task.backlog?.project?.Project_Name}
             </p>
+            {/* Backlog */}
             <p>
                 <strong>Backlog:</strong>{" "}
                 {/* Dropdown to change the backlog */}
@@ -1043,24 +1108,29 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     ))}
                 </select>
             </p>
+            {/* Created At */}
             <p>
                 <strong>Created At:</strong>{" "}
                 {task.Task_CreatedAt && (
                     <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />
                 )}
             </p>
+            {/* Due Date */}
             <p>
                 <strong>Due Date:</strong>{" "}
-                {task.Task_Due_Date ? (
-                    new Date(task.Task_Due_Date).toLocaleString()
-                ) : (
-                    "N/A"
-                )}
+                <input
+                    type="date"
+                    onChange={handleDueDateChange}
+                    className="p-2 border rounded"
+                    value={task.Task_Due_Date || ""}
+                />
             </p>
+            {/* Time Tracking */}
             <p className="timetrack-metric">
                 <strong>Time Tracking:</strong>
                 <TimeSpentDisplayView task={task} handleTaskTimeTrack={handleTaskTimeTrack} />
             </p>
+            {/* Time Spent */}
             <p className="timespent-metric mt-2">
                 <strong>Time Spent:</strong>
                 <Block variant="span">
