@@ -47,6 +47,7 @@ export const useAxios = () => {
         let config: AxiosRequestConfig = {
             withCredentials: true,
             headers: headers,
+            timeout: 10000, // Set a timeout of 10 seconds
         }
 
         // Check if postContent contains a file (e.g., image file) and use FormData if it does
@@ -157,7 +158,7 @@ export const useAxios = () => {
         }
         return send
     }
-    
+
     const httpPutWithData = async (apiEndPoint: string, putContent?: postContent, tokenName: string = 'accessToken') => {
         const actionType = "put"
         let send = await axiosAction(actionType, apiEndPoint, tokenName, putContent)
@@ -171,7 +172,7 @@ export const useAxios = () => {
         }
         return send
     }
-    
+
     const httpGetRequest = async (apiEndPoint: string, tokenName: string = 'accessToken') => {
         const actionType = "get"
         let send = await axiosAction(actionType, apiEndPoint, tokenName)
@@ -185,7 +186,7 @@ export const useAxios = () => {
         }
         return send
     }
-    
+
     const httpDeleteRequest = async (apiEndPoint: string, tokenName: string = 'accessToken') => {
         const actionType = 'delete'
         let send = await axiosAction(actionType, apiEndPoint, tokenName)
@@ -199,7 +200,7 @@ export const useAxios = () => {
         }
         return send
     }
-    
+
     return {
         httpPostWithData,
         httpPutWithData,
