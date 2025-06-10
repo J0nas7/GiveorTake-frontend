@@ -10,6 +10,7 @@ export type Task = {
     Task_Title: string
     Task_Description?: string
     Status_ID: number
+    Task_Hours_Spent?: number
     Task_Due_Date?: string
     Task_CreatedAt?: string
     Task_UpdatedAt?: string

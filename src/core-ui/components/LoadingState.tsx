@@ -1,11 +1,11 @@
 import { Block, Text } from '@/components'
-import { BacklogStates, OrganisationStates, ProjectStates, TeamStates } from '@/types'
+import { BacklogStates, CommentStates, OrganisationStates, ProjectStates, TeamStates } from '@/types'
 import Image from 'next/image'
 import React from 'react'
 
 type LoadingStateType = {
     singular: string
-    renderItem: OrganisationStates | TeamStates | ProjectStates | BacklogStates
+    renderItem: OrganisationStates | TeamStates | ProjectStates | BacklogStates | CommentStates
     permitted: boolean | undefined
     children?: React.ReactNode
 }

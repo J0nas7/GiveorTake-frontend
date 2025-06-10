@@ -72,6 +72,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const data = await httpGetRequest(`taskByKeys/${projectKey}/${taskKey}`)
 
             if (data) {
+                console.log("readTaskByKeys", data)
                 // Assuming 'data' is the object with task
                 setTaskByKeys(data)
                 return true

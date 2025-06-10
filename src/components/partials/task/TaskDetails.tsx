@@ -1,7 +1,7 @@
 "use client"
 
 // External
-import { faArrowUpFromBracket, faArrowUpRightFromSquare, faLightbulb, faPaperPlane, faPencil, faPlay, faStop, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUpFromBracket, faArrowUpRightFromSquare, faLightbulb, faPaperPlane, faPencil, faPlay, faReply, faStop, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -26,6 +26,7 @@ const loadQuill = async () => {
 import { Block, Text } from "@/components/ui/block-text";
 import { Heading } from "@/components/ui/heading";
 import { useProjectsContext, useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from "@/contexts";
+import { LoadingState } from '@/core-ui/components/LoadingState';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { env } from "@/env.urls";
 import { useURLLink } from "@/hooks";
@@ -472,6 +473,7 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     const [editComment, setEditComment] = useState<string>("");
     const [isCreateCommentVisible, setIsCreateCommentVisible] = useState<boolean>(false);
     const [isEditCommentVisible, setIsEditCommentVisible] = useState<TaskComment | undefined>(undefined);
+    const [isAnsweringCommentVisible, setIsAnsweringCommentVisible] = useState<TaskComment | undefined>(undefined);
 
     const handleAddComment = async () => {
         if (!authUser) return
@@ -482,11 +484,17 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
                 User_ID: authUser.User_ID,
                 Comment_Text: createComment.trim()
             }
+
+            if (isAnsweringCommentVisible) {
+                theNewComment.Parent_Comment_ID = isAnsweringCommentVisible.Comment_ID;
+            }
+
             console.log("theNewComment", theNewComment)
             await addTaskComment(theNewComment.Task_ID, theNewComment)
 
             setCreateComment("");
             setIsCreateCommentVisible(false)
+            setIsAnsweringCommentVisible(undefined)
 
             //// Task changed
             if (task) {
@@ -500,15 +508,31 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     const handleCommentCancel = () => {
         setCreateComment("");
         setIsCreateCommentVisible(false); // Hide editor after cancel
+        setIsAnsweringCommentVisible(undefined)
     };
 
     const handleEditComment = async () => {
-        if (!authUser || !isEditCommentVisible) return
+        if (!authUser || (!isEditCommentVisible && !isAnsweringCommentVisible)) return
 
         if (editComment.trim() && authUser.User_ID) {
-            const theEditedComment: TaskComment = {
-                ...isEditCommentVisible,
-                Comment_Text: editComment.trim()
+            let theEditedComment: TaskComment | undefined;
+
+            if (isEditCommentVisible) {
+                theEditedComment = {
+                    ...isEditCommentVisible,
+                    Comment_Text: editComment.trim()
+                };
+            } else if (isAnsweringCommentVisible) {
+                theEditedComment = {
+                    ...isAnsweringCommentVisible,
+                    Comment_Text: editComment.trim()
+                };
+            }
+
+            if (!theEditedComment) return;
+
+            if (isAnsweringCommentVisible) {
+                theEditedComment.Parent_Comment_ID = isAnsweringCommentVisible.Comment_ID;
             }
 
             await saveTaskCommentChanges(theEditedComment, theEditedComment.Task_ID)
@@ -612,6 +636,8 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
             setIsCreateCommentVisible={setIsCreateCommentVisible}
             isEditCommentVisible={isEditCommentVisible}
             setIsEditCommentVisible={setIsEditCommentVisible}
+            isAnsweringCommentVisible={isAnsweringCommentVisible}
+            setIsAnsweringCommentVisible={setIsAnsweringCommentVisible}
             task={task}
             authUser={authUser}
             addTaskComment={addTaskComment}
@@ -634,6 +660,8 @@ interface CommentsAreaViewProps {
     setIsCreateCommentVisible: React.Dispatch<React.SetStateAction<boolean>>
     isEditCommentVisible: TaskComment | undefined
     setIsEditCommentVisible: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
+    isAnsweringCommentVisible: TaskComment | undefined
+    setIsAnsweringCommentVisible: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
     task: Task;
     authUser: User | undefined
     addTaskComment: (taskId: number, comment: TaskComment) => Promise<void>
@@ -663,6 +691,8 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
     setIsCreateCommentVisible,
     isEditCommentVisible,
     setIsEditCommentVisible,
+    isAnsweringCommentVisible,
+    setIsAnsweringCommentVisible,
     task,
     authUser,
     addTaskComment,
@@ -672,93 +702,169 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
     handleEditCommentCancel,
     handleDeleteComment,
     quillModule
-}) => {
-    return (
-        <Card className={styles.commentsSection}>
+}) => (
+    <Card className={styles.commentsSection}>
+        <Block className="flex gap-2 items-center">
             <h2>Comments</h2>
-            {isEditCommentVisible ? (
-                <Block className={styles.commentEditor}>
-                    <ReactQuill
-                        value={editComment}
-                        onChange={setEditComment}
-                        placeholder="Write a comment..."
-                        className={styles.commentInput}
-                        theme="snow"
-                        modules={quillModule}
-                    />
-                    <Block className={styles.newCommentActions}>
-                        <button className={styles.sendButton} onClick={handleEditComment}>
-                            <FontAwesomeIcon icon={faPaperPlane} />
-                        </button>
-                        <button className={styles.cancelButton} onClick={handleEditCommentCancel}>
-                            Cancel
-                        </button>
-                    </Block>
+            <Text className="text-xs">({task.comments?.length})</Text>
+        </Block>
+        {isEditCommentVisible ? (
+            <Block className={styles.commentEditor}>
+                <ReactQuill
+                    value={editComment}
+                    onChange={setEditComment}
+                    placeholder="Write a comment..."
+                    className={styles.commentInput}
+                    theme="snow"
+                    modules={quillModule}
+                />
+                <Block className={styles.newCommentActions}>
+                    <button className={styles.sendButton} onClick={handleEditComment}>
+                        <FontAwesomeIcon icon={faPaperPlane} />
+                    </button>
+                    <button className={styles.cancelButton} onClick={handleEditCommentCancel}>
+                        Cancel
+                    </button>
                 </Block>
-            ) : (
-                <>
-                    {!isCreateCommentVisible ? (
-                        <Block className={styles.commentPlaceholder} onClick={() => setIsCreateCommentVisible(true)}>
-                            Add a new comment...
+            </Block>
+        ) : (
+            <>
+                {!isCreateCommentVisible && !isAnsweringCommentVisible ? (
+                    <Block className={styles.commentPlaceholder} onClick={() => setIsCreateCommentVisible(true)}>
+                        Add a new comment...
+                    </Block>
+                ) : (
+                    <Block className={styles.commentEditor}>
+                        {isAnsweringCommentVisible && (
+                            <>Answering: {isAnsweringCommentVisible.user?.User_FirstName} {isAnsweringCommentVisible.user?.User_Surname}</>
+                        )}
+                        <ReactQuill
+                            value={createComment}
+                            onChange={setCreateComment}
+                            placeholder="Write a comment..."
+                            className={styles.commentInput}
+                            theme="snow"
+                            modules={quillModule}
+                        />
+                        <Block className={styles.newCommentActions}>
+                            <button className={styles.sendButton} onClick={handleAddComment}>
+                                <FontAwesomeIcon icon={faPaperPlane} />
+                            </button>
+                            <button className={styles.cancelButton} onClick={handleCommentCancel}>
+                                Cancel
+                            </button>
                         </Block>
-                    ) : (
-                        <Block className={styles.commentEditor}>
-                            <ReactQuill
-                                value={createComment}
-                                onChange={setCreateComment}
-                                placeholder="Write a comment..."
-                                className={styles.commentInput}
-                                theme="snow"
-                                modules={quillModule}
-                            />
-                            <Block className={styles.newCommentActions}>
-                                <button className={styles.sendButton} onClick={handleAddComment}>
-                                    <FontAwesomeIcon icon={faPaperPlane} />
-                                </button>
-                                <button className={styles.cancelButton} onClick={handleCommentCancel}>
-                                    Cancel
+                    </Block>
+                )}
+            </>
+        )}
+        {task.comments?.filter(comment => !comment.Parent_Comment_ID).map((comment: TaskComment, index) => (
+            <CommentItem
+                key={index}
+                comment={comment}
+                setCreateComment={setCreateComment}
+                setEditComment={setEditComment}
+                setIsEditCommentVisible={setIsEditCommentVisible}
+                setIsAnsweringCommentVisible={setIsAnsweringCommentVisible}
+                handleDeleteComment={handleDeleteComment}
+            />
+        ))}
+    </Card>
+);
+
+type CommentItemProps = {
+    comment: TaskComment
+    setCreateComment: React.Dispatch<React.SetStateAction<string>>
+    setEditComment: (value: React.SetStateAction<string>) => void
+    setIsEditCommentVisible: (value: React.SetStateAction<TaskComment | undefined>) => void
+    setIsAnsweringCommentVisible: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
+    handleDeleteComment: (taskComment: TaskComment) => Promise<void>
+}
+
+export const CommentItem: React.FC<CommentItemProps> = ({
+    comment,
+    setCreateComment,
+    setEditComment,
+    setIsEditCommentVisible,
+    setIsAnsweringCommentVisible,
+    handleDeleteComment
+}) => {
+    // Hooks
+    const { readCommentById } = useTaskCommentsContext();
+
+    // State
+    const [theComment, setTheComment] = useState<TaskComment | undefined>(undefined);
+
+    useEffect(() => {
+        const readComment = async () => {
+            if (comment.Comment_ID) {
+                const result = await readCommentById(comment.Comment_ID, true)
+
+                if (result) setTheComment(result)
+            }
+        }
+        readComment()
+    }, [])
+
+    return (
+        <LoadingState singular="Comment" renderItem={theComment} permitted={true}>
+            {theComment && (
+                <>
+                    <Block className={styles.commentItem}>
+                        <div
+                            className={styles.comment}
+                            dangerouslySetInnerHTML={{ __html: theComment.Comment_Text }}
+                        />
+                        <Block className={styles.commentMeta}>
+                            <Block>
+                                <Block>
+                                    Created:{" "}
+                                    {theComment.Comment_CreatedAt && (
+                                        <CreatedAtToTimeSince dateCreatedAt={theComment.Comment_CreatedAt} />
+                                    )}
+                                </Block>
+                                <Block>
+                                    By: {theComment.user?.User_FirstName} {theComment.user?.User_Surname}
+                                </Block>
+                            </Block>
+                            <Block className={styles.commentActions}>
+                                <FontAwesomeIcon icon={faReply} className={styles.icon} onClick={() => {
+                                    setCreateComment("");
+                                    setIsAnsweringCommentVisible(theComment);
+                                }} />
+                                <FontAwesomeIcon icon={faPencil} className={styles.icon} onClick={() => {
+                                    setEditComment(theComment.Comment_Text || "");
+                                    setIsEditCommentVisible(theComment);
+                                }} />
+                                <button
+                                    className={styles.mediaActions}
+                                    onClick={() => handleDeleteComment(theComment)}
+                                >
+                                    <FontAwesomeIcon icon={faTrashCan} className={styles.icon} />
                                 </button>
                             </Block>
+                        </Block>
+                    </Block>
+                    {Array.isArray(theComment.children_comments) && theComment.children_comments.length > 0 && (
+                        <Block className="ml-5">
+                            {theComment.children_comments?.map((childComment: TaskComment, childIndex) => (
+                                <CommentItem
+                                    key={childIndex}
+                                    comment={childComment}
+                                    setCreateComment={setCreateComment}
+                                    setEditComment={setEditComment}
+                                    setIsEditCommentVisible={setIsEditCommentVisible}
+                                    setIsAnsweringCommentVisible={setIsAnsweringCommentVisible}
+                                    handleDeleteComment={handleDeleteComment}
+                                />
+                            ))}
                         </Block>
                     )}
                 </>
             )}
-            {task.comments?.map((comment, index) => (
-                <Block key={index} className={styles.commentItem}>
-                    <div
-                        className={styles.comment}
-                        dangerouslySetInnerHTML={{ __html: comment.Comment_Text }}
-                    />
-                    <Block className={styles.commentMeta}>
-                        <Block>
-                            <Block>
-                                Created:{" "}
-                                {comment.Comment_CreatedAt && (
-                                    <CreatedAtToTimeSince dateCreatedAt={comment.Comment_CreatedAt} />
-                                )}
-                            </Block>
-                            <Block>
-                                By: {comment.user?.User_FirstName} {comment.user?.User_Surname}
-                            </Block>
-                        </Block>
-                        <Block className={styles.commentActions}>
-                            <FontAwesomeIcon icon={faPencil} className={styles.icon} onClick={() => {
-                                setEditComment(comment.Comment_Text)
-                                setIsEditCommentVisible(comment)
-                            }} />
-                            <button
-                                className={styles.mediaActions}
-                                onClick={() => handleDeleteComment(comment)}
-                            >
-                                <FontAwesomeIcon icon={faTrashCan} className={styles.icon} />
-                            </button>
-                        </Block>
-                    </Block>
-                </Block>
-            ))}
-        </Card>
-    );
-};
+        </LoadingState>
+    )
+}
 
 const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
     const router = useRouter()
@@ -918,10 +1024,12 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
 
     const handleDueDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newDueDate = event.target.value;
-        // Validate date string (YYYY-MM-DD)
-        if (newDueDate && !isNaN(Date.parse(newDueDate))) {
-            handleTaskChanges("Task_Due_Date", newDueDate);
-        }
+        handleTaskChanges("Task_Due_Date", newDueDate);
+    }
+
+    const handleHoursSpentLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newHoursSpentLimit = Math.round(Number(event.target.value) * 3600);
+        handleTaskChanges("Task_Hours_Spent", newHoursSpentLimit.toString());
     }
 
     const handleTaskChanges = async (field: keyof Task, value: string) => {
@@ -957,6 +1065,7 @@ const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
             handleAssigneeChange={handleAssigneeChange}
             handleBacklogChange={handleBacklogChange}
             handleDueDateChange={handleDueDateChange}
+            handleHoursSpentLimitChange={handleHoursSpentLimitChange}
             handleTaskChanges={handleTaskChanges}
             handleTaskTimeTrack={handleTaskTimeTrack}
         />
@@ -974,6 +1083,7 @@ interface TaskDetailsViewProps {
     handleAssigneeChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleBacklogChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     handleDueDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+    handleHoursSpentLimitChange: (event: React.ChangeEvent<HTMLInputElement>) => void
     handleTaskChanges: (field: keyof Task, value: string) => void
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
 }
@@ -989,6 +1099,7 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     handleAssigneeChange,
     handleBacklogChange,
     handleDueDateChange,
+    handleHoursSpentLimitChange,
     handleTaskChanges,
     handleTaskTimeTrack,
 }) => {
@@ -1002,9 +1113,10 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
     return (
         <Card className={styles.detailsSection}>
             <Heading variant="h2" className="font-bold">Task Details</Heading>
+            {/* Due Date Progress */}
             {task.Task_Due_Date && (
                 <Block className="mb-4 text-xs font-semibold">
-                    <p>Days left:</p>
+                    <p>Progress:</p>
                     <Block className="relative w-full bg-yellow-400 rounded-lg">
                         {(() => {
                             if (!task.Task_Due_Date || !task.Task_CreatedAt) return "";
@@ -1015,14 +1127,19 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                             now.setHours(0);
                             now.setMinutes(0);
                             now.setSeconds(0);
+                            let progress = 0
                             const diffCreatedMs = due.getTime() - created.getTime();
                             const diffCreatedDays = Math.ceil(diffCreatedMs / (1000 * 60 * 60 * 24));
                             const daysElapsed = Math.ceil((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+                            progress = Math.floor(daysElapsed / diffCreatedDays * 100)
+
+                            if (task.status?.Status_Is_Closed) progress = 100; // If task is closed, set progress to 100%
+
                             return (
                                 <Block
                                     className="absolute bg-yellow-500 rounded-lg h-6"
                                     style={{
-                                        width: `${Math.floor(daysElapsed / diffCreatedDays * 100)}%`,
+                                        width: `${progress}%`,
                                         maxWidth: "100%",
                                     }}
                                 />
@@ -1039,9 +1156,9 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                                 now.setSeconds(0);
                                 const created = new Date(task.Task_CreatedAt);
 
-                                if (due < now) {
-                                    return "Task is overdue!";
-                                }
+                                if (task.status?.Status_Is_Closed) return "Task is closed!"
+
+                                if (due < now) return "Task is overdue!"
 
                                 const diffMs = due.getTime() - created.getTime();
                                 const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
@@ -1053,6 +1170,27 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                     </Block>
                 </Block>
             )}
+
+            {/* Time Spent vs. Time Total */}
+            {taskTimeSpent > 0 && (
+                <Block className="mb-4 text-xs font-semibold">
+                    <p>Time Spent:</p>
+                    <Block className="relative w-full bg-blue-400 rounded-lg">
+                        <Block
+                            className="absolute bg-blue-500 rounded-lg h-6"
+                            style={{
+                                width: `${(taskTimeSpent / (task.Task_Hours_Spent || 1)) * 100}%`,
+                                maxWidth: "100%",
+                            }}
+                        />
+                        <Block className="relative z-10 text-black text-center py-1 px-2">
+                            <SecondsToTimeDisplay totalSeconds={taskTimeSpent} />{" / "}
+                            <SecondsToTimeDisplay totalSeconds={(task.Task_Hours_Spent || 0)} />
+                        </Block>
+                    </Block>
+                </Block>
+            )}
+
             {/* Task Status */}
             <p>
                 <strong>Status:</strong>{" "}
@@ -1130,13 +1268,15 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
                 <strong>Time Tracking:</strong>
                 <TimeSpentDisplayView task={task} handleTaskTimeTrack={handleTaskTimeTrack} />
             </p>
-            {/* Time Spent */}
-            <p className="timespent-metric mt-2">
-                <strong>Time Spent:</strong>
-                <Block variant="span">
-                    <SecondsToTimeDisplay totalSeconds={taskTimeSpent} />{" "}
-                    <Block variant="small">({taskTimeTracksById.length} entries)</Block>
-                </Block>
+            {/* Time Spent Limit */}
+            <p>
+                <strong>Time Limit:</strong> <small>(hours)</small>{" "}
+                <input
+                    type="number"
+                    className="p-2 border rounded"
+                    value={(task.Task_Hours_Spent || 0) / 3600}
+                    onChange={handleHoursSpentLimitChange}
+                />
             </p>
         </Card>
     )

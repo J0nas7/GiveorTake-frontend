@@ -11,9 +11,11 @@ import { useResourceContext } from "./TypeContext"
 // Context API for TaskComments
 export type TaskCommentsContextType = {
     taskCommentsById: TaskComment[]
+    commentById: false | TaskComment | undefined
     taskCommentDetail: TaskComment | undefined
     newTaskComment: TaskComment | undefined
     readTaskCommentsByTaskId: (parentId: number) => Promise<void>
+    readCommentById: (itemId: number, reply?: boolean) => Promise<any>
     setTaskCommentDetail: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
     handleChangeNewTaskComment: (field: TaskCommentFields, value: string, object?: TaskComment | undefined) => Promise<void>
     addTaskComment: (parentId: number, object?: TaskComment | undefined) => Promise<void>
@@ -28,9 +30,11 @@ export const TaskCommentsProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Use useResourceContext directly for task-comment related logic
     const {
         itemsById: taskCommentsById,
+        itemById: commentById,
         newItem: newTaskComment,
         itemDetail: taskCommentDetail,
         readItemsById: readTaskCommentsByTaskId,
+        readItemById: readCommentById,
         setItemDetail: setTaskCommentDetail,
         handleChangeNewItem: handleChangeNewTaskComment,
         addItem: addTaskComment,
@@ -48,9 +52,11 @@ export const TaskCommentsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         <TaskCommentsContext.Provider
             value={{
                 taskCommentsById,
+                commentById,
                 taskCommentDetail,
                 newTaskComment,
                 readTaskCommentsByTaskId,
+                readCommentById,
                 setTaskCommentDetail,
                 handleChangeNewTaskComment,
                 addTaskComment,
