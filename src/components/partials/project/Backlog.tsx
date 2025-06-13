@@ -1,53 +1,105 @@
 "use client"
 
 // External
-import React, { useEffect, useMemo, useState } from "react"
+import { faCheckDouble, faLightbulb, faList, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { TFunction, useTranslation } from "next-i18next";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { TFunction, useTranslation } from "next-i18next"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faCheckDouble, faEllipsisV, faLightbulb, faList, faPencil, faPlus, faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
+import React, { useEffect, useMemo, useState } from "react";
 
 // Internal
-import styles from "@/core-ui/styles/modules/Backlog.module.scss"
-import { Block, Text, Field, Heading } from "@/components"
-import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, BacklogStates, Project, Status, Task, TaskFields } from "@/types";
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
-import Link from "next/link";
+import { Block, Field, Text } from "@/components";
 import { FlexibleBox } from "@/components/ui/flexible-box";
-import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
-import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
-import Image from "next/image";
+import { useBacklogsContext, useTasksContext } from "@/contexts";
 import { LoadingState } from "@/core-ui/components/LoadingState";
-import { BacklogStatusActionMenu } from "../backlog/BacklogStatusActionMenu";
+import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
+import { BacklogStates, Status, Task, TaskFields } from "@/types";
+import Link from "next/link";
+import { BacklogStatusActionMenu } from "../backlog/BacklogStatusActionMenu";
+import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
+import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 
 export const BacklogContainer = () => {
     // ---- Hooks ----
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(['backlog'])
-    const { backlogById, readBacklogById } = useBacklogsContext()
+    const { backlogById: renderBacklog, readBacklogById } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
     const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
     const { canAccessBacklog, canManageBacklog } = useRoleAccess(
-        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
         "backlog",
-        backlogById ? backlogById.Backlog_ID : 0
+        renderBacklog ? renderBacklog.Backlog_ID : 0
     )
 
     // ---- State and other Variables ----
     const urlTaskIds = searchParams.get("taskIds")
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
     const urlStatusIds = searchParams.get("statusIds")
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
     const [statusUrlEditing, setStatusUrlEditing] = useState<boolean>(false)
+
+    // ---- Effects ----
+    useEffect(() => {
+        // console.log("tasksByID changed")
+        console.log("tasksById changed", tasksById, renderTasks)
+        if (tasksById.length == 0 && renderTasks) {
+            setRenderTasks(undefined)
+        }
+        if (tasksById.length) {
+            console.log("renderTasks", renderTasks, "tasksById", tasksById)
+            setRenderTasks(tasksById)
+        }
+    }, [tasksById])
+    useEffect(() => {
+        console.log("backlogLink changed", backlogLink)
+        readTasksByBacklogId(parseInt(backlogId))
+        readBacklogById(parseInt(backlogId))
+    }, [backlogLink, backlogId])
+    useEffect(() => {
+        if (backlogLink && renderBacklog) {
+            const firstStatus: Status | undefined = renderBacklog.statuses?.
+                // Status_Order low to high:
+                sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
+            handleChangeNewTask("Status_ID", (firstStatus?.Status_ID ?? "").toString());
+            document.title = `Backlog: ${renderBacklog?.Backlog_Name} - GiveOrTake`;
+        }
+    }, [renderBacklog]);
+
+    // Get user IDs from URL
+    useEffect(() => {
+        if (urlTaskIds) {
+            // If userIds exist in the URL, use them
+            const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : [];
+            setSelectedTaskIds(taskIdsFromURL);
+        } else {
+            setSelectedTaskIds([]);
+        }
+    }, [urlTaskIds]);
+
+    // Sync selected backlog IDs with URL or default to all backlogs
+    useEffect(() => {
+        if (!renderBacklog) return
+
+        if (urlStatusIds) {
+            // If statusIds exist in the URL, use them
+            const statusIdsFromURL = urlStatusIds ? urlStatusIds.split(",") : [];
+            setSelectedStatusIds(statusIdsFromURL);
+        } else if (renderBacklog?.statuses?.length) {
+            // If no statusIds in URL, select all statuses by default
+            const allStatusIds = renderBacklog?.statuses
+                .map((status: Status) => status.Status_ID?.toString())
+                .filter((statusId) => statusId !== undefined) // Remove undefined values
+            setSelectedStatusIds(allStatusIds)
+        }
+    }, [urlStatusIds, renderBacklog])
 
     // ---- Methods ----
     // Handles the 'Enter' key press event to trigger task creation.
@@ -138,63 +190,6 @@ export const BacklogContainer = () => {
             router.push(url.toString(), { scroll: false }); // Prevent full page reload
         }
     };
-
-    // ---- Effects ----
-    useEffect(() => {
-        // console.log("tasksByID changed")
-        console.log("tasksById changed", tasksById, renderTasks)
-        if (tasksById.length == 0 && renderTasks) {
-            setRenderTasks(undefined)
-        }
-        if (tasksById.length) {
-            console.log("renderTasks", renderTasks, "tasksById", tasksById)
-            setRenderTasks(tasksById)
-        }
-    }, [tasksById])
-    useEffect(() => {
-        readTasksByBacklogId(parseInt(backlogId))
-        readBacklogById(parseInt(backlogId))
-    }, [backlogLink])
-    useEffect(() => {
-        if (backlogLink) {
-            setRenderBacklog(backlogById)
-            if (backlogById) {
-                const firstStatus: Status | undefined = backlogById.statuses?.
-                    // Status_Order low to high:
-                    sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
-                handleChangeNewTask("Status_ID", (firstStatus?.Status_ID ?? "").toString());
-                document.title = `Backlog: ${backlogById?.Backlog_Name} - GiveOrTake`;
-            }
-        }
-    }, [backlogById]);
-
-    // Get user IDs from URL
-    useEffect(() => {
-        if (urlTaskIds) {
-            // If userIds exist in the URL, use them
-            const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : [];
-            setSelectedTaskIds(taskIdsFromURL);
-        } else {
-            setSelectedTaskIds([]);
-        }
-    }, [urlTaskIds]);
-
-    // Sync selected backlog IDs with URL or default to all backlogs
-    useEffect(() => {
-        if (!renderBacklog) return
-
-        if (urlStatusIds) {
-            // If statusIds exist in the URL, use them
-            const statusIdsFromURL = urlStatusIds ? urlStatusIds.split(",") : [];
-            setSelectedStatusIds(statusIdsFromURL);
-        } else if (renderBacklog?.statuses?.length) {
-            // If no statusIds in URL, select all statuses by default
-            const allStatusIds = renderBacklog?.statuses
-                .map((status: Status) => status.Status_ID?.toString())
-                .filter((statusId) => statusId !== undefined) // Remove undefined values
-            setSelectedStatusIds(allStatusIds)
-        }
-    }, [urlStatusIds, renderBacklog])
 
     // ---- Special: Sorting ----
     const currentSort = searchParams.get("sort") || "Task_ID";
@@ -341,7 +336,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                 <Text variant="span">Filter Statuses</Text>
                             </Text>
                             <Link
-                                href={`/project/${convertID_NameStringToURLFormat(renderBacklog?.Project_ID, renderBacklog.project?.Project_Name ?? "")}`}
+                                href={`/project/${convertID_NameStringToURLFormat(renderBacklog.Project_ID, renderBacklog.project?.Project_Name ?? "")}`}
                                 className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faLightbulb} />

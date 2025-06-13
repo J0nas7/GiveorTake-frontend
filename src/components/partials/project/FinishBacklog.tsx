@@ -1,38 +1,36 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 
-import { Block, Field, FlexibleBox, Heading, Text } from '@/components';
+import { Block, Field, FlexibleBox, Text } from '@/components';
 import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/contexts';
-import { Backlog, BacklogStates, Project, ProjectStates, Task } from '@/types';
-import { faCheckCircle, faLightbulb } from '@fortawesome/free-solid-svg-icons';
-import { Card, CardContent } from '@mui/material';
-import Image from 'next/image';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { LoadingState } from '@/core-ui/components/LoadingState';
-import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
+import { setSnackMessage, useAppDispatch } from '@/redux';
+import { Backlog, BacklogStates, ProjectStates, Task } from '@/types';
+import { faCheckCircle, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Card, CardContent } from '@mui/material';
 
 export const FinishBacklog = () => {
     // ---- Hooks ----
     const dispatch = useAppDispatch()
     const router = useRouter();
     const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogId from URL
-    const { backlogById, readBacklogById, finishBacklog } = useBacklogsContext()
+    const { backlogById: renderBacklog, readBacklogById, finishBacklog } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId } = useTasksContext()
     const { projectById, readProjectById } = useProjectsContext()
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
     const { canManageBacklog } = useRoleAccess(
-        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
         "backlog",
-        backlogById ? backlogById.Backlog_ID : 0
+        renderBacklog ? renderBacklog.Backlog_ID : 0
     )
 
     // ---- State ----
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [taskStatusCounter, setTaskStatusCounter] = useState<{
         name: string;
         counter: Task[] | undefined;
@@ -47,7 +45,7 @@ export const FinishBacklog = () => {
     // ---- Methods ----
     // Handles the finishing of the current backlog and redirects accordingly
     const doFinishBacklog = async () => {
-        if (!backlogById) return
+        if (!renderBacklog) return
 
         const targetBacklog = await finishBacklog(backlogId, moveAction, newBacklog)
         if (targetBacklog) {
@@ -65,33 +63,29 @@ export const FinishBacklog = () => {
 
     // Sync backlog and project data when backlog changes
     useEffect(() => {
-        if (backlogId) {
-            setRenderBacklog(backlogById)
+        if (backlogId && renderBacklog) {
+            readProjectById(renderBacklog.Project_ID)
 
-            if (backlogById) {
-                readProjectById(backlogById.Project_ID)
+            setNewBacklog({
+                ...newBacklog,
+                Project_ID: renderBacklog.Project_ID,
+            })
 
-                setNewBacklog({
-                    ...newBacklog,
-                    Project_ID: backlogById.Project_ID,
+            setTaskStatusCounter(() => {
+                const statuses = renderBacklog.statuses
+                const tasks = renderBacklog.tasks
+
+                return statuses?.map(status => {
+                    return {
+                        name: status.Status_Name,
+                        counter: tasks?.filter(task => task.Status_ID === status.Status_ID)
+                    }
                 })
+            })
 
-                setTaskStatusCounter(() => {
-                    const statuses = backlogById.statuses
-                    const tasks = backlogById.tasks
-
-                    return statuses?.map(status => {
-                        return {
-                            name: status.Status_Name,
-                            counter: tasks?.filter(task => task.Status_ID === status.Status_ID)
-                        }
-                    })
-                })
-
-                document.title = `Finishing Backlog: ${backlogById?.Backlog_Name} - GiveOrTake`
-            }
+            document.title = `Finishing Backlog: ${renderBacklog.Backlog_Name} - GiveOrTake`
         }
-    }, [backlogById])
+    }, [renderBacklog])
 
     // ---- Render ----
     return (

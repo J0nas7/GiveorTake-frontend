@@ -1,26 +1,24 @@
 "use client"
 
 // External
-import React, { useEffect, useRef, useState } from "react"
-import { useParams } from "next/navigation"
-import { useDrag, useDrop, DndProvider } from "react-dnd"
-import { HTML5Backend } from "react-dnd-html5-backend"
+import { faLightbulb, faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faLightbulb, faPencil, faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
+import { useParams } from "next/navigation"
+import React, { useEffect, useRef, useState } from "react"
+import { DndProvider, useDrag, useDrop } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
 
 // Internal
-import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
-import { Block, Text, Heading } from "@/components"
-import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, BacklogStates, Project, Status, Task } from "@/types"
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux"
-import Link from "next/link"
+import { Block, Heading, Text } from "@/components"
 import { FlexibleBox } from "@/components/ui/flexible-box"
-import clsx from "clsx"
-import Image from "next/image"
+import { useBacklogsContext, useTasksContext } from "@/contexts"
 import { LoadingState } from "@/core-ui/components/LoadingState"
+import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
 import { useURLLink } from "@/hooks"
 import useRoleAccess from "@/hooks/useRoleAccess"
+import { BacklogStates, Status, Task } from "@/types"
+import clsx from "clsx"
+import Link from "next/link"
 
 const ItemType = { TASK: "task" }
 
@@ -111,17 +109,16 @@ const Column: React.FC<ColumnProps> = ({
 export const KanbanBoardContainer = () => {
     // ---- Hooks ----
     const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogId from URL
-    const { backlogById, readBacklogById } = useBacklogsContext()
+    const { backlogById: renderBacklog, readBacklogById } = useBacklogsContext()
     const { tasksById, readTasksByBacklogId, newTask, setTaskDetail, handleChangeNewTask, addTask, removeTask, saveTaskChanges } = useTasksContext()
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
     const { canAccessBacklog, canManageBacklog } = useRoleAccess(
-        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
         "backlog",
-        backlogById ? backlogById.Backlog_ID : 0
+        renderBacklog ? renderBacklog.Backlog_ID : 0
     )
 
     // ---- State and other Variables ----
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [kanbanColumns, setKanbanColumns] = useState<Status[] | undefined>(undefined)
 
@@ -141,14 +138,11 @@ export const KanbanBoardContainer = () => {
         readBacklogById(parseInt(backlogId))
     }, [backlogId])
     useEffect(() => {
-        if (backlogId) {
-            setRenderBacklog(backlogById)
-            if (backlogById) {
-                setKanbanColumns(backlogById.statuses)
-                document.title = `Kanban: ${backlogById?.Backlog_Name} - GiveOrTake`
-            }
+        if (backlogId && renderBacklog) {
+            setKanbanColumns(renderBacklog.statuses)
+            document.title = `Kanban: ${renderBacklog?.Backlog_Name} - GiveOrTake`
         }
-    }, [backlogById])
+    }, [renderBacklog])
 
     // ---- Methods ----
     // Archives a task and refreshes the task list.

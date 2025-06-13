@@ -1,27 +1,25 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
-import { useParams } from "next/navigation"
 import { TFunction, useTranslation } from "next-i18next"
+import { useParams } from "next/navigation"
+import React, { useEffect, useMemo, useState } from "react"
 
 // External chart library
-import { Pie, Bar } from 'react-chartjs-2'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
+import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from 'chart.js'
+import { Bar, Pie } from 'react-chartjs-2'
 
 // Internal components and hooks
-import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
-import { Block, Text, Heading } from "@/components"
-import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts"
-import { Backlog, BacklogStates, Project, Status, Task } from "@/types"
-import Link from "next/link"
+import { Block, Heading, Text } from "@/components"
 import { FlexibleBox } from "@/components/ui/flexible-box"
-import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons"
-import Image from "next/image"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { useBacklogsContext, useTasksContext } from "@/contexts"
 import { LoadingState } from "@/core-ui/components/LoadingState"
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux"
+import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
 import { useURLLink } from "@/hooks"
 import useRoleAccess from "@/hooks/useRoleAccess"
+import { BacklogStates, Task } from "@/types"
+import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import Link from "next/link"
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
@@ -30,17 +28,16 @@ const DashboardContainer = () => {
     // ---- Hooks ----
     const { t } = useTranslation(['dashboard'])
     const { tasksById, readTasksByBacklogId } = useTasksContext()
-    const { backlogById, readBacklogById } = useBacklogsContext()
+    const { backlogById: renderBacklog, readBacklogById } = useBacklogsContext()
     const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
     const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
     const { canAccessBacklog, canManageBacklog } = useRoleAccess(
-        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
         "backlog",
-        backlogById ? backlogById.Backlog_ID : 0
+        renderBacklog ? renderBacklog.Backlog_ID : 0
     )
 
     // ---- State ----
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
 
     // ---- Effects ----
@@ -60,11 +57,8 @@ const DashboardContainer = () => {
         readBacklogById(parseInt(backlogId))
     }, [backlogId])
     useEffect(() => {
-        if (backlogId) {
-            setRenderBacklog(backlogById)
-            if (backlogById) document.title = `Dashboard: ${backlogById?.Backlog_Name} - GiveOrTake`
-        }
-    }, [backlogById])
+        if (backlogId && renderBacklog) document.title = `Dashboard: ${renderBacklog?.Backlog_Name} - GiveOrTake`
+    }, [renderBacklog])
 
     // ---- Special: Dashboard Calculations ----
     // Ensure tasks is always an array
@@ -103,15 +97,15 @@ const DashboardContainer = () => {
 
     // Chart data for task status overview
     const chartData = useMemo(() => {
-        const statuses: { [key: string]: string } | undefined = backlogById ?
-            backlogById.statuses?.reduce((acc, status) => {
+        const statuses: { [key: string]: string } | undefined = renderBacklog ?
+            renderBacklog.statuses?.reduce((acc, status) => {
                 acc[status.Status_ID ?? 0] = status.Status_Name
                 return acc
             }, {} as { [key: string]: string }) : undefined
 
         const statusLabels = statuses ? Object.entries(statuses).map(([id, name]) => name) : []
         const statusCounts = statuses ? Object.entries(statuses).map(([id, name]) =>
-            (backlogById && backlogById.tasks?.filter(task => task.Status_ID === parseInt(id)).length) || 0
+            (renderBacklog && renderBacklog.tasks?.filter(task => task.Status_ID === parseInt(id)).length) || 0
         ) : []
 
         return {
@@ -195,7 +189,7 @@ type DashboardContainerViewProps = {
 
 const DashboardContainerView: React.FC<DashboardContainerViewProps> = ({
     renderBacklog, canAccessBacklog, totalTasks, completedTasks, completionRate,
-    overdueTasks, inProgressTasks, chartData, barChartData, t, 
+    overdueTasks, inProgressTasks, chartData, barChartData, t,
     convertID_NameStringToURLFormat
 }) => (
     <Block className="page-content">

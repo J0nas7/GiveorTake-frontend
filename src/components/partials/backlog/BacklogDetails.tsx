@@ -1,28 +1,27 @@
 "use client"
 
 // External
-import React, { useEffect, useState } from 'react';
-import { useParams, usePathname } from "next/navigation";
 import { faArrowDown, faArrowUp, faCheckDouble, faLightbulb, faList, faLock, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Link from 'next/link';
 import { Card, CardContent, Grid, TextField, Typography } from '@mui/material';
+import Link from 'next/link';
+import { useParams, usePathname } from "next/navigation";
+import React, { useEffect, useState } from 'react';
 
 // Dynamically import ReactQuill with SSR disabled
-import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 import dynamic from "next/dynamic";
+import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal
-import styles from "@/core-ui/styles/modules/Backlog.module.scss"
+import { Block, Field, FlexibleBox, Text } from '@/components';
 import { useBacklogsContext, useStatusContext } from '@/contexts';
-import { Backlog, BacklogStates, Status, User } from '@/types';
-import { selectAuthUser, selectAuthUserSeatPermissions, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
-import { Block, Text, FlexibleBox, Field } from '@/components';
 import { LoadingState } from '@/core-ui/components/LoadingState';
-import { dir } from 'console';
+import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
+import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
+import { Backlog, BacklogStates, Status, User } from '@/types';
 
 export const BacklogDetails: React.FC = () => {
     // ---- Hooks ----
@@ -48,35 +47,51 @@ export const BacklogDetails: React.FC = () => {
         Status_Is_Closed: false,
         Status_Color: '',
     });
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined);
+    const [localBacklog, setLocalBacklog] = useState<BacklogStates>(undefined);
+
+    // ---- Effects ----
+    useEffect(() => {
+        if (backlogId) readBacklogById(parseInt(backlogId));
+    }, [backlogId]);
+
+    useEffect(() => {
+        if (backlogById) {
+            setLocalBacklog(backlogById);
+            setNewStatus({
+                ...newStatus,
+                Backlog_ID: backlogById.Backlog_ID ?? 0
+            })
+            document.title = `Backlog: ${backlogById.Backlog_Name}`;
+        }
+    }, [backlogById]);
 
     // ---- Methods ----
     // Handle Input Change for text fields
     const handleBacklogInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!renderBacklog) return
+        if (!localBacklog) return
         const { name, value } = e.target;
 
-        setRenderBacklog({
-            ...renderBacklog,
+        setLocalBacklog({
+            ...localBacklog,
             [name]: value,
         });
     };
 
     // Handle Rich Text or other field changes
     const handleBacklogChange = (field: keyof Backlog, value: string) => {
-        if (!renderBacklog) return
+        if (!localBacklog) return
 
-        setRenderBacklog({
-            ...renderBacklog,
+        setLocalBacklog({
+            ...localBacklog,
             [field]: value,
         });
     };
 
     // Save backlog changes to backend
     const handleSaveBacklogChanges = async () => {
-        if (!renderBacklog) return;
+        if (!localBacklog) return;
         try {
-            const saveChanges = await saveBacklogChanges(renderBacklog, renderBacklog.Project_ID);
+            const saveChanges = await saveBacklogChanges(localBacklog, localBacklog.Project_ID);
 
             dispatch(setSnackMessage(
                 saveChanges ? "Backlog updated successfully." : "Failed to update backlog."
@@ -92,16 +107,16 @@ export const BacklogDetails: React.FC = () => {
 
     // Save status changes to backend
     const handleSaveStatusChanges = async (status: Status) => {
-        if (!renderBacklog) return;
+        if (!localBacklog) return;
         try {
-            const saveChanges = await saveStatusChanges(status, renderBacklog.Project_ID)
+            const saveChanges = await saveStatusChanges(status, localBacklog.Project_ID)
 
             dispatch(setSnackMessage(
                 saveChanges ? "Status changes saved successfully!" : "Failed to save status changes."
             ))
 
             if (saveChanges) {
-                setRenderBacklog(undefined)
+                setLocalBacklog(undefined)
                 readBacklogById(parseInt(backlogId))
             }
         } catch (err) {
@@ -112,12 +127,12 @@ export const BacklogDetails: React.FC = () => {
 
     // Handles the movement of a status within the backlog by changing its order.
     const handleMoveStatusChanges = async (statusId: number, direction: "up" | "down") => {
-        if (!renderBacklog) return;
+        if (!localBacklog) return;
         try {
             const saveChanges = await moveOrder(statusId, direction)
 
             if (saveChanges) {
-                setRenderBacklog(undefined)
+                setLocalBacklog(undefined)
                 readBacklogById(parseInt(backlogId))
             }
         } catch (err) {
@@ -128,12 +143,12 @@ export const BacklogDetails: React.FC = () => {
 
     // Handles the assignment of a default status to a backlog item.
     const handleAssignDefaultStatus = async (statusId: number) => {
-        if (!renderBacklog) return;
+        if (!localBacklog) return;
         try {
             const saveChanges = await assignDefault(statusId)
 
             if (saveChanges) {
-                setRenderBacklog(undefined)
+                setLocalBacklog(undefined)
                 readBacklogById(parseInt(backlogId))
             }
         } catch (err) {
@@ -144,12 +159,12 @@ export const BacklogDetails: React.FC = () => {
 
     // Handles the assignment of a default status to a backlog item.
     const handleAssignClosedStatus = async (statusId: number) => {
-        if (!renderBacklog) return;
+        if (!localBacklog) return;
         try {
             const saveChanges = await assignClosed(statusId)
 
             if (saveChanges) {
-                setRenderBacklog(undefined)
+                setLocalBacklog(undefined)
                 readBacklogById(parseInt(backlogId))
             }
         } catch (err) {
@@ -173,19 +188,19 @@ export const BacklogDetails: React.FC = () => {
             ...newStatus,
             Status_Name: ""
         })
-        setRenderBacklog(undefined)
+        setLocalBacklog(undefined)
         readBacklogById(parseInt(backlogId))
     };
 
     // Delete backlog from backend
     const handleDeleteBacklog = async () => {
-        if (!renderBacklog || !renderBacklog.Backlog_ID) return
+        if (!localBacklog || !localBacklog.Backlog_ID) return
 
         try {
             await removeBacklog(
-                renderBacklog.Backlog_ID, 
-                renderBacklog.Project_ID, 
-                `/project/${convertID_NameStringToURLFormat(renderBacklog.Project_ID, renderBacklog.project?.Project_Name ?? "")}`
+                localBacklog.Backlog_ID,
+                localBacklog.Project_ID,
+                `/project/${convertID_NameStringToURLFormat(localBacklog.Project_ID, localBacklog.project?.Project_Name ?? "")}`
             );
             alert('Backlog deleted.');
             // optionally redirect or clear state
@@ -195,26 +210,10 @@ export const BacklogDetails: React.FC = () => {
         }
     };
 
-    // ---- Effects ----
-    useEffect(() => {
-        if (backlogId) readBacklogById(parseInt(backlogId));
-    }, [backlogId]);
-
-    useEffect(() => {
-        if (backlogById) {
-            setRenderBacklog(backlogById);
-            setNewStatus({
-                ...newStatus,
-                Backlog_ID: backlogById.Backlog_ID ?? 0
-            })
-            document.title = `Backlog: ${backlogById.Backlog_Name}`;
-        }
-    }, [backlogById]);
-
     // ---- Render ----
     return (
         <BacklogDetailsView
-            renderBacklog={renderBacklog}
+            localBacklog={localBacklog}
             newStatus={newStatus}
             authUser={authUser}
             canAccessBacklog={canAccessBacklog}
@@ -238,7 +237,7 @@ export const BacklogDetails: React.FC = () => {
 };
 
 interface BacklogDetailsViewProps {
-    renderBacklog: BacklogStates;
+    localBacklog: BacklogStates;
     newStatus: Status
     authUser?: User;
     canAccessBacklog: boolean | undefined
@@ -273,7 +272,7 @@ const calculateTaskStats = (backlog: Backlog) => {
 };
 
 const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
-    renderBacklog,
+    localBacklog,
     newStatus,
     authUser,
     canAccessBacklog,
@@ -293,25 +292,25 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
     removeStatus,
     convertID_NameStringToURLFormat
 }) => {
-    const stats = renderBacklog ? calculateTaskStats(renderBacklog) : null;
+    const stats = localBacklog ? calculateTaskStats(localBacklog) : null;
 
     return (
         <Block className="page-content">
             <FlexibleBox
                 title="Backlog"
-                subtitle={renderBacklog ? renderBacklog.Backlog_Name : ''}
+                subtitle={localBacklog ? localBacklog.Backlog_Name : ''}
                 titleAction={
-                    canAccessBacklog && renderBacklog && (
+                    canAccessBacklog && localBacklog && (
                         <Block className="flex gap-2 ml-auto">
                             <Link
-                                href={`/backlog/${convertID_NameStringToURLFormat(renderBacklog?.Backlog_ID ?? 0, renderBacklog.Backlog_Name)}`}
+                                href={`/backlog/${convertID_NameStringToURLFormat(localBacklog?.Backlog_ID ?? 0, localBacklog.Backlog_Name)}`}
                                 className="blue-link !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faList} />
                                 <Text variant="span">Go to Backlog</Text>
                             </Link>
                             <Link
-                                href={`/project/${renderBacklog?.Project_ID}`}
+                                href={`/project/${localBacklog?.Project_ID}`}
                                 className="blue-link !inline-flex gap-2 items-center"
                             >
                                 <FontAwesomeIcon icon={faLightbulb} />
@@ -323,8 +322,8 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                 icon={faList}
                 className="no-box w-auto inline-block"
             >
-                <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
-                    {renderBacklog && (
+                <LoadingState singular="Backlog" renderItem={localBacklog} permitted={canAccessBacklog}>
+                    {localBacklog && (
                         <Card>
                             {canManageBacklog ? (
                                 <CardContent>
@@ -337,7 +336,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                                 label="Backlog Name"
                                                 variant="outlined"
                                                 fullWidth
-                                                value={renderBacklog.Backlog_Name}
+                                                value={localBacklog.Backlog_Name}
                                                 onChange={handleBacklogInputChange}
                                                 name="Backlog_Name"
                                             />
@@ -347,7 +346,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                             <ReactQuill
                                                 className="w-full"
                                                 theme="snow"
-                                                value={renderBacklog.Backlog_Description}
+                                                value={localBacklog.Backlog_Description}
                                                 onChange={(e: string) => handleBacklogChange("Backlog_Description", e)}
                                                 modules={{
                                                     toolbar: [
@@ -367,7 +366,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                                 type="date"
                                                 variant="outlined"
                                                 fullWidth
-                                                value={renderBacklog.Backlog_StartDate || ''}
+                                                value={localBacklog.Backlog_StartDate || ''}
                                                 onChange={(e) => handleBacklogChange("Backlog_StartDate", e.target.value)}
                                                 InputLabelProps={{ shrink: true }}
                                             />
@@ -378,7 +377,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                                 type="date"
                                                 variant="outlined"
                                                 fullWidth
-                                                value={renderBacklog.Backlog_EndDate || ''}
+                                                value={localBacklog.Backlog_EndDate || ''}
                                                 onChange={(e) => handleBacklogChange("Backlog_EndDate", e.target.value)}
                                                 InputLabelProps={{ shrink: true }}
                                             />
@@ -404,15 +403,15 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                             <div
                                                 className="bg-gray-100 p-2"
                                                 dangerouslySetInnerHTML={{
-                                                    __html: renderBacklog.Backlog_Description || "No description provided",
+                                                    __html: localBacklog.Backlog_Description || "No description provided",
                                                 }}
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={3}>
-                                            <strong>Start:</strong> {renderBacklog.Backlog_StartDate || "N/A"}
+                                            <strong>Start:</strong> {localBacklog.Backlog_StartDate || "N/A"}
                                         </Grid>
                                         <Grid item xs={12} sm={3}>
-                                            <strong>End:</strong> {renderBacklog.Backlog_EndDate || "N/A"}
+                                            <strong>End:</strong> {localBacklog.Backlog_EndDate || "N/A"}
                                         </Grid>
                                     </Grid>
                                 </CardContent>
@@ -423,7 +422,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
             </FlexibleBox>
 
             {/* Statuses Section */}
-            {canManageBacklog && renderBacklog && renderBacklog?.statuses && (
+            {canManageBacklog && localBacklog && localBacklog?.statuses && (
                 <FlexibleBox
                     title="Statuses"
                     icon={faCheckDouble}
@@ -465,12 +464,12 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                     </Block>
                                 </td>
                             </tr>
-                            {renderBacklog.statuses
+                            {localBacklog.statuses
                                 // Status_Order low to high:
                                 .sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
                                 .map((status: Status) => {
-                                    const allTasks = renderBacklog.tasks?.length
-                                    const numberOfTasks = renderBacklog.tasks?.filter(task => task.Status_ID === status.Status_ID).length
+                                    const allTasks = localBacklog.tasks?.length
+                                    const numberOfTasks = localBacklog.tasks?.filter(task => task.Status_ID === status.Status_ID).length
                                     const [statusName, setStatusName] = useState<string>(status.Status_Name)
 
                                     return (
@@ -509,7 +508,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                                                 onClick={() => removeStatus(
                                                                     status.Status_ID!,
                                                                     status.Backlog_ID,
-                                                                    `/backlog/${convertID_NameStringToURLFormat(renderBacklog.Backlog_ID ?? 0, renderBacklog.Backlog_Name)}/edit`
+                                                                    `/backlog/${convertID_NameStringToURLFormat(localBacklog.Backlog_ID ?? 0, localBacklog.Backlog_Name)}/edit`
                                                                 )}
                                                             />
                                                         </button>
@@ -530,7 +529,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                                                                 )}
                                                             </Text>
                                                             <Text className="w-3">
-                                                                {status.Status_ID && renderBacklog.statuses && renderBacklog.statuses.length > (status.Status_Order || 0) + 1 && (
+                                                                {status.Status_ID && localBacklog.statuses && localBacklog.statuses.length > (status.Status_Order || 0) + 1 && (
                                                                     <button>
                                                                         <FontAwesomeIcon icon={faArrowDown} size="xs"
                                                                             onClick={() => handleMoveStatusChanges(status.Status_ID!, "down")}
@@ -574,7 +573,7 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
             )}
 
             {/* Task Summary Section */}
-            {canAccessBacklog && renderBacklog && renderBacklog?.tasks && stats && (
+            {canAccessBacklog && localBacklog && localBacklog?.tasks && stats && (
                 <FlexibleBox
                     title="Task Summary"
                     icon={undefined}

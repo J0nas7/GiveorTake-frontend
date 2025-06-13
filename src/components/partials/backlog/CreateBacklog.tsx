@@ -1,29 +1,30 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import { faLightbulb, faList } from "@fortawesome/free-solid-svg-icons";
-import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 // Internal
-import { useBacklogsContext, useProjectsContext } from "@/contexts";
-import { Backlog, BacklogFields, ProjectStates } from "@/types";
 import { Block, Text } from "@/components/ui/block-text";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { Heading } from "@/components/ui/heading";
 import { Field } from "@/components/ui/input-field";
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
+import { useBacklogsContext, useProjectsContext } from "@/contexts";
 import { LoadingState } from "@/core-ui/components/LoadingState";
+import { useURLLink } from "@/hooks";
+import useRoleAccess from "@/hooks/useRoleAccess";
+import { selectAuthUser, useTypedSelector } from "@/redux";
+import { Backlog, BacklogFields, ProjectStates } from "@/types";
+import "react-quill/dist/quill.snow.css";
 
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
-import "react-quill/dist/quill.snow.css";
-import { useURLLink } from "@/hooks";
-import useRoleAccess from "@/hooks/useRoleAccess";
 
 export const CreateBacklog: React.FC = () => {
+    // ---- Hooks ----
     const router = useRouter();
     const { projectLink } = useParams<{ projectLink: string }>();
     const { projectById, readProjectById } = useProjectsContext();
@@ -35,8 +36,8 @@ export const CreateBacklog: React.FC = () => {
         projectById ? projectById.Project_ID : 0
     )
 
+    // ---- State ----
     const authUser = useTypedSelector(selectAuthUser);
-
     const [newBacklog, setNewBacklog] = useState<Backlog>({
         Project_ID: parseInt(projectId),
         Backlog_Name: "",
@@ -46,6 +47,18 @@ export const CreateBacklog: React.FC = () => {
         Backlog_EndDate: "",
     })
 
+    // ---- Effects ----
+    useEffect(() => {
+        if (projectId) readProjectById(parseInt(projectId));
+    }, [projectId]);
+
+    useEffect(() => {
+        if (projectById && authUser && !canManageProject) {
+            router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
+        }
+    }, [projectById]);
+
+    // ---- Methods ----
     const handleInputChange = (field: BacklogFields, value: string | boolean) => {
         setNewBacklog((prev) => ({
             ...prev,
@@ -63,16 +76,6 @@ export const CreateBacklog: React.FC = () => {
         await addBacklog(parseInt(projectId), newBacklog);
         router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
     };
-
-    useEffect(() => {
-        if (projectId) readProjectById(parseInt(projectId));
-    }, [projectId]);
-
-    useEffect(() => {
-        if (projectById && authUser && !canManageProject) {
-            router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
-        }
-    }, [projectById]);
 
     return (
         <CreateBacklogView
