@@ -1,20 +1,21 @@
 // External
-import React, { useEffect, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCopy, faEye, faEyeSlash, faPencil, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Link from 'next/link'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 
 // Internal
 import { Block, Field, Heading, Text } from '@/components'
+import { useBacklogsContext, useTasksContext } from '@/contexts'
 import { useAxios, useURLLink } from '@/hooks'
-import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/contexts'
-import { Router } from 'next/router'
-import clsx from 'clsx'
-import { Project, Task } from '@/types'
 import { selectSnackMessage, useTypedSelector } from '@/redux'
+import { Project, Task } from '@/types'
+import clsx from 'clsx'
 
-export const TaskBulkActionMenu = () => {
+export const TaskBulkActionMenu: React.FC<{ renderProject: Project }> = ({
+    renderProject
+}) => {
     // Hooks
     const router = useRouter()
     const { backlogLink, projectLink } = useParams<{ backlogLink: string, projectLink: string }>() // Get backlogLink from URL
@@ -114,7 +115,13 @@ export const TaskBulkActionMenu = () => {
                     { ["task-bulkedit-container-open"]: taskBulkEditing }
                 )}
             >
-                {taskBulkEditing && <BulkEdit selectedTaskIds={selectedTaskIds} setTaskBulkEditing={setTaskBulkEditing} />}
+                {taskBulkEditing && (
+                    <BulkEdit
+                        renderProject={renderProject}
+                        selectedTaskIds={selectedTaskIds}
+                        setTaskBulkEditing={setTaskBulkEditing}
+                    />
+                )}
             </Block>
             <Block className="taskplayer-container flex items-center justify-between">
                 <Block className="flex gap-2 items-center">
@@ -166,142 +173,152 @@ export const TaskBulkActionMenu = () => {
 }
 
 interface BulkEditProps {
+    renderProject: Project
     selectedTaskIds: string[]
     setTaskBulkEditing: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const BulkEdit: React.FC<BulkEditProps> =
-    ({
-        selectedTaskIds,
-        setTaskBulkEditing
-    }) => {
-        // Hooks
-        const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
-        const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
-        const { httpPostWithData } = useAxios()
-        const { backlogById, backlogsById, readBacklogById, readBacklogsByProjectId } = useBacklogsContext()
-        const { readTasksByBacklogId } = useTasksContext()
+const BulkEdit: React.FC<BulkEditProps> = ({
+    renderProject,
+    selectedTaskIds,
+    setTaskBulkEditing
+}) => {
+    // Hooks
+    const { backlogLink } = useParams<{ backlogLink: string }>(); // Get backlogLink from URL
+    const { linkId: backlogId, convertID_NameStringToURLFormat } = useURLLink(backlogLink)
+    const { httpPostWithData } = useAxios()
+    const { backlogById, backlogsById, readBacklogById, readBacklogsByProjectId } = useBacklogsContext()
+    const { readTasksByBacklogId } = useTasksContext()
 
-        // State
-        const [newUserId, setNewUserId] = useState<number | undefined>(undefined)
-        const [newDueDate, setNewDueDate] = useState<string>("")
-        const [newStatus, setNewStatus] = useState<string>("")
-        const [newBacklog, setNewBacklog] = useState<number>(parseInt(backlogId))
+    // State
+    const [newUserId, setNewUserId] = useState<number | undefined>(undefined)
+    const [newDueDate, setNewDueDate] = useState<string>("")
+    const [newStatus, setNewStatus] = useState<string>("")
+    const [newBacklog, setNewBacklog] = useState<number>(0)
 
-        /**
-         * Methods
-         */
-        const handleBulkUpdate = async () => {
-            if (!selectedTaskIds.length) return
+    /**
+     * Methods
+     */
+    const handleBulkUpdate = async () => {
+        if (!selectedTaskIds.length) return
 
-            const updatedTasks = selectedTaskIds.map((taskId) => ({
-                Task_ID: taskId,
-                Backlog_ID: newBacklog,
-                Task_Status: newStatus,
-                Task_Due_Date: newDueDate,
-                Assigned_User_ID: newUserId,
-            }))
+        const updatedTasks = selectedTaskIds.map((taskId) => ({
+            Task_ID: taskId,
+            Backlog_ID: newBacklog || null,
+            Status_ID: newStatus,
+            Task_Due_Date: newDueDate,
+            Assigned_User_ID: newUserId,
+        }))
+        console.log("Bulk update data:", updatedTasks)
 
-            const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks })
+        const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks })
 
-            if (result.updated_tasks) {
-                await readTasksByBacklogId(parseInt(backlogId), true)
-                setTaskBulkEditing(false)
-            }
+        console.log("Bulk update result:", result)
+
+        if (result.updated_tasks) {
+            await readTasksByBacklogId(parseInt(backlogId), true)
+            setTaskBulkEditing(false)
         }
+    }
 
-        /**
-         * Effects
-         */
-        useEffect(() => { readBacklogById(parseInt(backlogId)) }, [backlogId])
-        useEffect(() => {
-            if (backlogById) {
-                readBacklogsByProjectId(backlogById.Project_ID)
-            }
-        }, [backlogById])
+    /**
+     * Effects
+     */
+    useEffect(() => { readBacklogById(parseInt(backlogId)) }, [backlogId])
+    useEffect(() => {
+        if (backlogById) {
+            readBacklogsByProjectId(backlogById.Project_ID)
+        }
+    }, [backlogById])
 
-        if (!backlogById) return null
+    if (!backlogById) return null
 
-        return (
-            <Block className="flex flex-col gap-3">
-                <Block className="flex justify-between">
-                    <Heading variant="h3" className="font-bold text-xl">Bulk edit</Heading>
-                    <Text className="text-xl">{selectedTaskIds.length} tasks</Text>
-                </Block>
-                <Block>
-                    <Text variant="span" className="font-semibold">Assignee</Text>
-                    {/* Dropdown to change the user assignee */}
-                    <select
-                        value={newUserId}
-                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                            const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
-                            if (newAssigneeID) setNewUserId(newAssigneeID)
-                        }}
-                        className="p-2 border rounded bg-gray-200 w-60 h-14"
-                    >
-                        <option value="">Assignee</option>
-                        {backlogById.project?.team?.user_seats?.map(userSeat => {
-                            return (
-                                <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
-                            )
-                        })}
-                    </select>
-                </Block>
-                <Block>
-                    <Text variant="span" className="font-semibold">Due Date</Text>
-                    <Field
-                        type="date"
-                        lbl=""
-                        value={newDueDate}
-                        className="bg-gray-200 w-60"
-                        onChange={(e: string) => setNewDueDate(e)}
-                        disabled={false}
-                    />
-                </Block>
-                <Block>
-                    <Text variant="span" className="font-semibold">Status</Text>
-                    {/* Dropdown to change the status */}
-                    <select
-                        value={newStatus}
-                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                            const newStatus = event.target.value as unknown as Task["Status_ID"]
-                            setNewStatus(newStatus.toString())
-                        }}
-                        className="p-2 border rounded bg-gray-200 w-60 h-14"
-                    >
-                        <option value="">Status</option>
-                        {backlogById.statuses?.map(status => (
+    return (
+        <Block className="flex flex-col gap-3">
+            <Block className="flex justify-between">
+                <Heading variant="h3" className="font-bold text-xl">Bulk edit</Heading>
+                <Text className="text-xl">{selectedTaskIds.length} tasks</Text>
+            </Block>
+            {/* Assignee */}
+            <Block>
+                <Text variant="span" className="font-semibold">Assignee</Text>
+                {/* Dropdown to change the user assignee */}
+                <select
+                    value={newUserId}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                        const newAssigneeID = event.target.value as unknown as Task["Assigned_User_ID"]
+                        if (newAssigneeID) setNewUserId(newAssigneeID)
+                    }}
+                    className="p-2 border rounded bg-gray-200 w-60 h-14"
+                >
+                    <option value="">Assignee</option>
+                    {renderProject.team?.user_seats?.map(userSeat => {
+                        return (
+                            <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
+                        )
+                    })}
+                </select>
+            </Block>
+            {/* Due Date */}
+            <Block>
+                <Text variant="span" className="font-semibold">Due Date</Text>
+                <Field
+                    type="date"
+                    lbl=""
+                    value={newDueDate}
+                    className="bg-gray-200 w-60"
+                    onChange={(e: string) => setNewDueDate(e)}
+                    disabled={false}
+                />
+            </Block>
+            {/* Status */}
+            <Block className={newBacklog > 0 ? "opacity-100" : "opacity-50"}>
+                <Text variant="span" className="font-semibold">Status</Text>
+                {/* Dropdown to change the status */}
+                <select
+                    value={newStatus}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                        const newStatus = event.target.value as unknown as Task["Status_ID"]
+                        setNewStatus(newStatus.toString())
+                    }}
+                    className="p-2 border rounded bg-gray-200 w-60 h-14"
+                >
+                    <option value="">Status</option>
+                    {renderProject.backlogs?.
+                        find(backlog => backlog.Backlog_ID === newBacklog)?.
+                        statuses?.map(status => (
                             <option value={status.Status_ID}>{status.Status_Name}</option>
                         ))}
-                    </select>
-                </Block>
-                <Block>
-                    <Text variant="span" className="font-semibold">Backlog</Text>
-                    {/* Dropdown to change the backlog */}
-                    <select
-                        value={newBacklog}
-                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                            const newBacklog = parseInt(event.target.value) as Task["Backlog_ID"]
-                            setNewBacklog(newBacklog)
-                        }}
-                        className="p-2 border rounded bg-gray-200 w-60 h-14"
-                    >
-                        <option value="" disabled>Backlog</option>
-                        {Object.values(backlogsById).map(backlog => (
-                            <option key={backlog.Backlog_ID} value={backlog.Backlog_ID}>
-                                {backlog.Backlog_Name}
-                            </option>
-                        ))}
-                    </select>
-                </Block>
-                <Block className="flex gap-2 ml-auto">
-                    <button onClick={() => setTaskBulkEditing(false)}>
-                        Cancel
-                    </button>
-                    <button className="button-blue" onClick={handleBulkUpdate}>
-                        Confirm
-                    </button>
-                </Block>
+                </select>
             </Block>
-        )
-    }
+            <Block>
+                <Text variant="span" className="font-semibold">Backlog</Text>
+                {/* Dropdown to change the backlog */}
+                <select
+                    value={newBacklog}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                        const newBacklog = parseInt(event.target.value) as Task["Backlog_ID"]
+                        setNewBacklog(newBacklog)
+                        setNewStatus("") // Reset status when changing backlog
+                    }}
+                    className="p-2 border rounded bg-gray-200 w-60 h-14"
+                >
+                    <option value="0" disabled>Backlog</option>
+                    {renderProject.backlogs?.map(backlog => (
+                        <option key={backlog.Backlog_ID} value={backlog.Backlog_ID}>
+                            {backlog.Backlog_Name}
+                        </option>
+                    ))}
+                </select>
+            </Block>
+            <Block className="flex gap-2 ml-auto">
+                <button onClick={() => setTaskBulkEditing(false)}>
+                    Cancel
+                </button>
+                <button className="button-blue" onClick={handleBulkUpdate}>
+                    Confirm
+                </button>
+            </Block>
+        </Block>
+    )
+}

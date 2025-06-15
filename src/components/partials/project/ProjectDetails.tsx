@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Card, CardContent, Grid, TextField, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 // Dynamically import ReactQuill with SSR disabled
 import dynamic from "next/dynamic";
@@ -41,15 +41,18 @@ const ProjectDetails: React.FC = () => {
     const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
-    // Calculate the number of accessible backlogs for the authenticated user
-    const accessibleBacklogsCount = renderProject && renderProject.backlogs?.filter(
-        (backlog) =>
-            authUser &&
-            (
-                renderProject.team?.organisation?.User_ID === authUser.User_ID || // Check if the user owns the organisation
-                parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`) // Check if the user has access permissions
-            )
-    ).length || 0;
+    // Calculate the number of accessible backlogs for the authenticated user using useMemo
+    const accessibleBacklogsCount = useMemo(() => {
+        if (!renderProject || !renderProject.backlogs) return 0;
+        return renderProject.backlogs.filter(
+            (backlog) =>
+                authUser &&
+                (
+                    renderProject.team?.organisation?.User_ID === authUser.User_ID || // Check if the user owns the organisation
+                    parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`) // Check if the user has access permissions
+                )
+        ).length;
+    }, [renderProject, authUser, parsedPermissions]);
 
     // ---- Effects ----
     useEffect(() => { readProjectById(parseInt(projectId)); }, [projectId]);

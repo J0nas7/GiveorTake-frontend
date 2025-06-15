@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from "react";
 // Internal
 import { Block, Field, Text } from "@/components";
 import { FlexibleBox } from "@/components/ui/flexible-box";
-import { useBacklogsContext, useTasksContext } from "@/contexts";
+import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/contexts";
 import { LoadingState } from "@/core-ui/components/LoadingState";
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { useURLLink } from "@/hooks";
@@ -26,6 +26,10 @@ export const BacklogContainer = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useTranslation(['backlog'])
+    const {
+        projectById: renderProject,
+        readProjectById
+    } = useProjectsContext()
     const {
         backlogById: renderBacklog,
         readBacklogById
@@ -81,6 +85,8 @@ export const BacklogContainer = () => {
                 sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
             handleChangeNewTask("Status_ID", (firstStatus?.Status_ID ?? "").toString());
             document.title = `Backlog: ${renderBacklog?.Backlog_Name} - GiveOrTake`;
+
+            readProjectById(renderBacklog.Project_ID)
         }
     }, [renderBacklog]);
 
@@ -257,7 +263,7 @@ export const BacklogContainer = () => {
                 renderBacklog={renderBacklog}
                 selectedStatusIds={selectedStatusIds}
             />
-            <TaskBulkActionMenu />
+            {renderProject && <TaskBulkActionMenu renderProject={renderProject} />}
             <BacklogContainerView
                 renderBacklog={renderBacklog}
                 sortedTasks={sortedTasks}

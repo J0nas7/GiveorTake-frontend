@@ -87,7 +87,7 @@ export const useAxios = () => {
             }
         } catch (error: unknown) {
             // Handle errors, log them, and return the error object
-            console.log(`axiosAction ${actionType.toUpperCase()} error`, error)
+            console.log(`useAxios ${actionType.toUpperCase()} (${apiEndPoint}) error`, error)
             return error
         }
     }

@@ -1,5 +1,5 @@
 // External
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 // Internal
 import { RootState } from '@/redux/store'
@@ -58,7 +58,7 @@ export const authSlice = createSlice({
         setAuthUserSeat: (state: AuthState, action: PayloadAction<any>) => {
             const data = action.payload.data
             state.authUserSeat = data
-            
+
             // const Seat_Permissions = data.Seat_Permissions
             // let parsedPermissions: string[] = [];
 

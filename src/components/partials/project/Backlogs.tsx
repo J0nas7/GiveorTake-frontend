@@ -111,7 +111,9 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
             <LoadingState singular="Project" renderItem={renderProject} permitted={canAccessProject}>
                 {renderProject && (
                     <>
-                        <TaskBulkActionMenu />
+                        <TaskBulkActionMenu
+                            renderProject={renderProject}
+                        />
                         {renderProject.backlogs && renderProject.backlogs.map((backlog: Backlog) => (
                             <>
                                 {/* Backlog rendered if the user has the necessary permissions. */}
