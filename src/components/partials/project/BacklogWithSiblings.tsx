@@ -17,7 +17,6 @@ import useRoleAccess from "@/hooks/useRoleAccess";
 import { BacklogStates, Status, Task, TaskFields } from "@/types";
 import clsx from "clsx";
 import Link from "next/link";
-import { TaskBulkActionMenu } from "../task/TaskBulkActionMenu";
 import { CreatedAtToTimeSince } from "../task/TaskTimeTrackPlayer";
 
 type BacklogWithSiblingsContainerProps = {
@@ -107,11 +106,9 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
 
         let updatedTaskIds = selectedTaskIds;
 
-        if (checked) {
-            updatedTaskIds = [...selectedTaskIds, value]; // Add new ID
-        } else {
-            updatedTaskIds = selectedTaskIds.filter(id => id !== value); // Remove unchecked ID
-        }
+        updatedTaskIds = checked ?
+            [...selectedTaskIds, value] : // Add new ID
+            selectedTaskIds.filter(id => id !== value) // Remove unchecked ID
 
         updateURLParams(updatedTaskIds)
     };
@@ -141,7 +138,10 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
         if (newTaskIds === undefined) {
             url.searchParams.delete("taskIds")
         } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
-            if (newTaskIds.length > 0 && renderTasks && newTaskIds.length <= renderTasks.length) {
+            if (
+                newTaskIds.length > 0 && renderTasks
+                //  && newTaskIds.length <= renderTasks.length
+            ) {
                 url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
             } else {
                 url.searchParams.delete("taskIds"); // Remove if empty
@@ -243,28 +243,25 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
 
     // ---- Render ----
     return (
-        <>
-            <TaskBulkActionMenu />
-            <BacklogContainerView
-                localBacklog={localBacklog}
-                sortedTasks={sortedTasks}
-                localNewTask={localNewTask}
-                currentSort={currentSort}
-                currentOrder={currentOrder}
-                t={t}
-                selectedTaskIds={selectedTaskIds}
-                selectAll={selectAll}
-                canAccessBacklog={canAccessBacklog}
-                handleSort={handleSort}
-                handleCreateTask={prepareCreateTask}
-                ifEnter={ifEnter}
-                handleChangeLocalNewTask={handleChangeLocalNewTask}
-                setTaskDetail={setTaskDetail}
-                handleCheckboxChange={handleCheckboxChange}
-                handleSelectAllChange={handleSelectAllChange}
-                convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
-            />
-        </>
+        <BacklogContainerView
+            localBacklog={localBacklog}
+            sortedTasks={sortedTasks}
+            localNewTask={localNewTask}
+            currentSort={currentSort}
+            currentOrder={currentOrder}
+            t={t}
+            selectedTaskIds={selectedTaskIds}
+            selectAll={selectAll}
+            canAccessBacklog={canAccessBacklog}
+            handleSort={handleSort}
+            handleCreateTask={prepareCreateTask}
+            ifEnter={ifEnter}
+            handleChangeLocalNewTask={handleChangeLocalNewTask}
+            setTaskDetail={setTaskDetail}
+            handleCheckboxChange={handleCheckboxChange}
+            handleSelectAllChange={handleSelectAllChange}
+            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
+        />
     );
 }
 

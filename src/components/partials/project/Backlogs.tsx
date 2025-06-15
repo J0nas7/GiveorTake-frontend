@@ -1,22 +1,22 @@
 "use client"
 
 // External
-import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Link from 'next/link'
+import React, { useEffect, useState } from 'react'
 
 // Internal
 import { Block, FlexibleBox, Text } from '@/components'
-import { Backlog, ProjectStates, User } from '@/types'
+import { TaskBulkActionMenu } from '@/components/partials/task/TaskBulkActionMenu'
 import { useProjectsContext } from '@/contexts'
-import { useParams } from 'next/navigation'
-import { BacklogWithSiblingsContainer } from './BacklogWithSiblings'
-import Image from 'next/image'
 import { LoadingState } from '@/core-ui/components/LoadingState'
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux'
 import { useURLLink } from '@/hooks'
 import useRoleAccess from '@/hooks/useRoleAccess'
+import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux'
+import { Backlog, ProjectStates, User } from '@/types'
+import { useParams } from 'next/navigation'
+import { BacklogWithSiblingsContainer } from './BacklogWithSiblings'
 
 export const BacklogsContainer = () => {
     // ---- Hooks ----
@@ -111,6 +111,7 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
             <LoadingState singular="Project" renderItem={renderProject} permitted={canAccessProject}>
                 {renderProject && (
                     <>
+                        <TaskBulkActionMenu />
                         {renderProject.backlogs && renderProject.backlogs.map((backlog: Backlog) => (
                             <>
                                 {/* Backlog rendered if the user has the necessary permissions. */}

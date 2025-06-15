@@ -1,6 +1,16 @@
 Implement dependency injection into the component, by abstracting the TSX out of it, into a ComponentNameView.
 
 
+Insert comments for sections in the TS logic:
+// ---- Hooks ----
+(and for state, methods, effects and render as well)
+
+Make method-level comments for all methods and effects.
+
+Integrate dependency injection, so we split TS logic (ComponentNameContainer) and TSX (ComponentNameContainerView) from each other.
+
+
+
 Create testing of UserDetailsView, including UserDetailsViewProps variables being undefined/null.
 
 
