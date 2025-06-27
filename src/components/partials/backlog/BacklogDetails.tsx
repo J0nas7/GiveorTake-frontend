@@ -261,7 +261,7 @@ interface BacklogDetailsViewProps {
 const calculateTaskStats = (backlog: Backlog) => {
     if (!backlog.tasks || backlog.tasks.length === 0) return null;
 
-    const total = backlog.tasks.length;
+    const total = backlog.tasks.length; 1
     const assigneeCount = backlog.tasks.reduce((acc, task) => {
         const key = task.Assigned_User_ID || "Unassigned";
         acc[key] = (acc[key] || 0) + 1;
@@ -301,22 +301,10 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
                 subtitle={localBacklog ? localBacklog.Backlog_Name : ''}
                 titleAction={
                     canAccessBacklog && localBacklog && (
-                        <Block className="flex gap-2 ml-auto">
-                            <Link
-                                href={`/backlog/${convertID_NameStringToURLFormat(localBacklog?.Backlog_ID ?? 0, localBacklog.Backlog_Name)}`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faList} />
-                                <Text variant="span">Go to Backlog</Text>
-                            </Link>
-                            <Link
-                                href={`/project/${localBacklog?.Project_ID}`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faLightbulb} />
-                                <Text variant="span">Go to Project</Text>
-                            </Link>
-                        </Block>
+                        <BacklogHeaderLinks
+                            localBacklog={localBacklog}
+                            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
+                        />
                     )
                 }
                 icon={faList}
@@ -324,286 +312,381 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = ({
             >
                 <LoadingState singular="Backlog" renderItem={localBacklog} permitted={canAccessBacklog}>
                     {localBacklog && (
-                        <Card>
-                            {canManageBacklog ? (
-                                <CardContent>
-                                    <Typography variant="h6" gutterBottom>
-                                        Edit Backlog Details
-                                    </Typography>
-                                    <Grid container spacing={3}>
-                                        <Grid item xs={12} sm={6}>
-                                            <TextField
-                                                label="Backlog Name"
-                                                variant="outlined"
-                                                fullWidth
-                                                value={localBacklog.Backlog_Name}
-                                                onChange={handleBacklogInputChange}
-                                                name="Backlog_Name"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <Typography>Backlog Description</Typography>
-                                            <ReactQuill
-                                                className="w-full"
-                                                theme="snow"
-                                                value={localBacklog.Backlog_Description}
-                                                onChange={(e: string) => handleBacklogChange("Backlog_Description", e)}
-                                                modules={{
-                                                    toolbar: [
-                                                        [{ header: "1" }, { header: "2" }, { font: [] }],
-                                                        [{ list: "ordered" }, { list: "bullet" }],
-                                                        ["bold", "italic", "underline", "strike"],
-                                                        [{ align: [] }],
-                                                        ["link"],
-                                                        ["blockquote"],
-                                                    ],
-                                                }}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12} sm={6}>
-                                            <TextField
-                                                label="Start Date"
-                                                type="date"
-                                                variant="outlined"
-                                                fullWidth
-                                                value={localBacklog.Backlog_StartDate || ''}
-                                                onChange={(e) => handleBacklogChange("Backlog_StartDate", e.target.value)}
-                                                InputLabelProps={{ shrink: true }}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12} sm={6}>
-                                            <TextField
-                                                label="End Date"
-                                                type="date"
-                                                variant="outlined"
-                                                fullWidth
-                                                value={localBacklog.Backlog_EndDate || ''}
-                                                onChange={(e) => handleBacklogChange("Backlog_EndDate", e.target.value)}
-                                                InputLabelProps={{ shrink: true }}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Block className="mt-2 flex justify-between">
-                                        <button onClick={handleSaveBacklogChanges} className="button-blue">
-                                            Save Changes
-                                        </button>
-                                        <button onClick={handleDeleteBacklog} className="blue-link-light red-link-light">
-                                            Delete Backlog
-                                        </button>
-                                    </Block>
-                                </CardContent>
-                            ) : (
-                                <CardContent>
-                                    <Typography variant="h6" gutterBottom>
-                                        Backlog Details
-                                    </Typography>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12} sm={6}>
-                                            <strong>Description:</strong>
-                                            <div
-                                                className="bg-gray-100 p-2"
-                                                dangerouslySetInnerHTML={{
-                                                    __html: localBacklog.Backlog_Description || "No description provided",
-                                                }}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12} sm={3}>
-                                            <strong>Start:</strong> {localBacklog.Backlog_StartDate || "N/A"}
-                                        </Grid>
-                                        <Grid item xs={12} sm={3}>
-                                            <strong>End:</strong> {localBacklog.Backlog_EndDate || "N/A"}
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            )}
-                        </Card>
+                        <BacklogDetailsEditor
+                            localBacklog={localBacklog}
+                            canManageBacklog={canManageBacklog}
+                            handleBacklogInputChange={handleBacklogInputChange}
+                            handleSaveBacklogChanges={handleSaveBacklogChanges}
+                            handleDeleteBacklog={handleDeleteBacklog}
+                            handleBacklogChange={handleBacklogChange}
+                        />
                     )}
                 </LoadingState>
             </FlexibleBox>
 
             {/* Statuses Section */}
             {canManageBacklog && localBacklog && localBacklog?.statuses && (
-                <FlexibleBox
-                    title="Statuses"
-                    icon={faCheckDouble}
-                    className="no-box w-auto inline-block"
-                >
-                    <table className={styles.taskTable}>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Order</th>
-                                <th>Is Default?</th>
-                                <th>Is Closed?</th>
-                                <th>Number of Tasks</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colSpan={6}>
-                                    <Block className="flex gap-2 items-center">
-                                        <Field
-                                            type="text"
-                                            lbl="New status"
-                                            innerLabel={true}
-                                            value={newStatus.Status_Name}
-                                            onChange={(e: string) => setNewStatus({
-                                                ...newStatus,
-                                                Status_Name: e
-                                            })}
-                                            onKeyDown={
-                                                (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
-                                                    ifEnterCreateStatus(event)
-                                            }
-                                            disabled={false}
-                                            className="status-name-field"
-                                        />
-                                        <button className="blue-link" onClick={handleCreateStatus}>
-                                            Create status
-                                        </button>
-                                    </Block>
-                                </td>
-                            </tr>
-                            {localBacklog.statuses
-                                // Status_Order low to high:
-                                .sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
-                                .map((status: Status) => {
-                                    const allTasks = localBacklog.tasks?.length
-                                    const numberOfTasks = localBacklog.tasks?.filter(task => task.Status_ID === status.Status_ID).length
-                                    const [statusName, setStatusName] = useState<string>(status.Status_Name)
-
-                                    return (
-                                        <tr>
-                                            <td>
-                                                <Block className="flex gap-2 items-center">
-                                                    <Field
-                                                        type="text"
-                                                        lbl=""
-                                                        value={statusName}
-                                                        onChange={(e: string) => setStatusName(e)}
-                                                        onKeyDown={
-                                                            (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
-                                                                ifEnterSaveStatus(event, {
-                                                                    ...status,
-                                                                    Status_Name: statusName
-                                                                })
-                                                        }
-                                                        disabled={false}
-                                                        className="status-name-field"
-                                                    />
-                                                    {statusName !== status.Status_Name ? (
-                                                        <button>
-                                                            <FontAwesomeIcon icon={faPencil} color="green"
-                                                                onClick={() => handleSaveStatusChanges(
-                                                                    {
-                                                                        ...status,
-                                                                        Status_Name: statusName
-                                                                    }
-                                                                )}
-                                                            />
-                                                        </button>
-                                                    ) : status.Status_ID && !status.Status_Is_Default && !status.Status_Is_Closed ? (
-                                                        <button>
-                                                            <FontAwesomeIcon icon={faTrashCan} color="red" size="xs"
-                                                                onClick={() => removeStatus(
-                                                                    status.Status_ID!,
-                                                                    status.Backlog_ID,
-                                                                    `/backlog/${convertID_NameStringToURLFormat(localBacklog.Backlog_ID ?? 0, localBacklog.Backlog_Name)}/edit`
-                                                                )}
-                                                            />
-                                                        </button>
-                                                    ) : null}
-                                                </Block>
-                                            </td>
-                                            <td>
-                                                <Block className="flex gap-1 items-center">
-                                                    {!status.Status_Is_Default && !status.Status_Is_Closed ? (
-                                                        <>
-                                                            <Text className="w-3">
-                                                                {status.Status_ID && (status.Status_Order || 0) > 2 && (
-                                                                    <button>
-                                                                        <FontAwesomeIcon icon={faArrowUp} size="xs"
-                                                                            onClick={() => handleMoveStatusChanges(status.Status_ID!, "up")}
-                                                                        />
-                                                                    </button>
-                                                                )}
-                                                            </Text>
-                                                            <Text className="w-3">
-                                                                {status.Status_ID && localBacklog.statuses && localBacklog.statuses.length > (status.Status_Order || 0) + 1 && (
-                                                                    <button>
-                                                                        <FontAwesomeIcon icon={faArrowDown} size="xs"
-                                                                            onClick={() => handleMoveStatusChanges(status.Status_ID!, "down")}
-                                                                        />
-                                                                    </button>
-                                                                )}
-                                                            </Text>
-                                                            <Text>{status.Status_Order}</Text>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Text>{status.Status_Order}</Text>
-                                                            <FontAwesomeIcon icon={faLock} size="xs" color="lightgrey" />
-                                                        </>
-                                                    )}
-                                                </Block>
-                                            </td>
-                                            <td>{status.Status_Is_Default ? "Yes" : (
-                                                <input
-                                                    type="radio"
-                                                    onClick={() => handleAssignDefaultStatus(status.Status_ID ?? 0)}
-                                                />
-                                            )}</td>
-                                            <td>{status.Status_Is_Closed ? "Yes" : (
-                                                <input
-                                                    type="radio"
-                                                    onClick={() => handleAssignClosedStatus(status.Status_ID ?? 0)}
-                                                />
-                                            )}</td>
-                                            <td>
-                                                {allTasks && numberOfTasks && (
-                                                    <>{numberOfTasks} ({((numberOfTasks / allTasks) * 100).toFixed(0)}%)</>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                        </tbody>
-                    </table>
-                </FlexibleBox>
+                <StatusListEditor
+                    localBacklog={localBacklog}
+                    newStatus={newStatus}
+                    setNewStatus={setNewStatus}
+                    ifEnterCreateStatus={ifEnterCreateStatus}
+                    ifEnterSaveStatus={ifEnterSaveStatus}
+                    handleCreateStatus={handleCreateStatus}
+                    handleSaveStatusChanges={handleSaveStatusChanges}
+                    removeStatus={removeStatus}
+                    convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
+                    handleMoveStatusChanges={handleMoveStatusChanges}
+                    handleAssignDefaultStatus={handleAssignDefaultStatus}
+                    handleAssignClosedStatus={handleAssignClosedStatus}
+                />
             )}
 
             {/* Task Summary Section */}
             {canAccessBacklog && localBacklog && localBacklog?.tasks && stats && (
-                <FlexibleBox
-                    title="Task Summary"
-                    icon={undefined}
-                    className="no-box w-auto inline-block"
-                >
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={4}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h6">Total Tasks</Typography>
-                                    <Typography>{stats.total}</Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h6">Assignee Distribution</Typography>
-                                    {Object.entries(stats.assigneeCount).map(([assignee, count]) => (
-                                        <Typography key={assignee}>
-                                            {assignee === "Unassigned" ? "Unassigned" : `User #${assignee}`}:
-                                            {((count / stats.total) * 100).toFixed(1)}%
-                                        </Typography>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    </Grid>
-                </FlexibleBox>
+                <TaskSummaryCard
+                    stats={stats}
+                />
             )}
         </Block>
     );
 };
+
+export const BacklogHeaderLinks: React.FC<Partial<BacklogDetailsViewProps>> = ({
+    localBacklog: backlog,
+    convertID_NameStringToURLFormat
+}) => backlog && convertID_NameStringToURLFormat && (
+    <Block className="flex gap-2 ml-auto">
+        <Link
+            href={`/backlog/${convertID_NameStringToURLFormat(backlog.Backlog_ID ?? 0, backlog.Backlog_Name)}`}
+            className="blue-link !inline-flex gap-2 items-center"
+        >
+            <FontAwesomeIcon icon={faList} />
+            <Text variant="span">Go to Backlog</Text>
+        </Link>
+        <Link
+            href={`/project/${backlog?.Project_ID}`}
+            className="blue-link !inline-flex gap-2 items-center"
+        >
+            <FontAwesomeIcon icon={faLightbulb} />
+            <Text variant="span">Go to Project</Text>
+        </Link>
+    </Block>
+);
+
+export const BacklogDetailsEditor: React.FC<Partial<BacklogDetailsViewProps>> = ({
+    localBacklog,
+    canManageBacklog,
+    handleBacklogInputChange,
+    handleSaveBacklogChanges,
+    handleDeleteBacklog,
+    handleBacklogChange
+}) => localBacklog && handleBacklogChange && (
+    <Card>
+        {canManageBacklog ? (
+            <CardContent>
+                <Typography variant="h6" gutterBottom>
+                    Edit Backlog Details
+                </Typography>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            label="Backlog Name"
+                            variant="outlined"
+                            fullWidth
+                            value={localBacklog.Backlog_Name}
+                            onChange={handleBacklogInputChange}
+                            name="Backlog_Name"
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Typography>Backlog Description</Typography>
+                        <ReactQuill
+                            className="w-full"
+                            theme="snow"
+                            value={localBacklog.Backlog_Description}
+                            onChange={(e: string) => handleBacklogChange("Backlog_Description", e)}
+                            modules={{
+                                toolbar: [
+                                    [{ header: "1" }, { header: "2" }, { font: [] }],
+                                    [{ list: "ordered" }, { list: "bullet" }],
+                                    ["bold", "italic", "underline", "strike"],
+                                    [{ align: [] }],
+                                    ["link"],
+                                    ["blockquote"],
+                                ],
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            label="Start Date"
+                            type="date"
+                            variant="outlined"
+                            fullWidth
+                            value={localBacklog.Backlog_StartDate || ''}
+                            onChange={(e) => handleBacklogChange("Backlog_StartDate", e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            label="End Date"
+                            type="date"
+                            variant="outlined"
+                            fullWidth
+                            value={localBacklog.Backlog_EndDate || ''}
+                            onChange={(e) => handleBacklogChange("Backlog_EndDate", e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </Grid>
+                </Grid>
+                <Block className="mt-2 flex justify-between">
+                    <button onClick={handleSaveBacklogChanges} className="button-blue">
+                        Save Changes
+                    </button>
+                    <button onClick={handleDeleteBacklog} className="blue-link-light red-link-light">
+                        Delete Backlog
+                    </button>
+                </Block>
+            </CardContent>
+        ) : (
+            <CardContent>
+                <Typography variant="h6" gutterBottom>
+                    Backlog Details
+                </Typography>
+                <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                        <strong>Description:</strong>
+                        <div
+                            className="bg-gray-100 p-2"
+                            dangerouslySetInnerHTML={{
+                                __html: localBacklog.Backlog_Description || "No description provided",
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                        <strong>Start:</strong> {localBacklog.Backlog_StartDate || "N/A"}
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                        <strong>End:</strong> {localBacklog.Backlog_EndDate || "N/A"}
+                    </Grid>
+                </Grid>
+            </CardContent>
+        )}
+    </Card>
+)
+
+export const StatusListEditor: React.FC<Partial<BacklogDetailsViewProps>> = ({
+    localBacklog,
+    newStatus,
+    setNewStatus,
+    ifEnterCreateStatus,
+    ifEnterSaveStatus,
+    handleCreateStatus,
+    handleSaveStatusChanges,
+    removeStatus,
+    convertID_NameStringToURLFormat,
+    handleMoveStatusChanges,
+    handleAssignDefaultStatus,
+    handleAssignClosedStatus
+}) =>
+    localBacklog &&
+    newStatus &&
+    setNewStatus &&
+    ifEnterCreateStatus &&
+    ifEnterSaveStatus &&
+    handleSaveStatusChanges &&
+    removeStatus &&
+    convertID_NameStringToURLFormat &&
+    handleMoveStatusChanges &&
+    handleAssignDefaultStatus &&
+    handleAssignClosedStatus &&
+    (
+        <FlexibleBox
+            title="Statuses"
+            icon={faCheckDouble}
+            className="no-box w-auto inline-block"
+        >
+            <table className={styles.taskTable}>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Order</th>
+                        <th>Is Default?</th>
+                        <th>Is Closed?</th>
+                        <th>Number of Tasks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colSpan={6}>
+                            <Block className="flex gap-2 items-center">
+                                <Field
+                                    type="text"
+                                    lbl="New status"
+                                    innerLabel={true}
+                                    value={newStatus.Status_Name}
+                                    onChange={(e: string) => setNewStatus({
+                                        ...newStatus,
+                                        Status_Name: e
+                                    })}
+                                    onKeyDown={
+                                        (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                                            ifEnterCreateStatus(event)
+                                    }
+                                    disabled={false}
+                                    className="status-name-field"
+                                />
+                                <button className="blue-link" onClick={handleCreateStatus}>
+                                    Create status
+                                </button>
+                            </Block>
+                        </td>
+                    </tr>
+                    {localBacklog.statuses
+                        // Status_Order low to high:
+                        ?.sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                        .map((status: Status) => {
+                            const allTasks = localBacklog.tasks?.length
+                            const numberOfTasks = localBacklog.tasks?.filter(task => task.Status_ID === status.Status_ID).length
+                            const [statusName, setStatusName] = useState<string>(status.Status_Name)
+
+                            return (
+                                <tr>
+                                    <td>
+                                        <Block className="flex gap-2 items-center">
+                                            <Field
+                                                type="text"
+                                                lbl=""
+                                                value={statusName}
+                                                onChange={(e: string) => setStatusName(e)}
+                                                onKeyDown={
+                                                    (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                                                        ifEnterSaveStatus(event, {
+                                                            ...status,
+                                                            Status_Name: statusName
+                                                        })
+                                                }
+                                                disabled={false}
+                                                className="status-name-field"
+                                            />
+                                            {statusName !== status.Status_Name ? (
+                                                <button>
+                                                    <FontAwesomeIcon icon={faPencil} color="green"
+                                                        onClick={() => handleSaveStatusChanges(
+                                                            {
+                                                                ...status,
+                                                                Status_Name: statusName
+                                                            }
+                                                        )}
+                                                    />
+                                                </button>
+                                            ) : status.Status_ID && !status.Status_Is_Default && !status.Status_Is_Closed ? (
+                                                <button>
+                                                    <FontAwesomeIcon icon={faTrashCan} color="red" size="xs"
+                                                        onClick={() => removeStatus(
+                                                            status.Status_ID!,
+                                                            status.Backlog_ID,
+                                                            `/backlog/${convertID_NameStringToURLFormat(localBacklog.Backlog_ID ?? 0, localBacklog.Backlog_Name)}/edit`
+                                                        )}
+                                                    />
+                                                </button>
+                                            ) : null}
+                                        </Block>
+                                    </td>
+                                    <td>
+                                        <Block className="flex gap-1 items-center">
+                                            {!status.Status_Is_Default && !status.Status_Is_Closed ? (
+                                                <>
+                                                    <Text className="w-3">
+                                                        {status.Status_ID && (status.Status_Order || 0) > 2 && (
+                                                            <button>
+                                                                <FontAwesomeIcon icon={faArrowUp} size="xs"
+                                                                    onClick={() => handleMoveStatusChanges(status.Status_ID!, "up")}
+                                                                />
+                                                            </button>
+                                                        )}
+                                                    </Text>
+                                                    <Text className="w-3">
+                                                        {status.Status_ID && localBacklog.statuses && localBacklog.statuses.length > (status.Status_Order || 0) + 1 && (
+                                                            <button>
+                                                                <FontAwesomeIcon icon={faArrowDown} size="xs"
+                                                                    onClick={() => handleMoveStatusChanges(status.Status_ID!, "down")}
+                                                                />
+                                                            </button>
+                                                        )}
+                                                    </Text>
+                                                    <Text>{status.Status_Order}</Text>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Text>{status.Status_Order}</Text>
+                                                    <FontAwesomeIcon icon={faLock} size="xs" color="lightgrey" />
+                                                </>
+                                            )}
+                                        </Block>
+                                    </td>
+                                    <td>{status.Status_Is_Default ? "Yes" : (
+                                        <input
+                                            type="radio"
+                                            onClick={() => handleAssignDefaultStatus(status.Status_ID ?? 0)}
+                                        />
+                                    )}</td>
+                                    <td>{status.Status_Is_Closed ? "Yes" : (
+                                        <input
+                                            type="radio"
+                                            onClick={() => handleAssignClosedStatus(status.Status_ID ?? 0)}
+                                        />
+                                    )}</td>
+                                    <td>
+                                        {allTasks && numberOfTasks && (
+                                            <>{numberOfTasks} ({((numberOfTasks / allTasks) * 100).toFixed(0)}%)</>
+                                        )}
+                                    </td>
+                                </tr>
+                            )
+                        })}
+                </tbody>
+            </table>
+        </FlexibleBox>
+    )
+
+export const TaskSummaryCard: React.FC<{
+    stats: {
+        total: number;
+        assigneeCount: Record<string | number, number>;
+    } | null
+}> = ({
+    stats
+}) => stats && (
+    <FlexibleBox
+        title="Task Summary"
+        icon={undefined}
+        className="no-box w-auto inline-block"
+    >
+        <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}>
+                <Card>
+                    <CardContent>
+                        <Typography variant="h6">Total Tasks</Typography>
+                        <Typography>{stats.total}</Typography>
+                    </CardContent>
+                </Card>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+                <Card>
+                    <CardContent>
+                        <Typography variant="h6">Assignee Distribution</Typography>
+                        {Object.entries(stats.assigneeCount).map(([assignee, count]) => (
+                            <Typography key={assignee}>
+                                {assignee === "Unassigned" ? "Unassigned" : `User #${assignee}`}:
+                                {((count / stats.total) * 100).toFixed(1)}%
+                            </Typography>
+                        ))}
+                    </CardContent>
+                </Card>
+            </Grid>
+        </Grid>
+    </FlexibleBox>
+)

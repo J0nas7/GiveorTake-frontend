@@ -36,8 +36,8 @@ export const BacklogContainer = () => {
     } = useBacklogsContext()
     const {
         tasksById,
-        readTasksByBacklogId,
         newTask,
+        readTasksByBacklogId,
         setTaskDetail,
         handleChangeNewTask,
         addTask,

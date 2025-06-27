@@ -1,31 +1,30 @@
 "use client";
 
 // External
-import React, { useEffect, useMemo, useState } from "react";
+import { faArrowRight, faClock, faLightbulb, faSliders, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from "chart.js";
+import clsx from "clsx";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useTranslation } from "react-i18next";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faClock, faLightbulb, faSliders, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
+import React, { useEffect, useMemo, useState } from "react";
 import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 // Internal
-import styles from "@/core-ui/styles/modules/TimeTracks.module.scss"
 import { Block, Text } from "@/components/ui/block-text";
-import { useProjectsContext, useTasksContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
-import { Backlog, Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
 import { FlexibleBox } from "@/components/ui/flexible-box";
-import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 import { Heading } from "@/components/ui/heading";
+import { useProjectsContext, useTasksContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/contexts";
 import { LoadingState } from "@/core-ui/components/LoadingState";
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux";
+import styles from "@/core-ui/styles/modules/TimeTracks.module.scss";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
+import { Backlog, Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
+import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 
 export const TimeTracksContainer = () => {
     // ---- Hooks ----
@@ -276,8 +275,8 @@ export const TimeTracksContainer = () => {
                             </Block>
                             <Block className="flex flex-col lg:flex-row gap-4">
                                 <Block className="w-full lg:w-1/4 p-4 bg-white rounded-lg shadow-md">
-                                    <TimeSpentPerTask 
-                                        renderProject={renderProject} 
+                                    <TimeSpentPerTask
+                                        renderProject={renderProject}
                                         sortedByDuration={sortedByDuration}
                                         setTaskDetail={setTaskDetail}
                                     />
@@ -385,7 +384,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
                 if (renderProject && (renderProject.backlogs?.length ?? 0) > newBacklogIds.length) {
                     url.searchParams.set("backlogIds", newBacklogIds.join(",")); // Store as comma-separated values
                 } else {
-                    url.searchParams.delete("backlogIds"); // Remove if all are selected, as that is default 
+                    url.searchParams.delete("backlogIds"); // Remove if all are selected, as that is default
                 }
             } else {
                 url.searchParams.set("backlogIds", "");
@@ -400,7 +399,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
                 if (teamUserSeatsById.length > newUserIds.length) {
                     url.searchParams.set("userIds", newUserIds.join(",")); // Store as comma-separated values
                 } else {
-                    url.searchParams.delete("userIds"); // Remove if all are selected, as that is default 
+                    url.searchParams.delete("userIds"); // Remove if all are selected, as that is default
                 }
             } else {
                 url.searchParams.set("userIds", "");
@@ -415,7 +414,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
                 if (allProjectTasks && allProjectTasks.length > newTaskIds.length) {
                     url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
                 } else {
-                    url.searchParams.delete("taskIds"); // Remove if all are selected, as that is default 
+                    url.searchParams.delete("taskIds"); // Remove if all are selected, as that is default
                 }
             } else {
                 url.searchParams.set("taskIds", "");
@@ -843,9 +842,9 @@ export const TimeTracksCalendar: React.FC<TimeTracksSubComponentsProps> = ({ tim
                                                 <Text variant="small" className="text-xs">
                                                     ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                                 </Text>{" "}
-                                                <Text 
-                                                    key={index} 
-                                                    // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} 
+                                                <Text
+                                                    key={index}
+                                                    // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`}
                                                     onClick={() => setTaskDetail(track.task)}
                                                     className={clsx(styles["time-entry"], "inline blue-link-light cursor-pointer")}
                                                 >
@@ -932,7 +931,7 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
                                             ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                         </Text>{" "}
                                         <Text
-                                            // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} 
+                                            // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`}
                                             onClick={() => setTaskDetail(track.task)}
                                             className="blue-link-light inline text-gray-700 cursor-pointer"
                                         >
@@ -1023,9 +1022,10 @@ export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProjec
                             const taskHours = chartData.datasets[0].data[index] as number;
                             const percentage = ((taskHours / totalHours) * 100).toFixed(2);
                             const taskKey = chartData.taskKeys[index]
-                            const task = sortedByDuration?.filter((track) => {
-                                return track.task?.Task_Key ?? "" === taskKey
-                            })[0].task
+                            const taskTrack = sortedByDuration?.find((track) => {
+                                return (track.task?.Task_Key ?? "") === taskKey
+                            });
+                            const task = taskTrack?.task;
 
                             return (
                                 <li key={index} className="flex flex-col">
@@ -1033,7 +1033,7 @@ export const TimeSpentPerTask: React.FC<TimeSpentPerTaskProps> = ({ renderProjec
                                         <Text variant="span">
                                             <Block
                                                 // href={`/task/${renderProject?.Project_Key}/${taskKey}`}
-                                                onClick={() => setTaskDetail(task)}
+                                                onClick={() => task && setTaskDetail(task)}
                                                 className="blue-link-light inline cursor-pointer"
                                             >
                                                 <Text variant="small" className="text-xs">
@@ -1144,8 +1144,8 @@ export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({
                                     <Text variant="small">
                                         ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                     </Text>{" "}
-                                    <Text 
-                                        // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`} 
+                                    <Text
+                                        // href={`/task/${track.task?.backlog?.project?.Project_Key}/${track.task?.Task_Key}`}
                                         onClick={() => setTaskDetail(track.task)}
                                         className="inline blue-link cursor-pointer"
                                     >
