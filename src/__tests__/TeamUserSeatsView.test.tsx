@@ -1,10 +1,10 @@
 // External
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 // Internal
-import { TeamUserSeatsView, TeamUserSeatsViewProps } from '@/components/partials/team/TeamUserSeatsManager';
-import { TeamUserSeat, User, Team, Organisation } from '@/types';
+import { TeamRolesSeatsView, TeamRolesSeatsViewProps } from '@/components/partials/team/TeamRolesSeatsManager';
+import { Organisation, Team, TeamUserSeat, User } from '@/types';
+import type { TFunction } from 'i18next';
 
 // Mocks for props
 const mockHandleSelectSeat = jest.fn();
@@ -70,10 +70,9 @@ const mockTeamUserSeat: TeamUserSeat = {
     Seat_ID: 1,
     Team_ID: 1,
     User_ID: 1,
-    Seat_Role: 'user',
+    Role_ID: 1,
     Seat_Status: 'active',
     Seat_Role_Description: 'A regular user',
-    Seat_Permissions: ['view', 'edit'],
     Seat_CreatedAt: '2021-01-01',
     Seat_UpdatedAt: '2021-01-02',
     team: mockTeam,
@@ -84,10 +83,9 @@ const selectedSeat: TeamUserSeat = {
     Seat_ID: 1,
     Team_ID: 1,
     User_ID: 1,
-    Seat_Role: 'user',
+    Role_ID: 1,
     Seat_Status: 'active',
     Seat_Role_Description: 'A regular user',
-    Seat_Permissions: ['view', 'edit'],
     Seat_CreatedAt: '2021-01-01',
     Seat_UpdatedAt: '2021-01-02',
     team: mockTeam,
@@ -95,25 +93,43 @@ const selectedSeat: TeamUserSeat = {
 };
 
 // Default props with a complete mock setup
-const defaultProps: TeamUserSeatsViewProps = {
+const defaultProps: TeamRolesSeatsViewProps = {
     renderUserSeats: [mockTeamUserSeat],
-    renderTeam: mockTeam,
-    authUser: mockAuthUser,  // Here we pass the mockAuthUser as the authUser
-    selectedSeat: undefined,  // Default empty seat
-    newUserDetails: { email: '', firstName: '', lastName: '', role: 'user', status: 'active' },
+    renderTeam: mockTeam as any, // Type mismatch workaround for TeamStates
+    authUser: mockAuthUser,
+    selectedSeat: undefined,
+    displayInviteForm: undefined,
+    selectedRole: undefined,
+    teamId: '1',
+    t: ((key: string) => key) as TFunction, // Simple mock for TFunction
+    availablePermissions: [],
+    canManageTeamMembers: true,
+    rolesAndPermissionsByTeamId: [],
+    addTeamUserSeat: jest.fn().mockResolvedValue(undefined),
+    addRole: jest.fn().mockResolvedValue(undefined),
+    readTeamUserSeatsByTeamId: jest.fn().mockResolvedValue(undefined),
+    readRolesAndPermissionsByTeamId: jest.fn().mockResolvedValue(true),
     handleSelectSeat: mockHandleSelectSeat,
+    handleSelectRole: jest.fn(),
     handleRemoveSeat: mockHandleRemoveSeat,
-    handleSaveChanges: mockHandleSaveChanges,
+    handleRemoveRole: jest.fn(),
+    handleSeatChanges: jest.fn(),
+    handleRoleChanges: jest.fn().mockResolvedValue(undefined),
     handleSeatChange: mockHandleSeatChange,
-    handleUserInputChange: mockHandleUserInputChange,
-    handleCreateNewUser: mockHandleCreateNewUser,
-    setNewUserDetails: mockSetNewUserDetails,
+    handleRoleChange: jest.fn(),
+    setSelectedSeat: jest.fn(),
+    setDisplayInviteForm: jest.fn(),
+    setSelectedRole: jest.fn(),
+    displayNewRoleForm: false,
+    setDisplayNewRoleForm: jest.fn(),
+    togglePermission: jest.fn().mockResolvedValue(undefined),
+    convertID_NameStringToURLFormat: (id: number, name: string) => `${id}-${name}`,
 };
 
 describe('TeamUserSeatsView', () => {
     it('renders with complete props', () => {
-        render(<TeamUserSeatsView {...defaultProps} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} />);
+
         // Check if the page elements render correctly
         expect(screen.getByText('Manage Team User Seats')).toBeInTheDocument();
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -122,45 +138,45 @@ describe('TeamUserSeatsView', () => {
     });
 
     it('renders a message when no seats are available (empty renderUserSeats)', () => {
-        render(<TeamUserSeatsView {...defaultProps} renderUserSeats={[]} />);
+        render(<TeamRolesSeatsView {...defaultProps} renderUserSeats={[]} />);
 
         // Should render a message indicating no user seats
         expect(screen.getByText('No seats available')).toBeInTheDocument();
     });
 
     it('does not render the edit form when selectedSeat is undefined', () => {
-        render(<TeamUserSeatsView {...defaultProps} selectedSeat={undefined} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} selectedSeat={undefined} />);
+
         // Should not render the seat edit form since selectedSeat is undefined
         expect(screen.queryByText('Edit User Seat')).not.toBeInTheDocument();
     });
 
     it('renders seat edit form when selectedSeat is defined', () => {
-        render(<TeamUserSeatsView {...defaultProps} selectedSeat={selectedSeat} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} selectedSeat={selectedSeat} />);
+
         // Should render the edit form when selectedSeat is provided
         expect(screen.getByText('Edit User Seat')).toBeInTheDocument();
         expect(screen.getByLabelText('User Role')).toHaveValue('user');
     });
 
-    it('handles incomplete newUserDetails (email missing)', () => {
-        render(<TeamUserSeatsView {...defaultProps} newUserDetails={{ email: '', firstName: '', lastName: '', role: 'user', status: 'active' }} />);
-        
+    /*it('handles incomplete newUserDetails (email missing)', () => {
+        render(<TeamRolesSeatsView {...defaultProps} newUserDetails={{ email: '', firstName: '', lastName: '', role: 'user', status: 'active' }} />);
+
         // Check if the input fields render and are editable, even if email is empty
         expect(screen.getByLabelText('Email')).toBeInTheDocument();
         expect(screen.getByLabelText('First Name')).toBeInTheDocument();
-    });
+    });*/
 
-    it('handles incomplete newUserDetails (first name missing)', () => {
-        render(<TeamUserSeatsView {...defaultProps} newUserDetails={{ email: 'john@example.com', firstName: '', lastName: 'Doe', role: 'user', status: 'active' }} />);
-        
+    /*it('handles incomplete newUserDetails (first name missing)', () => {
+        render(<TeamRolesSeatsView {...defaultProps} newUserDetails={{ email: 'john@example.com', firstName: '', lastName: 'Doe', role: 'user', status: 'active' }} />);
+
         // Check if the first name input field is rendered as empty
         expect(screen.getByLabelText('First Name')).toHaveValue('');
-    });
+    });*/
 
     it('calls handleSaveChanges when Save Changes button is clicked', () => {
-        render(<TeamUserSeatsView {...defaultProps} selectedSeat={selectedSeat} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} selectedSeat={selectedSeat} />);
+
         const saveButton = screen.getByText('Save Changes');
         fireEvent.click(saveButton);
 
@@ -168,8 +184,8 @@ describe('TeamUserSeatsView', () => {
     });
 
     it('calls handleCreateNewUser when Create and Assign Seat button is clicked', () => {
-        render(<TeamUserSeatsView {...defaultProps} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} />);
+
         const createButton = screen.getByText('Create and Assign Seat');
         fireEvent.click(createButton);
 
@@ -177,8 +193,8 @@ describe('TeamUserSeatsView', () => {
     });
 
     it('calls handleSeatChange when seat role is modified', () => {
-        render(<TeamUserSeatsView {...defaultProps} selectedSeat={selectedSeat} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} selectedSeat={selectedSeat} />);
+
         const roleInput = screen.getByLabelText('User Role');
         fireEvent.change(roleInput, { target: { value: 'admin' } });
 
@@ -187,8 +203,8 @@ describe('TeamUserSeatsView', () => {
 
     it('handles seat removal properly', () => {
         const seat = { Seat_ID: 1, Seat_Role: 'user', Seat_Status: 'active' };
-        render(<TeamUserSeatsView {...defaultProps} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} />);
+
         const removeButton = screen.getByText('Remove');
         fireEvent.click(removeButton);
 
@@ -210,7 +226,7 @@ describe('TeamUserSeatsView - Edge Cases', () => {
             User_UpdatedAt: '2021-01-02',
         };
 
-        render(<TeamUserSeatsView {...defaultProps} authUser={mockUserWithoutImage} />);
+        render(<TeamRolesSeatsView {...defaultProps} authUser={mockUserWithoutImage} />);
 
         // Should render the user name correctly even if no image is present
         expect(screen.getByText('Jane Doe')).toBeInTheDocument();
@@ -220,18 +236,18 @@ describe('TeamUserSeatsView - Edge Cases', () => {
     it('handles a user with an invalid role', () => {
         const mockUserWithInvalidRole: TeamUserSeat = {
             ...mockTeamUserSeat,
-            Seat_Role: 'invalid_role', // Invalid role
+            Role_ID: 0, // Invalid role
         };
 
-        render(<TeamUserSeatsView {...defaultProps} renderUserSeats={[mockUserWithInvalidRole]} />);
+        render(<TeamRolesSeatsView {...defaultProps} renderUserSeats={[mockUserWithInvalidRole]} />);
 
         // Should render the invalid role and show a warning/error message
         expect(screen.getByText('invalid_role')).toBeInTheDocument();
     });
 
     it('renders with no user seats (empty user_seats array)', () => {
-        render(<TeamUserSeatsView {...defaultProps} renderUserSeats={[]} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} renderUserSeats={[]} />);
+
         // Should render a message saying no user seats are available
         expect(screen.getByText('No seats available')).toBeInTheDocument();
     });
@@ -242,8 +258,8 @@ describe('TeamUserSeatsView - Edge Cases', () => {
             Seat_Role_Description: undefined, // No role description
         };
 
-        render(<TeamUserSeatsView {...defaultProps} renderUserSeats={[mockSeatWithoutRoleDescription]} />);
-        
+        render(<TeamRolesSeatsView {...defaultProps} renderUserSeats={[mockSeatWithoutRoleDescription]} />);
+
         // Should render the seat without a role description, but still show the role
         expect(screen.getByText('user')).toBeInTheDocument();
         expect(screen.queryByText('A regular user')).toBeNull(); // No role description
@@ -259,7 +275,7 @@ describe('TeamUserSeatsView - Edge Cases', () => {
             teams: [], // No teams available
         };
 
-        render(<TeamUserSeatsView {...defaultProps} renderTeam={undefined} />);
+        render(<TeamRolesSeatsView {...defaultProps} renderTeam={undefined} />);
 
         // Should render a message saying no teams are available
         expect(screen.getByText('No teams available')).toBeInTheDocument();
