@@ -365,7 +365,7 @@ export const BacklogHeaderLinks: React.FC<Partial<BacklogDetailsViewProps>> = ({
             <Text variant="span">Go to Backlog</Text>
         </Link>
         <Link
-            href={`/project/${backlog?.Project_ID}`}
+            href={`/project/${convertID_NameStringToURLFormat(backlog?.Project_ID ?? 0, backlog.project?.Project_Name ?? "")}`}
             className="blue-link !inline-flex gap-2 items-center"
         >
             <FontAwesomeIcon icon={faLightbulb} />

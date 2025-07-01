@@ -1,17 +1,17 @@
 "use client";
 
 // External
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { faBuilding, faHouseChimney, faPlus, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faBuilding, faHouseChimney, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 // Internal
 import { Block, FlexibleBox, Text } from "@/components";
-import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from "@/redux";
 import { useOrganisationsContext, useTeamUserSeatsContext } from "@/contexts";
 import { useURLLink } from "@/hooks";
+import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from "@/redux";
 import { TeamUserSeat } from "@/types";
 
 export const Startpage = () => {
@@ -29,7 +29,7 @@ export const Startpage = () => {
     const approvePending = async (mySeat: TeamUserSeat) => {
         mySeat.Seat_Status = "Active"; // Set the seat status to active
         const saveChanges = await saveTeamUserSeatChanges(mySeat, mySeat.Team_ID)
-    
+
         dispatch(setSnackMessage(
             saveChanges ? "Seat approved successfully!" : "Failed to approve seat. Try again."
         ))
@@ -94,7 +94,7 @@ export const Startpage = () => {
                                                     onClick={() => removeTeamUserSeat(
                                                         seat.Seat_ID ?? 0,
                                                         seat.Team_ID,
-                                                        "/"
+                                                        undefined
                                                     )}
                                                 >
                                                     Decline

@@ -15,7 +15,16 @@ export const LoadingState: React.FC<LoadingStateType> = ({
 }) => {
     return (
         <>
-            {permitted !== undefined && !permitted ? (
+            {renderItem === undefined ? (
+                <Block className="flex justify-center">
+                    <Image
+                        src="/spinner-loader.gif"
+                        alt="Loading..."
+                        width={45}
+                        height={45}
+                    />
+                </Block>
+            ) : permitted !== undefined && !permitted ? (
                 <Block className="text-center">
                     <Text className="text-gray-400">
                         You don't have permission to view this {singular.toLowerCase()}
@@ -26,15 +35,6 @@ export const LoadingState: React.FC<LoadingStateType> = ({
                     <Text className="text-gray-400">
                         {singular} not found
                     </Text>
-                </Block>
-            ) : renderItem === undefined ? (
-                <Block className="flex justify-center">
-                    <Image
-                        src="/spinner-loader.gif"
-                        alt="Loading..."
-                        width={45}
-                        height={45}
-                    />
                 </Block>
             ) : (
                 children
