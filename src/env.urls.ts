@@ -1,7 +1,7 @@
 const prod = {
     url: {
-        APP_URL: "",
-        API_URL: "",
+        APP_URL: "https://giveortake-nextjs-frontend.ey.r.appspot.com",
+        API_URL: "https://giveortake-laravel-backend.ey.r.appspot.com",
     },
     mobilepay: {
         MP_CLIENT_ID: "",
@@ -18,6 +18,7 @@ const dev = {
         // API_URL: "http://localhost:8000",
         API_URL: "http://10.71.24.57:8000",
         // API_URL: "http://192.168.0.139:8000",
+        // API_URL: "https://giveortake-laravel-backend.ey.r.appspot.com",
     },
     mobilepay: {
         MP_CLIENT_ID: "",
