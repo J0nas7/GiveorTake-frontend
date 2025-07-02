@@ -1,3 +1,5 @@
+"use client"
+
 // External
 import { faArrowUpFromBracket, faArrowUpRightFromSquare, faLightbulb, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

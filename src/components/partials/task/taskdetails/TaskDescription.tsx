@@ -1,8 +1,9 @@
+"use client"
+
 // External
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useMemo, useState } from 'react';
-import ReactQuill from 'react-quill';
 
 // Internal
 import { Card } from '@/components/partials/task/taskdetails/TaskCard';
@@ -10,6 +11,22 @@ import { Block } from '@/components/ui/block-text';
 import { useTasksContext } from '@/contexts';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { Task, TeamUserSeat } from '@/types';
+
+import dynamic from "next/dynamic";
+import "quill-mention/dist/quill.mention.css";
+import "react-quill/dist/quill.snow.css"; // Import the Quill styles
+// Dynamically import ReactQuill with SSR disabled
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+// Import Quill & register mention module in useEffect
+let Quill: any
+// Ensure Quill is loaded properly
+const loadQuill = async () => {
+    if (typeof window !== "undefined") {
+        // Dynamically import quill
+        const { default: QuillLibrary } = await import("quill");
+        Quill = QuillLibrary;
+    }
+};
 
 export const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
     const { readTaskByKeys, readTasksByBacklogId, saveTaskChanges } = useTasksContext();
@@ -30,9 +47,24 @@ export const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
         }
     };
 
-    const handleCancel = () => {
-        setIsEditing(false);
-    };
+    const handleCancel = () => setIsEditing(false)
+
+    useEffect(() => {
+        // Only load Quill and mention module on the client
+        loadQuill().then(() => {
+            // if (Quill) {
+            //     Quill.register("modules/mention", Mention);
+            // }
+            if (Quill) {
+                // Dynamically import quill-mention once Quill is loaded
+                import("quill-mention").then((mentionModule) => {
+                    if (Quill && mentionModule) {
+                        // Quill.register("modules/mention", mentionModule);
+                    }
+                });
+            }
+        });
+    }, [Quill])
 
     // Quill Editor Modules (Mention plugin added)
     const [mentionUsers, setMentionUsers] = useState<any[]>([])
@@ -96,46 +128,43 @@ interface DescriptionAreaViewProps {
     }
 }
 
-export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> =
-    ({
-        task,
-        isEditing,
-        setIsEditing,
-        description,
-        setDescription,
-        handleSave,
-        handleCancel,
-        quillModule
-    }) => {
-        return (
-            <Card className={styles.descriptionSection}>
-                <h2>Task Description</h2>
-                {!isEditing ? (
-                    <div
-                        className={styles.descriptionPlaceholder}
-                        onClick={() => setIsEditing(true)}
-                        dangerouslySetInnerHTML={{ __html: description || "Click to add a description..." }}
-                    />
-                ) : (
-                    <Block className={styles.descriptionEditor}>
-                        <ReactQuill
-                            className={styles.descriptionInput}
-                            theme="snow"
-                            value={description}
-                            onChange={setDescription}
-                            onBlur={handleSave}
-                            modules={quillModule}
-                        />
-                        <Block className={styles.editDescriptionActions}>
-                            <button className={styles.sendButton} onClick={handleSave}>
-                                <FontAwesomeIcon icon={faPaperPlane} />
-                            </button>
-                            <button className={styles.cancelButton} onClick={handleCancel}>
-                                Cancel
-                            </button>
-                        </Block>
-                    </Block>
-                )}
-            </Card>
-        );
-    };
+export const DescriptionAreaView: React.FC<DescriptionAreaViewProps> = ({
+    task,
+    isEditing,
+    setIsEditing,
+    description,
+    setDescription,
+    handleSave,
+    handleCancel,
+    quillModule
+}) => (
+    <Card className={styles.descriptionSection}>
+        <h2>Task Description</h2>
+        {!isEditing ? (
+            <div
+                className={styles.descriptionPlaceholder}
+                onClick={() => setIsEditing(true)}
+                dangerouslySetInnerHTML={{ __html: description || "Click to add a description..." }}
+            />
+        ) : (
+            <Block className={styles.descriptionEditor}>
+                <ReactQuill
+                    className={styles.descriptionInput}
+                    theme="snow"
+                    value={description}
+                    onChange={setDescription}
+                    onBlur={handleSave}
+                    modules={quillModule}
+                />
+                <Block className={styles.editDescriptionActions}>
+                    <button className={styles.sendButton} onClick={handleSave}>
+                        <FontAwesomeIcon icon={faPaperPlane} />
+                    </button>
+                    <button className={styles.cancelButton} onClick={handleCancel}>
+                        Cancel
+                    </button>
+                </Block>
+            </Block>
+        )}
+    </Card>
+);

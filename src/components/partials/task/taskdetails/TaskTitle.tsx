@@ -1,3 +1,5 @@
+"use client"
+
 // External
 import { useEffect, useRef, useState } from 'react';
 
@@ -20,19 +22,20 @@ export const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
         }
     }, [isEditing]);
 
-    const handleBlur = async () => {
+    const handleBlur = () => {
         setIsEditing(false);
 
-        await saveTaskChanges(
+        saveTaskChanges(
             { ...task, Task_Title: title },
             task.Backlog_ID
-        );
-
-        //// Task changed
-        if (task) {
-            if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true)
-            if (task.backlog?.project?.Project_Key && task.Task_Key) readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
-        }
+        ).then(() => {
+            if (task) {
+                if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true);
+                if (task.backlog?.project?.Project_Key && task.Task_Key) {
+                    readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
+                }
+            }
+        });
     };
 
     useEffect(() => {
@@ -59,27 +62,31 @@ interface TitleAreaViewProps {
     setTitle: React.Dispatch<React.SetStateAction<string>>
     inputRef: React.RefObject<HTMLInputElement | null>
     task: Task;
-    handleBlur: () => Promise<void>
+    handleBlur: () => void
 }
 
 export const TitleAreaView: React.FC<TitleAreaViewProps> = ({
-    isEditing, setIsEditing, title, setTitle, inputRef, task, handleBlur
-}) => {
-    return (
-        <Block className={styles.titleArea}>
-            {!isEditing ? (
-                <Block className={styles.titlePlaceholder} onClick={() => setIsEditing(true)}>
-                    {title || "Click to add title..."}
-                </Block>
-            ) : (
-                <input
-                    className={styles.titleInput}
-                    ref={inputRef}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={handleBlur}
-                />
-            )}
-        </Block>
-    );
-};
+    isEditing,
+    setIsEditing,
+    title,
+    setTitle,
+    inputRef,
+    task,
+    handleBlur
+}) => (
+    <Block className={styles.titleArea}>
+        {!isEditing ? (
+            <Block className={styles.titlePlaceholder} onClick={() => setIsEditing(true)}>
+                {title || "Click to add title..."}
+            </Block>
+        ) : (
+            <input
+                className={styles.titleInput}
+                ref={inputRef}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleBlur}
+            />
+        )}
+    </Block>
+);

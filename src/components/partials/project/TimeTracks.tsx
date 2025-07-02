@@ -194,12 +194,9 @@ export const TimeTracksContainer = () => {
 
     // Update renderTimeTracks when data is available
     useEffect(() => {
-        if (taskTimeTracksByProjectId.length === 0 && renderTimeTracks) {
-            setRenderTimeTracks(undefined);
-        }
-        if (taskTimeTracksByProjectId.length) {
-            setRenderTimeTracks(taskTimeTracksByProjectId)
-        }
+        if (taskTimeTracksByProjectId.length === 0 && renderTimeTracks) setRenderTimeTracks(undefined);
+
+        if (taskTimeTracksByProjectId.length) setRenderTimeTracks(taskTimeTracksByProjectId)
     }, [taskTimeTracksByProjectId]);
 
     // Sort time tracks by duration and latest entry
@@ -231,7 +228,9 @@ export const TimeTracksContainer = () => {
         <Block className="page-content">
             <FlexibleBox
                 title={`${t("timetrack.title")}`}
-                subtitle={renderProject ? renderProject.Project_Name : undefined}
+                subtitle={renderProject ?
+                    `${renderProject.Project_Name} (${renderTimeTracks?.length} timetracks) (${selectedTaskIds.length} selectedTaskIds) (${renderProject?.backlogs?.length} backlogs)` :
+                    undefined}
                 titleAction={
                     renderProject && (
                         <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
@@ -699,7 +698,7 @@ export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks
                 </Block>
 
                 <Block className="w-1/5 flex flex-col items-center text-sm font-semibold text-gray-400">
-                    {startDateWithoutTime.toLocaleDateString()} - {endDateWithoutTime.toLocaleDateString()}
+                    {startDateWithoutTime.toLocaleString()} - {endDateWithoutTime.toLocaleString()}
                 </Block>
 
                 <Block className="w-2/5 flex flex-col items-center">

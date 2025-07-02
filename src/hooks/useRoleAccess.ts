@@ -1,9 +1,7 @@
 // External
-import React from 'react'
 
 // Internal
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux'
-import { useTeamsContext } from '@/contexts'
 
 const useRoleAccess = (
     organisationOwnerId: number | undefined,
@@ -16,7 +14,7 @@ const useRoleAccess = (
     // State
     const authUser = useTypedSelector(selectAuthUser) // Redux
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) ?? []
-    
+
     const canModifyOrganisationSettings = (authUser && (
         organisationOwnerId === authUser.User_ID ||
         parsedPermissions?.includes("Modify Organisation Settings")
@@ -51,7 +49,7 @@ const useRoleAccess = (
         organisationOwnerId === authUser.User_ID ||
         parsedPermissions?.includes(`manageBacklog.${contextId}`)
     ))
-    
+
     return {
         canModifyOrganisationSettings,
         canModifyTeamSettings,

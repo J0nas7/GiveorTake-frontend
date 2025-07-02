@@ -2,9 +2,9 @@
 import React from "react";
 
 // Internal
-import { Header, LeftNav, Footer } from "../";
-import { TaskDetailWithModal } from "@/components/partials/task/TaskDetails";
+import { TaskDetailWithModal } from "@/components/partials/task/TaskContainer";
 import { TaskTimeTrackPlayer } from "@/components/partials/task/TaskTimeTrackPlayer";
+import { Footer, Header } from "../";
 import { SnackBar } from "../components/SnackBar";
 
 export const PrivateLayout = (

@@ -1,8 +1,7 @@
 // External
-import React from 'react'
 
 // Internal
-import { TaskDetailWithoutModal } from '@/components/partials/task/TaskDetails'
+import { TaskDetailWithoutModal } from '@/components/partials/task/TaskContainer'
 
 const TaskDetailPage = () => {
     return (

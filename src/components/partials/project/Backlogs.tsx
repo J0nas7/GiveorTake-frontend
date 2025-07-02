@@ -115,7 +115,7 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
                             renderProject={renderProject}
                         />
                         {renderProject.backlogs && renderProject.backlogs.map((backlog: Backlog) => (
-                            <>
+                            <React.Fragment key={backlog.Backlog_ID}>
                                 {/* Backlog rendered if the user has the necessary permissions. */}
                                 {authUser &&
                                     (
@@ -127,7 +127,7 @@ const BacklogsView: React.FC<BacklogsViewProps> = ({
                                         </Block>
                                     )
                                 }
-                            </>
+                            </React.Fragment>
                         ))}
                     </>
                 )}

@@ -1,3 +1,5 @@
+"use client"
+
 // External
 import { faPaperPlane, faPencil, faReply, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

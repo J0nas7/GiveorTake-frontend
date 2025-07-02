@@ -405,7 +405,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                         // Status_Order low to high:
                                         sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
                                         .map(status => (
-                                            <option value={status.Status_ID}>{status.Status_Name}</option>
+                                            <option key={status.Status_ID} value={status.Status_ID}>{status.Status_Name}</option>
                                         ))}
                                 </select>
                             </td>
@@ -420,11 +420,9 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
                                     className="p-2 border rounded"
                                 >
                                     <option value="">Assignee</option>
-                                    {localBacklog?.project?.team?.user_seats?.map(userSeat => {
-                                        return (
-                                            <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
-                                        )
-                                    })}
+                                    {localBacklog?.project?.team?.user_seats?.map(userSeat => (
+                                        <option key={userSeat.Seat_ID} value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
+                                    ))}
                                 </select>
                             </td>
                             <td>

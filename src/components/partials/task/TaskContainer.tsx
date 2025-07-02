@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 // Internal components and hooks
-import { CommentsArea, CtaButtons, DescriptionArea, MediaFilesArea, TaskDetailsArea, TitleArea } from '@/components/partials/task/taskdetails/';
+import { CommentsArea, CtaButtons, DescriptionArea, MediaFilesArea, TaskDetailsArea, TitleArea } from '@/components/partials/task/taskdetails';
 import { Block } from "@/components/ui/block-text";
 import { useTasksContext } from "@/contexts";
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
@@ -17,26 +17,22 @@ interface TaskDetailProps {
     theTask: Task
 }
 
-export const TaskDetail: React.FC<TaskDetailProps> = ({ theTask }) => {
-    const { taskDetail, setTaskDetail } = useTasksContext()
-
-    if (!theTask) return null
-
-    return (
-        <Block className={styles.content}>
-            <Block className={styles.leftPanel}>
-                <TitleArea task={theTask} />
-                <DescriptionArea task={theTask} />
-                <MediaFilesArea task={theTask} />
-                <CommentsArea task={theTask} />
-            </Block>
-            <Block className={styles.rightPanel}>
-                <CtaButtons task={theTask} />
-                <TaskDetailsArea task={theTask} />
-            </Block>
+export const TaskDetail: React.FC<TaskDetailProps> = ({
+    theTask
+}) => theTask && (
+    <Block className={styles.content}>
+        <Block className={styles.leftPanel}>
+            <TitleArea task={theTask} />
+            <DescriptionArea task={theTask} />
+            <MediaFilesArea task={theTask} />
+            <CommentsArea task={theTask} />
         </Block>
-    );
-};
+        <Block className={styles.rightPanel}>
+            <CtaButtons task={theTask} />
+            <TaskDetailsArea task={theTask} />
+        </Block>
+    </Block>
+);
 
 export const TaskDetailWithModal = () => {
     const taskDetailRef = useRef<HTMLDivElement>(null);
@@ -95,14 +91,13 @@ export const TaskDetailWithoutModal = () => {
     const [renderTask, setRenderTask] = useState<Task | undefined>(undefined)
 
     useEffect(() => {
-        const fetch = async () => {
-            setRenderTask(undefined)
-            await readTaskByKeys(projectKey, taskKey)
-            setTaskDetail(undefined)
+        setRenderTask(undefined);
+        if (projectKey && taskKey) {
+            readTaskByKeys(projectKey, taskKey).finally(() => {
+                setTaskDetail(undefined);
+            });
         }
-
-        if (projectKey && taskKey) fetch()
-    }, [projectKey, taskKey])
+    }, [projectKey, taskKey]);
 
     useEffect(() => {
         if (taskKey) {
