@@ -14,7 +14,7 @@ import { Heading } from '@/components/ui/heading';
 import { useProjectsContext, useTasksContext, useTaskTimeTrackContext } from '@/contexts';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '@/redux';
-import { ProjectStates, Task, TaskTimeTrack } from '@/types';
+import { ProjectStates, Task, TaskTimeTracksStates } from '@/types';
 
 export const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
     const { readTasksByBacklogId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
@@ -113,7 +113,7 @@ type TaskDetailsViewProps = {
     task: Task
     taskDetail: Task | undefined
     taskTimeSpent: number
-    taskTimeTracksById: TaskTimeTrack[]
+    taskTimeTracksById: TaskTimeTracksStates
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     saveTaskChanges: (taskChanges: Task, parentId: number) => void
     handleStatusChange: (event: React.ChangeEvent<HTMLSelectElement>) => void

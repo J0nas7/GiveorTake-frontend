@@ -186,7 +186,8 @@ const TeamRolesSeatsManager: React.FC = () => {
     }, [teamId]);
 
     useEffect(() => {
-        setRenderUserSeats(teamUserSeatsById);
+        if (teamUserSeatsById) setRenderUserSeats(teamUserSeatsById)
+
         setRenderTeam(teamById)
     }, [teamUserSeatsById, teamById]);
 

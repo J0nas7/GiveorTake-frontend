@@ -1,4 +1,4 @@
-import { Backlog, Status, TaskComment, TaskMediaFile, TaskTimeTrack } from "./"
+import { Backlog, LoadingStateType, Status, TaskComment, TaskMediaFile, TaskTimeTrack } from "./"
 
 // Task Type
 export type Task = {
@@ -26,3 +26,6 @@ export type Task = {
 export type TaskFields =
     "Task_ID" | "Task_Key" | "Backlog_ID" | "Team_ID" | "Assigned_User_ID" | "Task_Title" |
     "Task_Description" | "Status_ID" | "Task_Due_Date" | "Task_CreatedAt" | "Task_UpdatedAt"
+
+export type TaskStates = Task | LoadingStateType
+export type TasksStates = Task[] | LoadingStateType

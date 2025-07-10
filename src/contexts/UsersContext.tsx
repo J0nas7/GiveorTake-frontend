@@ -4,12 +4,12 @@
 import React, { createContext, useContext } from "react";
 
 // Internal
-import { User, UserFields } from "@/types";
+import { User, UserFields, UsersStates } from "@/types";
 import { useResourceContext } from "./";
 
 // Context for Users
 export type UsersContextType = {
-    usersById: User[];
+    usersById: UsersStates
     userDetail: User | undefined;
     newUser: User | undefined;
     setUserDetail: React.Dispatch<React.SetStateAction<User | undefined>>;

@@ -4,13 +4,13 @@
 import React, { createContext, useContext } from "react"
 
 // Internal
-import { TaskMediaFile, TaskMediaFileFields } from "@/types"
+import { MediaFilesStates, TaskMediaFile, TaskMediaFileFields } from "@/types"
 import { useResourceContext } from "./TypeContext"
 
 // TaskMediaFiles Context
 // Context API for TaskMediaFiles
 export type TaskMediaFilesContextType = {
-    taskMediaFilesById: TaskMediaFile[]
+    taskMediaFilesById: MediaFilesStates
     taskMediaFileDetail: TaskMediaFile | undefined
     newTaskMediaFile: TaskMediaFile | undefined
     readTaskMediaFilesByTaskId: (parentId: number) => Promise<void>

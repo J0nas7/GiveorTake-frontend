@@ -4,12 +4,12 @@
 import React, { createContext, useContext } from "react"
 
 // Internal
-import { Project, ProjectFields, ProjectStates } from "@/types"
+import { Project, ProjectFields, ProjectsStates, ProjectStates } from "@/types"
 import { useResourceContext } from "./TypeContext"
 
 // Context for Projects
 export type ProjectsContextType = {
-    projectsById: Project[]
+    projectsById: ProjectsStates
     projectById: ProjectStates
     projectDetail: Project | undefined
     newProject: Project | undefined

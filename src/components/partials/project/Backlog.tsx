@@ -65,10 +65,10 @@ export const BacklogContainer = () => {
     useEffect(() => {
         // console.log("tasksByID changed")
         console.log("tasksById changed", tasksById, renderTasks)
-        if (tasksById.length == 0 && renderTasks) {
+        if (tasksById && tasksById.length == 0 && renderTasks) {
             setRenderTasks(undefined)
         }
-        if (tasksById.length) {
+        if (tasksById && tasksById.length) {
             console.log("renderTasks", renderTasks, "tasksById", tasksById)
             setRenderTasks(tasksById)
         }
@@ -191,7 +191,7 @@ export const BacklogContainer = () => {
         if (newTaskIds === undefined) {
             url.searchParams.delete("taskIds")
         } else if (Array.isArray(newTaskIds)) { // Handle taskIds (convert array to a comma-separated string)
-            if (newTaskIds.length > 0 && newTaskIds.length <= tasksById.length) {
+            if (tasksById && newTaskIds.length > 0 && newTaskIds.length <= tasksById.length) {
                 url.searchParams.set("taskIds", newTaskIds.join(",")); // Store as comma-separated values
             } else {
                 url.searchParams.delete("taskIds"); // Remove if empty

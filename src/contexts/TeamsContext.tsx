@@ -4,12 +4,12 @@
 import React, { createContext, useContext } from "react"
 
 // External
-import { Team, TeamFields, TeamStates } from "@/types"
+import { Team, TeamFields, TeamsStates, TeamStates } from "@/types"
 import { useResourceContext } from "./"
 
 // Context for Teams
 export type TeamsContextType = {
-    teamsById: Team[]
+    teamsById: TeamsStates
     teamById: TeamStates
     teamDetail: Team | undefined
     newTeam: Team | undefined

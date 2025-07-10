@@ -17,12 +17,12 @@ export const OnlyPublicRoutes = ({ children }: { children: React.ReactNode }) =>
     useAuth()
     const router = useRouter()
     const pathname = usePathname() // Get the current pathname
-    
+
     // Redux
     const isLoggedIn = useTypedSelector(selectIsLoggedIn)
 
     // Variables
-    const [render,setRender] = useState<boolean>(false)
+    const [render, setRender] = useState<boolean>(false)
 
     // Routes that are allowed for guests
     const publicRoutes = [
@@ -35,17 +35,17 @@ export const OnlyPublicRoutes = ({ children }: { children: React.ReactNode }) =>
      * @var pathIsProtected checks if path exists in the the publicRoutes routes array
      */
     const pathIsProtected = publicRoutes.indexOf(pathname) === -1
-    
-    if (isBrowser() && isLoggedIn === false && pathIsProtected) {
-        router.push(`/sign-in?ref=${encodeURIComponent(pathname)}`)
-    }
-    
+
     useEffect(() => {
-        setRender(true)
-    }, [])
-    
+        if (isBrowser() && isLoggedIn === false && pathIsProtected) {
+            router.push(`/sign-in?ref=${encodeURIComponent(pathname)}`)
+        } else {
+            setRender(true);
+        }
+    }, [isLoggedIn, pathname, pathIsProtected]);
+
     if (!render) return null
-    
+
     if (isLoggedIn === false && pathIsProtected) {
         return null
     }
@@ -58,7 +58,7 @@ export const OnlyPrivateRoutes = ({ children }: { children: React.ReactNode }) =
     useAuth()
     const router = useRouter()
     const pathname = usePathname() // Get the current pathname
-    
+
     // Redux
     const isLoggedIn = useTypedSelector(selectIsLoggedIn)
 
@@ -76,13 +76,13 @@ export const OnlyPrivateRoutes = ({ children }: { children: React.ReactNode }) =
      * @var pathIsProtected checks if path exists in the the publicRoutes routes array
      */
     const pathIsNotProtected = privateRoutes.indexOf(pathname) === -1
-    
+
     useEffect(() => {
         setRender(true)
     }, [])
-    
+
     if (!render) return null
-    
+
     if (isLoggedIn === true && !pathIsNotProtected) {
         return null
     }

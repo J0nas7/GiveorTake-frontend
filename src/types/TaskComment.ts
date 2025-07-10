@@ -1,4 +1,4 @@
-import { Task, User } from "./";
+import { LoadingStateType, Task, User } from "./";
 
 // Task Comment Type
 export type TaskComment = {
@@ -23,4 +23,5 @@ export type TaskCommentFields =
     "Comment_ID" | "Task_ID" | "User_ID" | "Comment_Text" |
     "Comment_CreatedAt" | "Comment_UpdatedAt" | "Comment_DeletedAt"
 
-export type CommentStates = TaskComment | undefined | false
+export type CommentStates = TaskComment | LoadingStateType
+export type CommentsStates = TaskComment[] | LoadingStateType

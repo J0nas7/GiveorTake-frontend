@@ -125,10 +125,10 @@ export const KanbanBoardContainer = () => {
     // ---- Effects ----
     useEffect(() => {
         console.log("tasksByID changed")
-        if (tasksById.length == 0 && renderTasks) {
+        if (tasksById && tasksById.length == 0 && renderTasks) {
             setRenderTasks(undefined)
         }
-        if (tasksById.length) {
+        if (tasksById && tasksById.length) {
             console.log("renderTasks", renderTasks)
             setRenderTasks(tasksById)
         }

@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState } from "react"
 
 // Internal
 import { useAxios } from "@/hooks"
-import { Task, TaskFields } from "@/types"
+import { Task, TaskFields, TasksStates, TaskStates } from "@/types"
 import { useResourceContext } from "./TypeContext"
 
 // Tasks Context (DEPRECATED)
@@ -23,8 +23,8 @@ import { useResourceContext } from "./TypeContext"
 // Tasks Context
 // Context API for Tasks
 export type TasksContextType = {
-    tasksById: Task[]
-    taskById: Task | undefined | false
+    tasksById: TasksStates
+    taskById: TaskStates
     taskDetail: Task | undefined
     newTask: Task | undefined
     readTasksByBacklogId: (parentId: number, refresh?: boolean | undefined, reply?: boolean) => Promise<any>

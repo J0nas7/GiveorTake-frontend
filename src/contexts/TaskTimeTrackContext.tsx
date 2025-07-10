@@ -6,12 +6,12 @@ import React, { createContext, useContext, useState } from "react"
 // Internal
 import { useAxios } from "@/hooks"
 import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux"
-import { Task, TaskTimeTrack } from "@/types"
+import { Task, TaskTimeTrack, TaskTimeTracksStates } from "@/types"
 import { useResourceContext, useTasksContext } from "./"
 
 // TaskTimeTrack Context Type
 export type TaskTimeTrackContextType = {
-    taskTimeTracksById: TaskTimeTrack[]
+    taskTimeTracksById: TaskTimeTracksStates
     taskTimeTrackDetail: TaskTimeTrack | undefined
     newTaskTimeTrack: TaskTimeTrack | undefined
     readTaskTimeTracksByTaskId: (taskId: number) => Promise<void>

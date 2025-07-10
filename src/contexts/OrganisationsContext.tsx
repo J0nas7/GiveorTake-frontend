@@ -9,7 +9,7 @@ import { useResourceContext } from "./TypeContext"
 
 // Context for Organisations
 export type OrganisationsContextType = {
-    organisationsById: Organisation[]
+    organisationsById: false | Organisation[] | undefined
     organisationById: OrganisationStates
     organisationDetail: Organisation | undefined
     newOrganisation: Organisation | undefined

@@ -1,19 +1,18 @@
 // External
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import clsx from "clsx";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
 
 // Internal
-import styles from "../styles/modules/LeftNav.module.scss";
-import { Organisation, Project } from "@/types";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBuilding, faUser, faChevronDown, faChevronRight, faDoorOpen } from "@fortawesome/free-solid-svg-icons";
 import { Block, Text } from "@/components";
-import { selectAuthUser, selectAuthUserOrganisation, selectAuthUserSeat, useTypedSelector } from "@/redux";
-import { useTranslation } from "react-i18next";
-import { useAuth } from "@/hooks";
 import { useOrganisationsContext } from "@/contexts";
-import { render } from "@testing-library/react";
+import { useAuth } from "@/hooks";
+import { selectAuthUser, selectAuthUserOrganisation, selectAuthUserSeat, useTypedSelector } from "@/redux";
+import { Organisation, Project } from "@/types";
+import { faBuilding, faChevronDown, faChevronRight, faDoorOpen, faUser } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useTranslation } from "react-i18next";
+import styles from "../styles/modules/LeftNav.module.scss";
 
 export const LeftNav: React.FC = () => {
     const { t } = useTranslation('leftnav')
@@ -44,7 +43,7 @@ export const LeftNav: React.FC = () => {
         // if (authUserSeats && authUserSeats.team?.projects?.[0]?.Project_ID) {
         //     setVisibleProject(authUserSeats.team?.projects?.[0].Project_ID.toString())
         //     setRenderOrganisation(authUserSeats.team?.organisation)
-        // } else 
+        // } else
         const projectId = authUserOrganisation?.teams?.[0]?.projects?.[0]?.Project_ID ?? null
         if (projectId) {
             setVisibleProject(projectId.toString())
@@ -64,7 +63,7 @@ export const LeftNav: React.FC = () => {
         <aside className={styles.leftNav}>
             <ul className={styles.navList}>
                 {!authUserSeats &&
-                    authUser && organisationsById.length &&
+                    authUser && organisationsById && organisationsById.length &&
                     organisationsById[0].User_ID !== authUser.User_ID ? (
                     <Text variant="span">
                         {t('leftnav:noseats')}

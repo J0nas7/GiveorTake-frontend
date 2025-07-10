@@ -65,7 +65,7 @@ export const TaskDetailWithModal = () => {
     }, [taskDetail])
 
     useEffect(() => {
-        if (tasksById.length) {
+        if (tasksById && tasksById.length) {
             const updatedTask = tasksById.find(task => task.Task_ID === taskDetail?.Task_ID)
             if (updatedTask) setTaskDetail({ ...updatedTask })
         }

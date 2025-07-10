@@ -4,14 +4,14 @@
 import React, { createContext, useContext } from "react"
 
 // Internal
-import { TaskComment, TaskCommentFields } from "@/types"
+import { CommentsStates, CommentStates, TaskComment, TaskCommentFields } from "@/types"
 import { useResourceContext } from "./TypeContext"
 
 // TaskComments Context
 // Context API for TaskComments
 export type TaskCommentsContextType = {
-    taskCommentsById: TaskComment[]
-    commentById: false | TaskComment | undefined
+    taskCommentsById: CommentsStates
+    commentById: CommentStates
     taskCommentDetail: TaskComment | undefined
     newTaskComment: TaskComment | undefined
     readTaskCommentsByTaskId: (parentId: number) => Promise<void>

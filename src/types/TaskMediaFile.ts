@@ -1,4 +1,4 @@
-import { Task, User } from "./";
+import { LoadingStateType, Task, User } from "./";
 
 // Task Media File Type
 export type TaskMediaFile = {
@@ -21,3 +21,5 @@ export type TaskMediaFile = {
 export type TaskMediaFileFields =
     "Media_ID" | "Task_ID" | "Uploaded_By_User_ID" | "Media_File_Name" | "Media_File_Path" |
     "Media_File_Type" | "Media_CreatedAt" | "Media_UpdatedAt" | "Media_DeletedAt"
+
+export type MediaFilesStates = TaskMediaFile[] | LoadingStateType

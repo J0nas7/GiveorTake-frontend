@@ -1,4 +1,4 @@
-import { Project, Task, User } from "./"
+import { LoadingStateType, Project, Task, User } from "./"
 
 // Task Time Track Type
 export type TaskTimeTrack = {
@@ -27,3 +27,5 @@ export type TaskTimeTrackFields =
     "Time_Tracking_Start_Time" | "Time_Tracking_End_Time" |
     "Time_Tracking_Duration" | "Time_Tracking_Notes" |
     "Time_Tracking_CreatedAt" | "Time_Tracking_UpdatedAt" | "Time_Tracking_DeletedAt"
+
+export type TaskTimeTracksStates = TaskTimeTrack[] | LoadingStateType

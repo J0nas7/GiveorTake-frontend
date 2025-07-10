@@ -23,7 +23,7 @@ import { LoadingState } from "@/core-ui/components/LoadingState";
 import styles from "@/core-ui/styles/modules/TimeTracks.module.scss";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
-import { Backlog, Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat } from "@/types";
+import { Backlog, Project, ProjectStates, Task, TaskTimeTrack, TeamUserSeat, TeamUserSeatsStates } from "@/types";
 import { SecondsToTimeDisplay } from "../task/TaskTimeTrackPlayer";
 
 export const TimeTracksContainer = () => {
@@ -133,7 +133,7 @@ export const TimeTracksContainer = () => {
             // If userIds exist in the URL, use them
             const userIdsFromURL = urlUserIds ? urlUserIds.split(",") : [];
             setSelectedUserIds(userIdsFromURL);
-        } else if (teamUserSeatsById.length) {
+        } else if (teamUserSeatsById && teamUserSeatsById.length) {
             // If no userIds in URL, select all users by default
             const allUserIds = teamUserSeatsById
                 .map((userSeat: TeamUserSeat) => userSeat.user?.User_ID?.toString())
@@ -218,7 +218,8 @@ export const TimeTracksContainer = () => {
     }, [renderTimeTracks]);
 
     useEffect(() => {
-        if (renderProject && renderProject.team?.Team_ID && !teamUserSeatsById.length) {
+        if (renderProject && renderProject.team?.Team_ID &&
+            teamUserSeatsById && !teamUserSeatsById.length) {
             readTeamUserSeatsByTeamId(renderProject.team?.Team_ID)
         }
     }, [renderProject])
@@ -318,7 +319,7 @@ interface FilterTimeEntriesProps {
     renderProject: ProjectStates
     filterTimeEntries: boolean
     setFilterTimeEntries: React.Dispatch<React.SetStateAction<boolean>>
-    teamUserSeatsById: TeamUserSeat[]
+    teamUserSeatsById: TeamUserSeatsStates
     selectedBacklogIds: string[]
     selectedUserIds: string[]
     selectedTaskIds: string[]
@@ -395,7 +396,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
             url.searchParams.delete("userIds")
         } else if (Array.isArray(newUserIds)) { // Handle userIds (convert array to a comma-separated string)
             if (newUserIds.length > 0) {
-                if (teamUserSeatsById.length > newUserIds.length) {
+                if (teamUserSeatsById && teamUserSeatsById.length > newUserIds.length) {
                     url.searchParams.set("userIds", newUserIds.join(",")); // Store as comma-separated values
                 } else {
                     url.searchParams.delete("userIds"); // Remove if all are selected, as that is default
@@ -468,7 +469,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
 
     // Toggles selection of all team members.
     const handleSelectAllTeamMembersChange = () => {
-        const allSelected = selectedUserIds.length === teamUserSeatsById.length;
+        const allSelected = teamUserSeatsById && selectedUserIds.length === teamUserSeatsById.length;
         updateURLParams(startDateParam, endDateParam, selectedBacklogIds, allSelected ? ["0"] : undefined, selectedTaskIds);
     }
 
@@ -585,7 +586,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
             <Block>
                 <Text className="text-sm font-semibold">Team members</Text>
 
-                {(teamUserSeatsById.length > 1) && (
+                {teamUserSeatsById && (teamUserSeatsById.length > 1) && (
                     <Text
                         variant="span"
                         onClick={() => handleSelectAllTeamMembersChange()}
@@ -596,7 +597,7 @@ const FilterTimeEntries: React.FC<FilterTimeEntriesProps> = ({
                 )}
 
                 <Block className="flex flex-col mt-3">
-                    {teamUserSeatsById.length && teamUserSeatsById.map(userSeat => {
+                    {teamUserSeatsById && teamUserSeatsById.length && teamUserSeatsById.map(userSeat => {
                         const userDetails = userSeat.user
 
                         if (!userDetails) return null

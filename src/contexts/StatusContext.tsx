@@ -2,13 +2,13 @@
 
 import { createContext, useContext } from "react"
 
-import { Status, StatusFields, StatusStates } from "@/types"
-import { useResourceContext } from "./"
 import { useAxios } from "@/hooks"
+import { Status, StatusesStates, StatusFields, StatusStates } from "@/types"
+import { useResourceContext } from "./"
 
 // Context for Status
 export type StatusContextType = {
-    statusById: Status[]
+    statusById: StatusesStates
     statusByIdDetail: StatusStates
     statusDetail: Status | undefined
     newStatus: Status | undefined
@@ -47,7 +47,7 @@ export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     )
 
     const { httpPostWithData } = useAxios()
-    
+
     const moveOrder = async (statusId: number, direction: "up" | "down") => {
         try {
             const postData = { direction }

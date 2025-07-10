@@ -5,13 +5,13 @@ import React, { createContext, useContext } from "react";
 
 // Internal
 import { useAxios } from "@/hooks";
-import { Backlog, BacklogFields, BacklogStates } from "@/types";
+import { Backlog, BacklogFields, BacklogsStates, BacklogStates } from "@/types";
 import { useResourceContext } from "./TypeContext";
 
 // Context for Backlogs
 export type BacklogsContextType = {
-    backlogsById: Backlog[]
-    backlogById: BacklogStates;
+    backlogsById: BacklogsStates
+    backlogById: BacklogStates
     backlogDetail: Backlog | undefined;
     newBacklog: Backlog | undefined;
     readBacklogsByProjectId: (parentId: number) => Promise<void>;

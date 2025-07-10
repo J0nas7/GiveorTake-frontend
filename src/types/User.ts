@@ -1,4 +1,4 @@
-import { TaskTimeTrack } from "./"
+import { LoadingStateType, TaskTimeTrack } from "./"
 
 // User Type
 export type User = {
@@ -20,4 +20,5 @@ export type UserFields =
     "User_ID" | "User_Status" | "User_Email" | "User_FirstName" | "User_Surname" |
     "User_ImageSrc" | "User_CreatedAt" | "User_UpdatedAt" | "User_DeletedAt"
 
-export type UserStates = User | undefined | false
+export type UserStates = User | LoadingStateType
+export type UsersStates = User[] | LoadingStateType

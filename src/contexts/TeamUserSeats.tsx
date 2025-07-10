@@ -6,12 +6,12 @@ import React, { createContext, useContext, useState } from "react";
 
 // Internal
 import { useAxios, useTypeAPI } from "@/hooks";
-import { Role, TeamUserSeat, TeamUserSeatFields } from "@/types";
+import { Role, TeamUserSeat, TeamUserSeatFields, TeamUserSeatsStates } from "@/types";
 import { useResourceContext } from "./";
 
 // Context for Team User Seats
 export type TeamUserSeatsContextType = {
-    teamUserSeatsById: TeamUserSeat[];
+    teamUserSeatsById: TeamUserSeatsStates
     teamUserSeatDetail: TeamUserSeat | undefined
     newTeamUserSeat: TeamUserSeat | undefined;
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>

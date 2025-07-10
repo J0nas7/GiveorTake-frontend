@@ -1,7 +1,7 @@
 // External
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
 
 // Internal
 import {
@@ -11,7 +11,7 @@ import {
     MediaFilesAreaView,
     TaskDetailsView,
     TitleAreaView
-} from '@/components/partials/task/TaskDetails';
+} from '@/components/partials/task/taskdetails';
 import { Task } from '@/types';
 
 const mockTask: Task = {
@@ -266,6 +266,8 @@ describe('CommentsAreaView', () => {
                 setIsCreateCommentVisible={jest.fn()}
                 isEditCommentVisible={undefined}
                 setIsEditCommentVisible={jest.fn()}
+                isAnsweringCommentVisible={undefined}
+                setIsAnsweringCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
@@ -291,6 +293,8 @@ describe('CommentsAreaView', () => {
                 setIsCreateCommentVisible={jest.fn()}
                 isEditCommentVisible={undefined}
                 setIsEditCommentVisible={jest.fn()}
+                isAnsweringCommentVisible={undefined}
+                setIsAnsweringCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
@@ -317,6 +321,8 @@ describe('CommentsAreaView', () => {
                 setIsCreateCommentVisible={jest.fn()}
                 isEditCommentVisible={undefined}
                 setIsEditCommentVisible={jest.fn()}
+                isAnsweringCommentVisible={undefined}
+                setIsAnsweringCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
@@ -345,6 +351,8 @@ describe('CommentsAreaView', () => {
                 setIsCreateCommentVisible={jest.fn()}
                 isEditCommentVisible={undefined}
                 setIsEditCommentVisible={jest.fn()}
+                isAnsweringCommentVisible={undefined}
+                setIsAnsweringCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
@@ -373,6 +381,8 @@ describe('CommentsAreaView', () => {
                 setIsCreateCommentVisible={jest.fn()}
                 isEditCommentVisible={undefined}
                 setIsEditCommentVisible={jest.fn()}
+                isAnsweringCommentVisible={undefined}
+                setIsAnsweringCommentVisible={jest.fn()}
                 task={mockTask}
                 authUser={undefined}
                 addTaskComment={jest.fn()}
@@ -396,6 +406,8 @@ describe('CtaButtonsView', () => {
                 taskDetail={mockTask}
                 archiveTask={jest.fn()}
                 shareTask={jest.fn()}
+                setTaskDetail={jest.fn()}
+                convertID_NameStringToURLFormat={jest.fn()}
             />
         );
         expect(screen.getByText('Open in URL')).toBeInTheDocument();
@@ -408,6 +420,8 @@ describe('CtaButtonsView', () => {
                 taskDetail={undefined}
                 archiveTask={jest.fn()}
                 shareTask={jest.fn()}
+                setTaskDetail={jest.fn()}
+                convertID_NameStringToURLFormat={jest.fn()}
             />
         );
         expect(screen.queryByText('Open in URL')).not.toBeInTheDocument();
@@ -428,6 +442,8 @@ describe('TaskDetailsView', () => {
                 handleAssigneeChange={jest.fn()}
                 handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleDueDateChange={jest.fn()}
+                handleHoursSpentLimitChange={jest.fn()}
                 handleTaskTimeTrack={jest.fn()}
             />
         );
@@ -447,6 +463,8 @@ describe('TaskDetailsView', () => {
                 handleAssigneeChange={jest.fn()}
                 handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleDueDateChange={jest.fn()}
+                handleHoursSpentLimitChange={jest.fn()}
                 handleTaskTimeTrack={jest.fn()}
             />
         );
@@ -467,6 +485,8 @@ describe('TaskDetailsView', () => {
                 handleAssigneeChange={jest.fn()}
                 handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleDueDateChange={jest.fn()}
+                handleHoursSpentLimitChange={jest.fn()}
                 handleTaskTimeTrack={jest.fn()}
             />
         );
@@ -487,6 +507,8 @@ describe('TaskDetailsView', () => {
                 handleAssigneeChange={jest.fn()}
                 handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleDueDateChange={jest.fn()}
+                handleHoursSpentLimitChange={jest.fn()}
                 handleTaskTimeTrack={jest.fn()}
             />
         );
@@ -513,6 +535,8 @@ describe('TaskDetailsView', () => {
                 handleAssigneeChange={jest.fn()}
                 handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleDueDateChange={jest.fn()}
+                handleHoursSpentLimitChange={jest.fn()}
                 handleTaskTimeTrack={jest.fn()}
             />
         );
@@ -541,6 +565,8 @@ describe('TaskDetailsView', () => {
                 handleAssigneeChange={jest.fn()}
                 handleBacklogChange={jest.fn()}
                 handleTaskChanges={jest.fn()}
+                handleDueDateChange={jest.fn()}
+                handleHoursSpentLimitChange={jest.fn()}
                 handleTaskTimeTrack={jest.fn()}
             />
         );

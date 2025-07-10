@@ -1,9 +1,8 @@
 // External
-import React, { createContext, useContext, useState, useEffect } from "react"
+import { useState } from "react"
 
 // Internal
 import { useTypeAPI } from "@/hooks"
-import { selectIsLoggedIn, useTypedSelector } from "@/redux"
 
 // Generic context and provider to handle different resources like teams, tasks, organisations, etc.
 export const useResourceContext = <T extends { [key: string]: any }, IDKey extends keyof T>(
@@ -13,12 +12,12 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
 ) => {
     const { fetchItemsByParent, fetchItem, postItem, updateItem, deleteItem } = useTypeAPI<T, IDKey>(resource, idFieldName, parentResource)
 
-    const [itemsById, setItemsById] = useState<T[]>([])
+    const [itemsById, setItemsById] = useState<T[] | undefined | false>(undefined)
     const [itemById, setItemById] = useState<T | undefined | false>(undefined)
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
 
-    const readItemsById = async (parentId: number, refresh?: boolean|undefined, reply?: boolean) => {
+    const readItemsById = async (parentId: number, refresh?: boolean | undefined, reply?: boolean) => {
         if (refresh) setItemsById([])
 
         const data = await fetchItemsByParent(parentId) // Fetch all items by parentId

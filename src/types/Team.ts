@@ -1,4 +1,4 @@
-import { Organisation, Project, Task, TeamUserSeat } from "./"
+import { LoadingStateType, Organisation, Project, Task, TeamUserSeat } from "./"
 
 // Team Type
 export type Team = {
@@ -20,4 +20,5 @@ export type TeamFields =
     "Team_ID" | "Organisation_ID" | "Team_Name" |
     "Team_Description" | "Team_CreatedAt" | "Team_UpdatedAt"
 
-export type TeamStates = Team | undefined | false
+export type TeamStates = Team | LoadingStateType
+export type TeamsStates = Team[] | LoadingStateType

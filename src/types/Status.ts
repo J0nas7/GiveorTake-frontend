@@ -1,4 +1,4 @@
-import { Backlog, Task } from "./"
+import { Backlog, LoadingStateType, Task } from "./"
 
 export type Status = {
     Status_ID?: number
@@ -20,4 +20,5 @@ export type StatusFields =
     "Status_ID" | "Backlog_ID" | "Status_Name" | "Status_Order" |
     "Status_Is_Default" | "Status_Is_Closed" | "Status_Color" | "Status_CreatedAt" | "Status_UpdatedAt"
 
-export type StatusStates = Status | undefined | false
+export type StatusStates = Status | LoadingStateType
+export type StatusesStates = Status[] | LoadingStateType

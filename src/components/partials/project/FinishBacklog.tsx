@@ -10,7 +10,7 @@ import { LoadingState } from '@/core-ui/components/LoadingState';
 import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
 import { setSnackMessage, useAppDispatch } from '@/redux';
-import { Backlog, BacklogStates, ProjectStates, Task } from '@/types';
+import { Backlog, BacklogStates, ProjectStates, Task, TasksStates } from '@/types';
 import { faCheckCircle, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Card, CardContent } from '@mui/material';
@@ -108,7 +108,7 @@ export const FinishBacklog = () => {
 type FinishBacklogViewProps = {
     renderBacklog: BacklogStates
     canManageBacklog: boolean | undefined
-    tasksById: Task[]
+    tasksById: TasksStates
     taskStatusCounter: {
         name: string;
         counter: Task[] | undefined;
@@ -149,7 +149,7 @@ export const FinishBacklogView: React.FC<FinishBacklogViewProps> = ({
                 {renderBacklog && (
                     <Card>
                         <CardContent>
-                            <Block className="font-semibold">{tasksById.length || 0} tasks total in this backlog</Block>
+                            <Block className="font-semibold">{tasksById && tasksById.length || 0} tasks total in this backlog</Block>
                             <Block className="flex gap-4">
                                 {Array.isArray(taskStatusCounter) && taskStatusCounter.map(({ name, counter }) => (
                                     <Text key={name}>

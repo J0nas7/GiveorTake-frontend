@@ -1,4 +1,4 @@
-import { Backlog, Team } from "./"
+import { Backlog, LoadingStateType, Team } from "./"
 
 // Project Type
 export type Project = {
@@ -23,4 +23,5 @@ export type ProjectFields =
     "Project_Description" | "Project_Status" | "Project_Start_Date" |
     "Project_End_Date" | "Project_CreatedAt" | "Project_UpdatedAt"
 
-export type ProjectStates = Project | undefined | false
+export type ProjectStates = Project | LoadingStateType
+export type ProjectsStates = Project[] | LoadingStateType

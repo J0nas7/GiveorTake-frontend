@@ -1,4 +1,4 @@
-import { Role, Team, User } from "./"
+import { LoadingStateType, Role, Team, User } from "./"
 
 // Team User Seat Type
 export type TeamUserSeat = {
@@ -20,8 +20,9 @@ export type TeamUserSeat = {
 }
 
 export type TeamUserSeatFields =
-    "Seat_ID" | "Team_ID" | "User_ID" | "Role_ID" | 
-    "Seat_Status" | "Seat_Role_Description" | "Seat_Expiration" | 
+    "Seat_ID" | "Team_ID" | "User_ID" | "Role_ID" |
+    "Seat_Status" | "Seat_Role_Description" | "Seat_Expiration" |
     "Seat_CreatedAt" | "Seat_UpdatedAt" | "Seat_DeletedAt"
 
-export type TeamUserSeatStates = TeamUserSeat | undefined | false
+export type TeamUserSeatStates = TeamUserSeat | LoadingStateType
+export type TeamUserSeatsStates = TeamUserSeat[] | LoadingStateType

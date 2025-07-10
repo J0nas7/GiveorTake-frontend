@@ -1,24 +1,22 @@
 "use client"
 
 // External
-import React, { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
+import { useRouter } from "next/navigation"
+import React, { useEffect, useState } from "react"
 
 // Internal
-import { useOrganisationsContext } from "@/contexts"
-import { Organisation, OrganisationFields } from "@/types"
 import { Block, Text } from "@/components/ui/block-text"
 import { FlexibleBox } from "@/components/ui/flexible-box"
+import { Field } from "@/components/ui/input-field"
+import { useOrganisationsContext } from "@/contexts"
+import { selectAuthUser, useTypedSelector } from "@/redux"
+import { Organisation, OrganisationFields } from "@/types"
 import { faBuilding } from "@fortawesome/free-solid-svg-icons"
+import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 
 // Dynamically import ReactQuill with SSR disabled
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false })
-import "react-quill/dist/quill.snow.css" // Import the Quill styles
-import { Card } from "../task/TaskDetails"
-import { Heading } from "@/components/ui/heading"
-import { Field } from "@/components/ui/input-field"
-import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from "@/redux"
 
 export const CreateOrganisation: React.FC = () => {
     // ---- Hooks ----

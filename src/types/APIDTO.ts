@@ -11,3 +11,5 @@ export type axiosHeaders = {
 }
 
 export type postContent = { [key: string]: any }
+
+export type LoadingStateType = undefined | false
