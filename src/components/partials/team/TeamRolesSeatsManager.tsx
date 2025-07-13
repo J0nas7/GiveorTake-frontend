@@ -385,107 +385,109 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
             className="no-box w-auto inline-block"
             numberOfColumns={2}
         ></FlexibleBox>
-        <LoadingState singular="Team" renderItem={renderTeam} permitted={canManageTeamMembers}>
-            <FlexibleBox
-                title={t('team:rolesSeatsManager:rolesHeadline')}
-                icon={faShield}
-                className="no-box w-auto inline-block"
-                numberOfColumns={2}
-            >
-                {renderTeam && (
-                    <Card className="shadow-lg rounded-lg mb-4">
-                        <CardContent>
-                            <Grid container spacing={3}>
-                                {Array.isArray(rolesAndPermissionsByTeamId) && rolesAndPermissionsByTeamId.map((role) => (
-                                    <Grid item xs={12} sm={6} md={4} key={role.Role_ID}>
-                                        <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all p-3">
-                                            <Typography variant="h6" className="font-semibold text-lg">
-                                                {role.Role_Name}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                Permissions: {role.permissions?.length}
-                                            </Typography>
-
-                                            {canManageTeamMembers && (
-                                                <div className="flex justify-between mt-4">
-                                                    <button
-                                                        onClick={() => handleSelectRole(role)}
-                                                        className="blue-link w-[48%]"
-                                                    >
-                                                        {t('team:rolesSeatsManager:edit')}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => role.Role_ID && handleRemoveRole(role.Role_ID)}
-                                                        className="blue-link w-[48%]"
-                                                    >
-                                                        {t('team:rolesSeatsManager:remove')}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </Card>
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </CardContent>
-                    </Card>
-                )}
-            </FlexibleBox>
-            <FlexibleBox
-                title={t('team:rolesSeatsManager:seatsHeadline')}
-                icon={faUsers}
-                className="no-box w-auto inline-block"
-                numberOfColumns={2}
-            >
-                {renderTeam && (
-                    <Card className="shadow-lg rounded-lg mb-4">
-                        <CardContent>
-                            {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
-                                <Block>{t('team:rolesSeatsManager:length0_iamowner')}</Block>
-                            ) : (
+        {!selectedSeat && !displayInviteForm && !selectedRole && !displayNewRoleForm && (
+            <LoadingState singular="Team" renderItem={renderTeam} permitted={canManageTeamMembers}>
+                <FlexibleBox
+                    title={t('team:rolesSeatsManager:rolesHeadline')}
+                    icon={faShield}
+                    className="no-box w-auto inline-block"
+                    numberOfColumns={2}
+                >
+                    {renderTeam && (
+                        <Card className="shadow-lg rounded-lg mb-4">
+                            <CardContent>
                                 <Grid container spacing={3}>
-                                    {Array.isArray(renderUserSeats) && renderUserSeats.map((seat) => (
-                                        <Grid item xs={12} sm={6} md={4} key={seat.Seat_ID}>
-                                            <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all">
-                                                <CardContent className="p-4">
-                                                    <Block variant="span" className="flex flex-col gap-3">
-                                                        <Typography variant="h6" className="font-semibold text-lg">
-                                                            {seat.user?.User_FirstName} {seat.user?.User_Surname}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t('team:rolesSeatsManager:role')}: {seat.role?.Role_Name}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t('team:rolesSeatsManager:status')}: {seat.Seat_Status}
-                                                        </Typography>
+                                    {Array.isArray(rolesAndPermissionsByTeamId) && rolesAndPermissionsByTeamId.map((role) => (
+                                        <Grid item xs={12} sm={6} md={4} key={role.Role_ID}>
+                                            <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all p-3">
+                                                <Typography variant="h6" className="font-semibold text-lg">
+                                                    {role.Role_Name}
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    Permissions: {role.permissions?.length}
+                                                </Typography>
 
-                                                        {canManageTeamMembers && (
-                                                            <div className="flex justify-between mt-4">
-                                                                <button
-                                                                    onClick={() => handleSelectSeat(seat)}
-                                                                    className="blue-link w-[48%]"
-                                                                >
-                                                                    {t('team:rolesSeatsManager:edit')}
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
-                                                                    className="blue-link w-[48%]"
-                                                                >
-                                                                    {t('team:rolesSeatsManager:remove')}
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </Block>
-                                                </CardContent>
+                                                {canManageTeamMembers && (
+                                                    <div className="flex justify-between mt-4">
+                                                        <button
+                                                            onClick={() => handleSelectRole(role)}
+                                                            className="blue-link w-[48%]"
+                                                        >
+                                                            {t('team:rolesSeatsManager:edit')}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => role.Role_ID && handleRemoveRole(role.Role_ID)}
+                                                            className="blue-link w-[48%]"
+                                                        >
+                                                            {t('team:rolesSeatsManager:remove')}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </Card>
                                         </Grid>
                                     ))}
                                 </Grid>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-            </FlexibleBox>
-        </LoadingState>
+                            </CardContent>
+                        </Card>
+                    )}
+                </FlexibleBox>
+                <FlexibleBox
+                    title={t('team:rolesSeatsManager:seatsHeadline')}
+                    icon={faUsers}
+                    className="no-box w-auto inline-block"
+                    numberOfColumns={2}
+                >
+                    {renderTeam && (
+                        <Card className="shadow-lg rounded-lg mb-4">
+                            <CardContent>
+                                {!renderUserSeats.length && authUser && renderTeam?.organisation?.User_ID === authUser.User_ID ? (
+                                    <Block>{t('team:rolesSeatsManager:length0_iamowner')}</Block>
+                                ) : (
+                                    <Grid container spacing={3}>
+                                        {Array.isArray(renderUserSeats) && renderUserSeats.map((seat) => (
+                                            <Grid item xs={12} sm={6} md={4} key={seat.Seat_ID}>
+                                                <Card className="border border-gray-300 rounded-lg hover:shadow-xl transition-all">
+                                                    <CardContent className="p-4">
+                                                        <Block variant="span" className="flex flex-col gap-3">
+                                                            <Typography variant="h6" className="font-semibold text-lg">
+                                                                {seat.user?.User_FirstName} {seat.user?.User_Surname}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                {t('team:rolesSeatsManager:role')}: {seat.role?.Role_Name}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                {t('team:rolesSeatsManager:status')}: {seat.Seat_Status}
+                                                            </Typography>
+
+                                                            {canManageTeamMembers && (
+                                                                <div className="flex justify-between mt-4">
+                                                                    <button
+                                                                        onClick={() => handleSelectSeat(seat)}
+                                                                        className="blue-link w-[48%]"
+                                                                    >
+                                                                        {t('team:rolesSeatsManager:edit')}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
+                                                                        className="blue-link w-[48%]"
+                                                                    >
+                                                                        {t('team:rolesSeatsManager:remove')}
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </Block>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+                </FlexibleBox>
+            </LoadingState>
+        )}
 
         {canManageTeamMembers && renderTeam && (
             <>
