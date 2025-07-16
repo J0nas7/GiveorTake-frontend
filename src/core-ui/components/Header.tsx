@@ -1,17 +1,17 @@
 // External
-import clsx from "clsx"
-import React from "react"
+import { faDoorOpen, faUser } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import clsx from "clsx";
 import Image from "next/image";
 import Link from "next/link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDoorOpen, faUser } from "@fortawesome/free-solid-svg-icons";
+import React from "react";
 
 // Internal
-import styles from "../styles/modules/Header.module.scss";
 import { Block, Text } from "@/components";
-import SearchBar from "./SearchBar";
-import { selectAuthUser, useTypedSelector } from "@/redux";
 import { useAuth } from "@/hooks";
+import { selectAuthUser, useTypedSelector } from "@/redux";
+import styles from "../styles/modules/Header.module.scss";
+import SearchBar from "./SearchBar";
 
 export const Header: React.FC = () => {
     // Hooks
@@ -71,15 +71,14 @@ export const Header: React.FC = () => {
                         <li>
                             <Block variant="span" className="flex items-center gap-2">
                                 <FontAwesomeIcon icon={faDoorOpen} />
-                                <Block
-                                    variant="span"
+                                <button
                                     className={clsx(
                                         `inline-block text-sm text-white cursor-pointer`
                                     )}
                                     onClick={handleLogoutSubmit}
                                 >
                                     Log out
-                                </Block>
+                                </button>
                             </Block>
                         </li>
                     </ul>
