@@ -1,23 +1,14 @@
 // External
-import React from 'react'
-import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 
 // Internal
-import { Block, Text } from '@/components'
-import { BacklogStates, Status } from '@/types';
+import { Block, Text } from '@/components';
+import { BacklogProps } from '@/components/backlog';
+import { Status } from '@/types';
 
-interface BacklogStatusActionMenuProps {
-    statusUrlEditing: boolean
-    renderBacklog: BacklogStates
-    selectedStatusIds: string[]
-}
-
-export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = ({
-    statusUrlEditing,
-    renderBacklog,
-    selectedStatusIds,
-}) => {
+export const BacklogStatusActionMenu: React.FC<BacklogProps> = (props) => {
     // Hooks
     const router = useRouter()
 
@@ -26,7 +17,7 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
         newStatusIds: string[] | undefined | string,
         returnUrl?: boolean
     ) => {
-        if (!renderBacklog) return
+        if (!props.renderBacklog) return
 
         const url = new URL(window.location.href);
 
@@ -35,7 +26,7 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
             url.searchParams.delete("statusIds")
         } else if (Array.isArray(newStatusIds)) { // Handle statusIds (convert array to a comma-separated string)
             if (newStatusIds.length > 0) {
-                if (renderBacklog.statuses && renderBacklog.statuses.length > newStatusIds.length) {
+                if (props.renderBacklog.statuses && props.renderBacklog.statuses.length > newStatusIds.length) {
                     url.searchParams.set("statusIds", newStatusIds.join(",")); // Store as comma-separated values
                 } else {
                     url.searchParams.delete("statusIds"); // Remove if all are selected, as that is default
@@ -57,11 +48,11 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
         const { value, checked } = event.target;
 
         let updatedStatusIds = checked
-            ? [...selectedStatusIds, value] // Add new ID
-            : selectedStatusIds.filter(id => id !== value); // Remove unchecked ID
+            ? [...props.selectedStatusIds, value] // Add new ID
+            : props.selectedStatusIds.filter(id => id !== value); // Remove unchecked ID
 
-        if (selectedStatusIds.length === 0 && renderBacklog) {
-            updatedStatusIds = (renderBacklog.statuses || [])
+        if (props.selectedStatusIds.length === 0 && props.renderBacklog) {
+            updatedStatusIds = (props.renderBacklog.statuses || [])
                 .filter((status) => status.Status_ID?.toString() !== value)
                 .map((status) => status.Status_ID?.toString() || "")
                 .filter((id): id is string => id !== "");
@@ -70,20 +61,20 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
         updateURLParams(updatedStatusIds);
     }
 
-    if (!statusUrlEditing) return null
+    if (!props.statusUrlEditing) return null
 
     return (
         <Block
             className={clsx(
                 "task-bulkedit-container",
-                { ["task-bulkedit-container-open"]: statusUrlEditing }
+                { ["task-bulkedit-container-open"]: props.statusUrlEditing }
             )}
         >
-            {statusUrlEditing && renderBacklog && (
+            {props.statusUrlEditing && props.renderBacklog && (
                 <Block>
                     <Text className="text-sm font-semibold">Backlog statuses</Text>
 
-                    {(renderBacklog.statuses?.length && renderBacklog.statuses.length > 1) && (
+                    {(props.renderBacklog.statuses?.length && props.renderBacklog.statuses.length > 1) && (
                         <Text
                             variant="span"
                             // onClick={() => handleSelectAllBacklogsChange()}
@@ -94,7 +85,7 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
                     )}
 
                     <Block className="flex flex-col mt-3">
-                        {renderBacklog.statuses?.length && renderBacklog.statuses
+                        {props.renderBacklog.statuses?.length && props.renderBacklog.statuses
                             // Status_Order low to high:
                             .sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
                             .map(status => {
@@ -103,7 +94,7 @@ export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (
                                         <input
                                             type="checkbox"
                                             value={status.Status_ID}
-                                            checked={selectedStatusIds.length === 0 || (status.Status_ID ? selectedStatusIds.includes(status.Status_ID.toString()) : false)}
+                                            checked={props.selectedStatusIds.length === 0 || (status.Status_ID ? props.selectedStatusIds.includes(status.Status_ID.toString()) : false)}
                                             onChange={handleCheckboxStatusChange}
                                         />
                                         <Text>{status.Status_Name}</Text>

@@ -1,14 +1,15 @@
+"use client"
+
 // External
-import React, { useEffect, useState } from 'react'
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStop } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 // Internal
-import { Block, Text } from '@/components/ui/block-text'
-import { selectAuthUserTaskTimeTrack, selectSnackMessage, useAppDispatch, useAuthActions, useTypedSelector } from '@/redux';
+import { Block, Text } from '@/components/ui/block-text';
 import { useTasksContext, useTaskTimeTrackContext } from '@/contexts';
+import { selectAuthUserTaskTimeTrack, selectSnackMessage, useAppDispatch, useAuthActions, useTypedSelector } from '@/redux';
 import { TaskTimeTrack } from '@/types';
 
 export const TaskTimeTrackPlayer = () => {
@@ -17,7 +18,7 @@ export const TaskTimeTrackPlayer = () => {
     const { taskDetail, setTaskDetail } = useTasksContext()
     const { fetchIsLoggedInStatus } = useAuthActions()
     const dispatch = useAppDispatch()
-    
+
     // State
     const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack)
     const snackMessage = useTypedSelector(selectSnackMessage)
@@ -51,8 +52,8 @@ export const TaskTimeTrackPlayer = () => {
                                 <TimeSpentDisplay startTime={taskTimeTrack.Time_Tracking_Start_Time} />
                             ) : null}
                         </Block>
-                        <Text 
-                            // href={`/task/${taskTimeTrack.task?.backlog?.project?.Project_Key}/${taskTimeTrack.task?.Task_Key}`} 
+                        <Text
+                            // href={`/task/${taskTimeTrack.task?.backlog?.project?.Project_Key}/${taskTimeTrack.task?.Task_Key}`}
                             onClick={() => setTaskDetail(taskTimeTrack.task)}
                             className="blue-link-light h-12 overflow-y-hidden break-all cursor-pointer"
                         >

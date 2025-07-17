@@ -20,7 +20,7 @@ Add a second describe() => {}, testing 5 new edge cases.
 
 
 Network hosting:
-npm run dev -- -H 10.71.26.243
+npm run dev -- -H 192.168.50.132
 
 npm i:
     sass

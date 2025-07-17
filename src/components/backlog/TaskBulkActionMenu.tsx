@@ -1,3 +1,5 @@
+"use client"
+
 // External
 import { faCheck, faCopy, faEye, faEyeSlash, faPencil, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -13,8 +15,8 @@ import { selectSnackMessage, useTypedSelector } from '@/redux'
 import { Project, Task } from '@/types'
 import clsx from 'clsx'
 
-export const TaskBulkActionMenu: React.FC<{ renderProject: Project }> = ({
-    renderProject
+export const TaskBulkActionMenu: React.FC<{ project?: Project | undefined }> = ({
+    project
 }) => {
     // Hooks
     const router = useRouter()
@@ -117,7 +119,7 @@ export const TaskBulkActionMenu: React.FC<{ renderProject: Project }> = ({
             >
                 {taskBulkEditing && (
                     <BulkEdit
-                        renderProject={renderProject}
+                        renderProject={project}
                         selectedTaskIds={selectedTaskIds}
                         setTaskBulkEditing={setTaskBulkEditing}
                     />
@@ -173,7 +175,7 @@ export const TaskBulkActionMenu: React.FC<{ renderProject: Project }> = ({
 }
 
 interface BulkEditProps {
-    renderProject: Project
+    renderProject: Project | undefined
     selectedTaskIds: string[]
     setTaskBulkEditing: React.Dispatch<React.SetStateAction<boolean>>
 }
@@ -252,7 +254,7 @@ const BulkEdit: React.FC<BulkEditProps> = ({
                     className="p-2 border rounded bg-gray-200 w-60 h-14"
                 >
                     <option value="">Assignee</option>
-                    {renderProject.team?.user_seats?.map(userSeat => {
+                    {renderProject?.team?.user_seats?.map(userSeat => {
                         return (
                             <option value={userSeat.user?.User_ID}>{userSeat.user?.User_FirstName} {userSeat.user?.User_Surname}</option>
                         )
@@ -284,7 +286,7 @@ const BulkEdit: React.FC<BulkEditProps> = ({
                     className="p-2 border rounded bg-gray-200 w-60 h-14"
                 >
                     <option value="">Status</option>
-                    {renderProject.backlogs?.
+                    {renderProject?.backlogs?.
                         find(backlog => backlog.Backlog_ID === newBacklog)?.
                         statuses?.map(status => (
                             <option value={status.Status_ID}>{status.Status_Name}</option>
@@ -304,7 +306,7 @@ const BulkEdit: React.FC<BulkEditProps> = ({
                     className="p-2 border rounded bg-gray-200 w-60 h-14"
                 >
                     <option value="0" disabled>Backlog</option>
-                    {renderProject.backlogs?.map(backlog => (
+                    {renderProject?.backlogs?.map(backlog => (
                         <option key={backlog.Backlog_ID} value={backlog.Backlog_ID}>
                             {backlog.Backlog_Name}
                         </option>

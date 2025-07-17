@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react'
 
 // Internal
 import { Block, FlexibleBox, Text } from '@/components'
-import { TaskBulkActionMenu } from '@/components/partials/task/TaskBulkActionMenu'
+import { TaskBulkActionMenu } from '@/components/backlog/TaskBulkActionMenu'
 import { useProjectsContext } from '@/contexts'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import { useURLLink } from '@/hooks'
