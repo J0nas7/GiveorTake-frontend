@@ -1,13 +1,5 @@
-// External
-import React from 'react'
+import { ProfileView } from '@/components/auth';
 
-// Internal
-import UserDetails from '@/components/partials/users/UserDetails'
+const ProfilePage = () => <ProfileView />
 
-const ProfilePage = () => {
-    return (
-        <UserDetails />
-    )
-}
-
-export default ProfilePage
+export default ProfilePage;

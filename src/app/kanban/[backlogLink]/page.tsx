@@ -1,11 +1,5 @@
-// External
-import React from "react"
+import { KanbanBoardView } from '@/components/backlog';
 
-// Internal
-import { KanbanBoardContainer } from "@/components"
+const KanbanBoardPage = () => <KanbanBoardView />
 
-export default function Kanban() {
-    return (
-        <KanbanBoardContainer />
-    )
-}
+export default KanbanBoardPage;

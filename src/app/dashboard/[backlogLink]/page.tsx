@@ -1,11 +1,5 @@
-// External
-import React from "react"
+import { DashboardView } from '@/components/backlog';
 
-// Internal
-import { Dashboard } from "@/components/partials/project/Dashboard"
+const DashboardPage = () => <DashboardView />
 
-export default function Home() {
-    return (
-        <Dashboard />
-    )
-}
+export default DashboardPage;

@@ -1,12 +1,10 @@
 // External
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 // Internal
-import { Organisation } from '@/types';
-import { User } from '@/types';
-import { OrganisationDetailsView } from '@/components/partials/organisation/OrganisationDetails';
+import { OrganisationDetailsView } from '@/components/organisation/OrganisationEditPage/OrganisationEditView';
+import { Organisation, User } from '@/types';
 
 const mockOrganisation: Organisation = {
     Organisation_ID: 1,
@@ -27,11 +25,11 @@ const mockUser: User = {
 describe('OrganisationDetailsView Component - As Expected', () => {
     test('renders organisation details for non-authenticated users', () => {
         render(
-            <OrganisationDetailsView 
-                organisation={mockOrganisation} 
-                authUser={undefined} 
-                onOrganisationChange={jest.fn()} 
-                onSaveChanges={jest.fn()} 
+            <OrganisationDetailsView
+                organisation={mockOrganisation}
+                authUser={undefined}
+                onOrganisationChange={jest.fn()}
+                onSaveChanges={jest.fn()}
             />
         );
 
@@ -43,11 +41,11 @@ describe('OrganisationDetailsView Component - As Expected', () => {
 
     test('renders editable fields for authorised users', () => {
         render(
-            <OrganisationDetailsView 
-                organisation={mockOrganisation} 
-                authUser={mockUser} 
-                onOrganisationChange={jest.fn()} 
-                onSaveChanges={jest.fn()} 
+            <OrganisationDetailsView
+                organisation={mockOrganisation}
+                authUser={mockUser}
+                onOrganisationChange={jest.fn()}
+                onSaveChanges={jest.fn()}
             />
         );
 
@@ -59,11 +57,11 @@ describe('OrganisationDetailsView Component - As Expected', () => {
         const mockOnChange = jest.fn();
 
         render(
-            <OrganisationDetailsView 
-                organisation={mockOrganisation} 
-                authUser={mockUser} 
-                onOrganisationChange={mockOnChange} 
-                onSaveChanges={jest.fn()} 
+            <OrganisationDetailsView
+                organisation={mockOrganisation}
+                authUser={mockUser}
+                onOrganisationChange={mockOnChange}
+                onSaveChanges={jest.fn()}
             />
         );
 
@@ -77,11 +75,11 @@ describe('OrganisationDetailsView Component - As Expected', () => {
         const mockOnSave = jest.fn();
 
         render(
-            <OrganisationDetailsView 
-                organisation={mockOrganisation} 
-                authUser={mockUser} 
-                onOrganisationChange={jest.fn()} 
-                onSaveChanges={mockOnSave} 
+            <OrganisationDetailsView
+                organisation={mockOrganisation}
+                authUser={mockUser}
+                onOrganisationChange={jest.fn()}
+                onSaveChanges={mockOnSave}
             />
         );
 
@@ -97,11 +95,11 @@ describe('OrganisationDetailsView Component - Edge Cases', () => {
         const organisationWithoutDescription = { ...mockOrganisation, Organisation_Description: '' };
 
         render(
-            <OrganisationDetailsView 
-                organisation={organisationWithoutDescription} 
-                authUser={mockUser} 
-                onOrganisationChange={jest.fn()} 
-                onSaveChanges={jest.fn()} 
+            <OrganisationDetailsView
+                organisation={organisationWithoutDescription}
+                authUser={mockUser}
+                onOrganisationChange={jest.fn()}
+                onSaveChanges={jest.fn()}
             />
         );
 
@@ -113,11 +111,11 @@ describe('OrganisationDetailsView Component - Edge Cases', () => {
         const anotherUser: User = { ...mockUser, User_ID: 99 };
 
         render(
-            <OrganisationDetailsView 
-                organisation={mockOrganisation} 
-                authUser={anotherUser} 
-                onOrganisationChange={jest.fn()} 
-                onSaveChanges={jest.fn()} 
+            <OrganisationDetailsView
+                organisation={mockOrganisation}
+                authUser={anotherUser}
+                onOrganisationChange={jest.fn()}
+                onSaveChanges={jest.fn()}
             />
         );
 
@@ -131,11 +129,11 @@ describe('OrganisationDetailsView Component - Edge Cases', () => {
         const organisationWithoutTeams = { ...mockOrganisation, teams: [] };
 
         render(
-            <OrganisationDetailsView 
-                organisation={organisationWithoutTeams} 
-                authUser={mockUser} 
-                onOrganisationChange={jest.fn()} 
-                onSaveChanges={jest.fn()} 
+            <OrganisationDetailsView
+                organisation={organisationWithoutTeams}
+                authUser={mockUser}
+                onOrganisationChange={jest.fn()}
+                onSaveChanges={jest.fn()}
             />
         );
 

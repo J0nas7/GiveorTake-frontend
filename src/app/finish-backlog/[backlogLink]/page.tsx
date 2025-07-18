@@ -1,11 +1,5 @@
-// External
-import React from "react"
+import { FinishBacklogView } from '@/components/backlog';
 
-// Internal
-import { FinishBacklog } from "@/components"
+const FinishBacklogPage = () => <FinishBacklogView />
 
-export default function FinishBacklogPage() {
-    return (
-        <FinishBacklog />
-    )
-}
+export default FinishBacklogPage;

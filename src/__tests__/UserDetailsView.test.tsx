@@ -1,11 +1,11 @@
 // External
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
 
 // Internal
-import { TeamUserSeat, User } from '@/types';
-import { UserDetailsView, UserDetailsViewProps } from '@/components/partials/users/UserDetails';
+import { UserDetailsView, UserDetailsViewProps } from '@/components/auth/ProfilePage/ProfileView';
+import { TeamUserSeat } from '@/types';
 
 // Mock components used inside UserDetailsView
 jest.mock('@/components/ui/heading', () => ({
@@ -112,10 +112,10 @@ describe('UserDetailsView', () => {
     it('should render "This user is not part of any teams" when userTeams is an empty array', () => {
         const propsWithEmptyUserTeams = { ...defaultProps, userTeams: [] }; // userTeams is an empty array
         render(<UserDetailsView {...propsWithEmptyUserTeams} />);
-    
+
         expect(screen.getByText('This user is not part of any teams.')).toBeInTheDocument();
     });
-    
+
 });
 
 describe('UserDetailsView Edge Cases', () => {

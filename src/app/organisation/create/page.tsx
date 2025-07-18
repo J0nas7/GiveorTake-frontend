@@ -1,13 +1,5 @@
-// External
-import React from 'react'
+import { OrganisationCreateView } from '@/components/organisation';
 
-// Internal
-import { CreateOrganisation } from '@/components/partials/organisation/CreateOrganisation'
+const OrganisationCreatePage = () => <OrganisationCreateView />
 
-const CreateOrganisationPage = () => {
-    return (
-        <CreateOrganisation />
-    )
-}
-
-export default CreateOrganisationPage
+export default OrganisationCreatePage;

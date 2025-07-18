@@ -1,13 +1,5 @@
-// External
-import React from 'react'
+import { CreateTeamView } from '@/components/team';
 
-// Internal
-import { CreateTeam } from '@/components/partials/team/CreateTeam'
+const CreateTeamPage = () => <CreateTeamView />
 
-const CreateTeamPage = () => {
-    return (
-        <CreateTeam />
-    )
-}
-
-export default CreateTeamPage
+export default CreateTeamPage;
