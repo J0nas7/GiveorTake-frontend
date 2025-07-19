@@ -1,13 +1,5 @@
-// External
-import React from 'react'
+import { BacklogCreateView } from '@/components/backlog';
 
-// Internal
-import { CreateBacklog } from '@/components/partials/backlog/CreateBacklog'
+const BacklogCreatePage = () => <BacklogCreateView />
 
-const CreateBacklogPage = () => {
-    return (
-        <CreateBacklog />
-    )
-}
-
-export default CreateBacklogPage
+export default BacklogCreatePage;

@@ -1,10 +1,9 @@
 // External
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 // Internal
+import { ProjectDetailsView } from '@/components/project/ProjectPage/ProjectView';
 import { Project, User } from '@/types';
-import { ProjectDetailsView } from '@/components/partials/project/ProjectDetails';
 
 // Mock props
 const mockProject: Project = {

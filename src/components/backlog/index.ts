@@ -1,3 +1,7 @@
+// BacklogCreatePage
+export * from './BacklogCreatePage/BacklogCreate'
+export * from './BacklogCreatePage/BacklogCreateView'
+
 // BacklogEditPage
 export * from './BacklogEditPage/BacklogEdit'
 export * from './BacklogEditPage/BacklogEditEditor'
