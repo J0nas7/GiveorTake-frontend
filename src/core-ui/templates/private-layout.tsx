@@ -2,8 +2,8 @@
 import React from "react";
 
 // Internal
-import { TaskDetailWithModal } from "@/components/partials/task/TaskContainer";
 import { TaskTimeTrackPlayer } from "@/components/partials/task/TaskTimeTrackPlayer";
+import { TaskDetailWithModal } from "@/components/task/TaskView";
 import { Footer, Header } from "../";
 import { SnackBar } from "../components/SnackBar";
 

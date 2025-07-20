@@ -6,8 +6,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useMemo, useState } from 'react';
 
 // Internal
-import { Card } from '@/components/partials/task/taskdetails/TaskCard';
 import { CreatedAtToTimeSince } from '@/components/partials/task/TaskTimeTrackPlayer';
+import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block, Text } from '@/components/ui/block-text';
 import { useTaskCommentsContext, useTasksContext } from '@/contexts';
 import { LoadingState } from '@/core-ui/components/LoadingState';

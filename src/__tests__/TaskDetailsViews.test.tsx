@@ -11,7 +11,7 @@ import {
     MediaFilesAreaView,
     TaskDetailsView,
     TitleAreaView
-} from '@/components/partials/task/taskdetails';
+} from '@/components/task/taskdetails';
 import { Task } from '@/types';
 
 const mockTask: Task = {

@@ -1,12 +1,5 @@
-// External
+import { TaskView } from '@/components/task';
 
-// Internal
-import { TaskDetailWithoutModal } from '@/components/partials/task/TaskContainer'
+const TaskPage = () => <TaskView />
 
-const TaskDetailPage = () => {
-    return (
-        <TaskDetailWithoutModal />
-    )
-}
-
-export default TaskDetailPage
+export default TaskPage;

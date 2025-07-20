@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useMemo, useState } from 'react';
 
 // Internal
-import { Card } from '@/components/partials/task/taskdetails/TaskCard';
+import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block } from '@/components/ui/block-text';
 import { useTasksContext } from '@/contexts';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";

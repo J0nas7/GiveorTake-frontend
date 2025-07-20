@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 // Internal components and hooks
-import { CommentsArea, CtaButtons, DescriptionArea, MediaFilesArea, TaskDetailsArea, TitleArea } from '@/components/partials/task/taskdetails';
+import { CommentsArea, CtaButtons, DescriptionArea, MediaFilesArea, TaskDetailsArea, TitleArea } from '@/components/task/taskdetails';
 import { Block } from "@/components/ui/block-text";
 import { useTasksContext } from "@/contexts";
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
@@ -82,7 +82,7 @@ export const TaskDetailWithModal = () => {
     )
 }
 
-export const TaskDetailWithoutModal = () => {
+export const TaskView = () => {
     const { taskByKeys, readTaskByKeys, setTaskDetail } = useTasksContext()
     const taskDetailRef = useRef<HTMLDivElement>(null);
     const { projectKey, taskLink } = useParams<{ projectKey: string, taskLink: string }>(); // Get projectKey and taskLink from URL

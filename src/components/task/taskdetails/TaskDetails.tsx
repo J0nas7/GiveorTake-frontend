@@ -7,8 +7,8 @@ import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 
 // Internal
-import { Card } from '@/components/partials/task/taskdetails/TaskCard';
 import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '@/components/partials/task/TaskTimeTrackPlayer';
+import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block } from '@/components/ui/block-text';
 import { Heading } from '@/components/ui/heading';
 import { useProjectsContext, useTasksContext, useTaskTimeTrackContext } from '@/contexts';

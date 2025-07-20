@@ -1,13 +1,5 @@
-// External
-import React from 'react'
+import { CreateProjectView } from '@/components/project';
 
-// Internal
-import { CreateProject } from '@/components/partials/project/CreateProject'
+const CreateProjectPage = () => <CreateProjectView />
 
-const CreateProjectPage = () => {
-    return (
-        <CreateProject />
-    )
-}
-
-export default CreateProjectPage
+export default CreateProjectPage;

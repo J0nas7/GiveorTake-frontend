@@ -8,8 +8,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 // Internal
-import { Card } from '@/components/partials/task/taskdetails/TaskCard';
 import { CreatedAtToTimeSince } from '@/components/partials/task/TaskTimeTrackPlayer';
+import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block, Text } from '@/components/ui/block-text';
 import { useTaskMediaFilesContext, useTasksContext } from '@/contexts';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";

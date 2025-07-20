@@ -1,9 +1,9 @@
 // External
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 // Internal
+import { TeamDetailsView } from '@/components/team/TeamPage/TeamView';
 import { Team, User } from '@/types'; // Ensure types are correct
-import { TeamDetailsView } from '@/components/partials/team/TeamDetails';
 
 // Mock data
 const mockTeam: Team = {

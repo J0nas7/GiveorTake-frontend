@@ -8,3 +8,9 @@ export * from './ProfilePage/ProfileHeader';
 export * from './ProfilePage/ProfileOrganisation';
 export * from './ProfilePage/ProfileView';
 
+// RegisterAccountPage
+export * from './RegisterAccountPage/RegisterAccountView';
+
+// SignInPage
+export * from './SignInPage/SignInView';
+
