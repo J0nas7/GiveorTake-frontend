@@ -1,8 +1,7 @@
 "use client"
 
 import { Block, FlexibleBox } from '@/components';
-import { BacklogEditEditor, BacklogHeaderLinks, StatusListEditor } from '@/components/backlog';
-import { TaskSummaryCard } from '@/components/backlog/TaskSummaryCard';
+import { BacklogEditEditor, BacklogHeaderLinks, StatusListEditor, TaskSummaryCard } from '@/components/backlog';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { Backlog, BacklogStates, Status, User } from '@/types';
 import { faList } from '@fortawesome/free-solid-svg-icons';

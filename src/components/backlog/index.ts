@@ -8,6 +8,7 @@ export * from './BacklogEditPage/BacklogEditEditor'
 export * from './BacklogEditPage/BacklogEditView'
 export * from './BacklogEditPage/BacklogHeaderLinks'
 export * from './BacklogEditPage/StatusListEditor'
+export * from './BacklogEditPage/TaskSummaryCard'
 
 // BacklogPage
 export * from './BacklogPage/Backlog'
