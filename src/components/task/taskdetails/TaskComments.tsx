@@ -6,11 +6,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useMemo, useState } from 'react';
 
 // Internal
-import { CreatedAtToTimeSince } from '@/components/partials/task/TaskTimeTrackPlayer';
 import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block, Text } from '@/components/ui/block-text';
 import { useTaskCommentsContext, useTasksContext } from '@/contexts';
 import { LoadingState } from '@/core-ui/components/LoadingState';
+import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { selectAuthUser, useTypedSelector } from '@/redux';
 import { Task, TaskComment, TeamUserSeat, User } from '@/types';

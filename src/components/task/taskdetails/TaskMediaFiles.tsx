@@ -8,10 +8,10 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 // Internal
-import { CreatedAtToTimeSince } from '@/components/partials/task/TaskTimeTrackPlayer';
 import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block, Text } from '@/components/ui/block-text';
 import { useTaskMediaFilesContext, useTasksContext } from '@/contexts';
+import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { env } from '@/env.urls';
 import { Task, TaskMediaFile } from '@/types';

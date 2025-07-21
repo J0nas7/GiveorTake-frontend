@@ -15,7 +15,7 @@ import { useURLLink } from "@/hooks";
 import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from "@/redux";
 import { TeamUserSeat } from "@/types";
 
-export const Startpage = () => {
+export const StartView = () => {
     // Hooks
     const dispatch = useAppDispatch()
     const router = useRouter()

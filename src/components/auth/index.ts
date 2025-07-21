@@ -14,3 +14,5 @@ export * from './RegisterAccountPage/RegisterAccountView';
 // SignInPage
 export * from './SignInPage/SignInView';
 
+// StartPage
+export * from './StartPage/StartView';

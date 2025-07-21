@@ -1,5 +1,5 @@
 import { BacklogProps } from '@/components/backlog';
-import { CreatedAtToTimeSince } from '@/components/partials/task/TaskTimeTrackPlayer';
+import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { Task } from '@/types';
 

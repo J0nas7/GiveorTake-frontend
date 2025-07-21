@@ -4,7 +4,7 @@ import { Team } from "@/types"
 import { Card, CardContent, Grid, Typography } from "@mui/material"
 import Link from "next/link"
 import React from "react"
-import { CreatedAtToTimeSince } from "../../partials/task/TaskTimeTrackPlayer"
+import { CreatedAtToTimeSince } from "../../../core-ui/components/TaskTimeTrackPlayer"
 
 type OrganisationTeamsOverviewProps = {
     teams: Team[]

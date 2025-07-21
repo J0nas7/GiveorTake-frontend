@@ -1,11 +1,5 @@
-// External
-import React from "react"
+import { StartView } from '@/components/auth';
 
-// Internal
-import { Startpage } from "@/components/partials/users/Startpage"
+const StartPage = () => <StartView />
 
-export default function Home() {
-    return (
-        <Startpage />
-    )
-}
+export default StartPage;

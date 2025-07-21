@@ -1,11 +1,5 @@
-// External
-import React from 'react';
+import { RolesSeatsView } from '@/components/team';
 
-// Internal
-import TeamRolesSeatsManager from '@/components/partials/team/TeamRolesSeatsManager';
+const RolesSeatsPage = () => <RolesSeatsView />
 
-const TeamRolesSeatsPage = () => {
-    return <TeamRolesSeatsManager />
-}
-
-export default TeamRolesSeatsPage
+export default RolesSeatsPage;

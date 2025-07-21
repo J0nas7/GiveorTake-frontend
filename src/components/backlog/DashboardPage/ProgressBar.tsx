@@ -4,15 +4,13 @@ type ProgressBarProps = {
     completed: number // Completion percentage (0 - 100)
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ completed }) => {
-    return (
-        <div className={styles.progressBar}>
-            <div
-                className={styles.progressFill}
-                style={{ width: `${completed}%` }}
-            >
-                <span className={styles.progressText}>{completed}%</span>
-            </div>
+export const ProgressBar: React.FC<ProgressBarProps> = (props) => (
+    <div className={styles.progressBar}>
+        <div
+            className={styles.progressFill}
+            style={{ width: `${props.completed}%` }}
+        >
+            <span className={styles.progressText}>{props.completed}%</span>
         </div>
-    )
-}
+    </div>
+)

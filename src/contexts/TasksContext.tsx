@@ -8,18 +8,6 @@ import { useAxios } from "@/hooks"
 import { Task, TaskFields, TasksStates, TaskStates } from "@/types"
 import { useResourceContext } from "./TypeContext"
 
-// Tasks Context (DEPRECATED)
-/*export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return (
-        <ResourceProvider<Task, "Task_ID">
-            resource="tasks"
-            idFieldName="Task_ID"
-        >
-            {children}
-        </ResourceProvider>
-    )
-}*/
-
 // Tasks Context
 // Context API for Tasks
 export type TasksContextType = {

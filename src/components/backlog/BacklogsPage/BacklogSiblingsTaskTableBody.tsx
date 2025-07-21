@@ -1,5 +1,5 @@
 import { BacklogSiblingsProps } from '@/components/backlog';
-import { CreatedAtToTimeSince } from '@/components/partials/task/TaskTimeTrackPlayer';
+import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
 
 type BacklogSiblingsTaskTableBodyProps = Pick<
     BacklogSiblingsProps,

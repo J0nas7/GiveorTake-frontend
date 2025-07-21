@@ -2,7 +2,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 // Internal
-import { TeamRolesSeatsView, TeamRolesSeatsViewProps } from '@/components/partials/team/TeamRolesSeatsManager';
+import { TeamRolesSeatsView, TeamRolesSeatsViewProps } from '@/components/team/RolesSeatsManager/RolesSeatsView';
 import { Organisation, Team, TeamUserSeat, User } from '@/types';
 import type { TFunction } from 'i18next';
 

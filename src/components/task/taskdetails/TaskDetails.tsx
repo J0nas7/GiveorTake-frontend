@@ -7,11 +7,11 @@ import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 
 // Internal
-import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '@/components/partials/task/TaskTimeTrackPlayer';
 import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block } from '@/components/ui/block-text';
 import { Heading } from '@/components/ui/heading';
 import { useProjectsContext, useTasksContext, useTaskTimeTrackContext } from '@/contexts';
+import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '@/redux';
 import { ProjectStates, Task, TaskTimeTracksStates } from '@/types';
