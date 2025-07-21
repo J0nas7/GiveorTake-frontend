@@ -1,13 +1,14 @@
 "use client"
 
 import { Block, Field, Heading } from '@/components'
+import { useAuth } from '@/hooks'
 import Link from 'next/link'
 import React, { FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const ForgotPasswordView = () => {
     // Hooks
-    // TODO const { resetUserPassword } = useUsers()
+    const { handleForgotRequest } = useAuth()
 
     // Internal variables
     const { t } = useTranslation(['guest'])
@@ -20,10 +21,10 @@ export const ForgotPasswordView = () => {
 
         if (!forgotPending) {
             setForgotPending(true)
-            // TODO resetUserPassword(userEmail) // Trigger password reset
-            setTimeout(() => {
-                setForgotPending(false) // Simulate async reset completion
-            }, 1000)
+
+            handleForgotRequest(userEmail) // Trigger password reset
+
+            setForgotPending(false)
         }
     }
 

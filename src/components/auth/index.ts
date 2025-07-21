@@ -1,6 +1,9 @@
 // ForgotPasswordPage
 export * from './ForgotPasswordView';
 
+// ForgotPasswordResetViewPage
+export * from './ForgotPasswordResetView';
+
 // ProfilePage
 export * from './ProfilePage/Profile';
 export * from './ProfilePage/ProfileForm';

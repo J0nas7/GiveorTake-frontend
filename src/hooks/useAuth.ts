@@ -1,23 +1,20 @@
 "use client"
 
 // External
-import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
 // Internal
-import { useAxios, useCookies } from './'
-import { apiResponseDTO, User } from "@/types"
 import {
-    useAppDispatch,
-    useTypedSelector,
-
-    useAuthActions,
-
-    setIsLoggedIn,
     setAccessToken,
-    setRefreshToken,
     setAuthUser,
+    setIsLoggedIn,
+    setSnackMessage,
+    useAppDispatch,
+    useAuthActions
 } from '@/redux'
+import { apiResponseDTO } from "@/types"
+import { useAxios, useCookies } from './'
 
 interface Errors {
     [key: string]: string | undefined
@@ -54,14 +51,14 @@ export const useAuth = () => {
         if (typeof window !== "undefined") {
             const newAccessToken = loginData.accessToken
             const newAuthUser = loginData.user
-            
+
             setTheCookie("accessToken", newAccessToken)
 
             dispatch(setAccessToken({ "data": newAccessToken }))
             // dispatch(setRefreshToken({ "data": jwtData.refreshToken }))
             dispatch(setIsLoggedIn({ "data": true }))
             dispatch(setAuthUser({ "data": newAuthUser }))
-            
+
             let ref = searchParams.get("ref")
             router.push(ref ?? "/")
         }
@@ -73,14 +70,17 @@ export const useAuth = () => {
         if (fromAction != 'login') return false
 
         setStatus('resolved')
-        
+
         if (theResult.success === true) {
             console.log("User logged in:", theResult.data)
             return saveLoginSuccess(theResult.data)
         }
 
+        dispatch(setSnackMessage(
+            theResult.message ? theResult.message : "Login credentials are wrong."
+        ))
+
         console.log("Login failed", theResult)
-        alert(theResult.message)
         return false
     }
 
@@ -125,11 +125,147 @@ export const useAuth = () => {
         return false
     }
 
+    const handleForgotRequest = async (emailInput: string): Promise<boolean> => {
+        setStatus('resolving')
+        let errorData: apiResponseDTO = {
+            "success": false,
+            "message": "-",
+            "data": false
+        }
+        let error = false
+        // Resetting the errorType triggers another dispatch that resets the error
+        // dispatch(setLoginErrorType({ "data": "" }))
+
+        // If name/email or password is empty
+        if (!emailInput) {
+            errorData = {
+                "success": false,
+                "message": "Missing neccesary credentials.",
+                "data": false
+            }
+            error = true
+        }
+
+        const forgotVariables = {
+            "User_Email": emailInput
+        }
+
+        // Send email to the API for token generation
+        try {
+            if (!error) {
+                const data = await httpPostWithData("auth/forgot-password", forgotVariables)
+
+                if (data.success !== true) {
+                    const errors = data.response?.data?.errors;
+
+                    if (errors && typeof errors === 'object') {
+                        // Flatten the object to a single array of messages
+                        let messages = Object.values(errors).flat();
+                        errorData.message = messages.join(', ');
+                        throw new Error(errorData.message)
+                    } else {
+                        errorData.message = data.message
+                        throw new Error(errorData.message)
+                    }
+                } else if (data.success === true) {
+                    dispatch(setSnackMessage("Reset-mail is sent to you."))
+                    router.push("/forgot-password/reset")
+                    return true
+                }
+            }
+        } catch (e) {
+            if (!error && errorData.message == "-") {
+                console.log("useAuth forgot error", e)
+                errorData = {
+                    "success": false,
+                    "message": "Forgot-request failed. Try again.",
+                    "data": false
+                }
+                error = true
+            }
+        }
+
+        dispatch(setSnackMessage(errorData.message))
+        return false
+    }
+
+    const handleResetRequest = async (
+        email: string,
+        rememberToken: string,
+        password1: string,
+        password2: string
+    ): Promise<boolean> => {
+        setStatus('resolving')
+        let errorData: apiResponseDTO = {
+            "success": false,
+            "message": "-",
+            "data": false
+        }
+        let error = false
+        // Resetting the errorType triggers another dispatch that resets the error
+        // dispatch(setLoginErrorType({ "data": "" }))
+
+        // If fields are empty
+        if (!email || !rememberToken || !password1 || !password2) {
+            errorData = {
+                "success": false,
+                "message": "Missing neccesary credentials.",
+                "data": false
+            }
+            error = true
+        }
+
+        const resetVariables = {
+            "User_Email": email,
+            "User_Remember_Token": rememberToken,
+            "New_User_Password": password1,
+            "New_User_Password_confirmation": password2
+        };
+
+        // Send email to the API for token generation
+        try {
+            if (!error) {
+                const data = await httpPostWithData("auth/reset-password", resetVariables)
+
+                if (data.success !== true) {
+                    const errors = data.response?.data?.errors;
+
+                    if (errors && typeof errors === 'object') {
+                        // Flatten the object to a single array of messages
+                        let messages = Object.values(errors).flat();
+                        errorData.message = messages.join(', ');
+                        throw new Error(errorData.message)
+                    } else {
+                        errorData.message = data.message
+                        throw new Error(errorData.message)
+                    }
+                } else if (data.success === true) {
+                    dispatch(setSnackMessage("Your password was reset."))
+                    router.push("/sign-in")
+                    return true
+                }
+            }
+        } catch (e) {
+            if (!error && errorData.message == "-") {
+                console.log("useAuth forgot error", e)
+                errorData = {
+                    "success": false,
+                    "message": "Reset-request failed. Try again.",
+                    "data": false
+                }
+                error = true
+            }
+        }
+
+        dispatch(setSnackMessage(errorData.message))
+        return false
+    }
+
     const handleLogoutSubmit = async () => {
         deleteTheCookie("accessToken")
         window.location.href = "/sign-in"; // Forces a full page reload
     }
-    
+
     const handleTokenTest = () => {
         dispatch(fetchIsLoggedInStatus())
     }
@@ -157,6 +293,8 @@ export const useAuth = () => {
     return {
         saveLoginSuccess,
         handleLoginSubmit,
+        handleForgotRequest,
+        handleResetRequest,
         handleLogoutSubmit,
         errorMsg,
         status,

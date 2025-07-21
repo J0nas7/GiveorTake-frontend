@@ -28,7 +28,8 @@ export const OnlyPublicRoutes = ({ children }: { children: React.ReactNode }) =>
     const publicRoutes = [
         "/sign-in",
         "/register-account",
-        "/forgot-password"
+        "/forgot-password",
+        "/forgot-password/reset",
     ]
 
     /**
