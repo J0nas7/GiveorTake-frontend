@@ -37,7 +37,7 @@ export const RolesSeatsView: React.FC = () => {
     const { teamById, readTeamById } = useTeamsContext();
     const { addUser } = useUsersContext(); // Assuming you have a `UsersContext` for adding new users
     const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
-    const { linkId: teamId, convertID_NameStringToURLFormat } = useURLLink(teamLink)
+    const { linkId: teamId, linkName, convertID_NameStringToURLFormat } = useURLLink(teamLink)
     const { canManageTeamMembers } = useRoleAccess(teamById ? teamById.organisation?.User_ID : undefined)
 
     // ---- State ----
@@ -48,7 +48,7 @@ export const RolesSeatsView: React.FC = () => {
     const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
     const [selectedSeat, setSelectedSeat] = useState<TeamUserSeat | undefined>(undefined);
     const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
-    const [displayInviteForm, setDisplayInviteForm] = useState<string>("");
+    const [displayInviteForm, setDisplayInviteForm] = useState<string | undefined>("");
     const [displayNewRoleForm, setDisplayNewRoleForm] = useState<boolean>(false);
 
     const availablePermissions = ["Modify Organisation Settings", "Modify Team Settings", "Manage Team Members"]
@@ -80,7 +80,7 @@ export const RolesSeatsView: React.FC = () => {
     const handleRemoveSeat = (seatId: number) => removeTeamUserSeat(
         seatId,
         parseInt(teamId),
-        `/team/${teamLink}/roles-seats`
+        `/team/${convertID_NameStringToURLFormat(parseInt(teamId), linkName)}/roles-seats`
     );
 
     // Handles the removal of a team role.

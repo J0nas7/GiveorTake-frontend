@@ -125,6 +125,66 @@ export const useAuth = () => {
         return false
     }
 
+    const handleRegister = async (formData: any): Promise<boolean> => {
+        setStatus('resolving')
+        let errorData: apiResponseDTO = {
+            "success": false,
+            "message": "-",
+            "data": false
+        }
+        let error = false
+        // Resetting the errorType triggers another dispatch that resets the error
+        // dispatch(setLoginErrorType({ "data": "" }))
+
+        // If fields are empty
+        if (!Object.values(formData).length) {
+            errorData = {
+                "success": false,
+                "message": "Missing neccesary credentials.",
+                "data": false
+            }
+            error = true
+        }
+
+        // Send email to the API for token generation
+        try {
+            if (!error) {
+                const data = await httpPostWithData("auth/register", formData)
+
+                if (data.success !== true) {
+                    const errors = data.response?.data?.errors;
+
+                    if (errors && typeof errors === 'object') {
+                        // Flatten the object to a single array of messages
+                        let messages = Object.values(errors).flat();
+                        errorData.message = messages.join(', ');
+                        throw new Error(errorData.message)
+                    } else {
+                        errorData.message = data.message
+                        throw new Error(errorData.message)
+                    }
+                } else if (data.success === true) {
+                    dispatch(setSnackMessage("Your account was created. Activation e-mail is sent."))
+                    router.push("/sign-in")
+                    return true
+                }
+            }
+        } catch (e) {
+            if (!error && errorData.message == "-") {
+                console.log("useAuth register error", e)
+                errorData = {
+                    "success": false,
+                    "message": "Register-request failed. Try again.",
+                    "data": false
+                }
+                error = true
+            }
+        }
+
+        dispatch(setSnackMessage(errorData.message))
+        return false
+    }
+
     const handleForgotRequest = async (emailInput: string): Promise<boolean> => {
         setStatus('resolving')
         let errorData: apiResponseDTO = {
@@ -293,6 +353,7 @@ export const useAuth = () => {
     return {
         saveLoginSuccess,
         handleLoginSubmit,
+        handleRegister,
         handleForgotRequest,
         handleResetRequest,
         handleLogoutSubmit,

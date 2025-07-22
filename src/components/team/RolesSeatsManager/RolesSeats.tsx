@@ -37,7 +37,7 @@ export type RolesSeatsProps = {
     handleSeatChange: (field: TeamUserSeatFields, value: string) => void;
     handleRoleChange: (field: RoleFields, value: string) => void
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
-    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string | undefined>>
     setSelectedRole: React.Dispatch<React.SetStateAction<Role | undefined>>
     displayNewRoleForm: boolean
     setDisplayNewRoleForm: React.Dispatch<React.SetStateAction<boolean>>

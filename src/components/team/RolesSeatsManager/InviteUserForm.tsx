@@ -5,13 +5,13 @@ import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import { Box, Card, CardContent, Grid, TextField, Typography } from '@mui/material';
 import { TFunction } from 'next-i18next';
 import Link from 'next/link';
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from "next/navigation";
+import React, { KeyboardEvent, useEffect, useState } from 'react';
 
 // Internal
 import { Block } from '@/components';
 import { FlexibleBox } from '@/components/ui/flexible-box';
-import { useAxios } from '@/hooks';
+import { useAxios, useURLLink } from '@/hooks';
 import { setSnackMessage, useAppDispatch } from '@/redux';
 import { Role, TeamUserSeat, User } from '@/types';
 
@@ -23,7 +23,7 @@ export type InviteUserFormProps = {
     addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
-    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string | undefined>>
 }
 
 export const InviteUserForm: React.FC<InviteUserFormProps> = (props) => {
@@ -31,6 +31,8 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = (props) => {
     const dispatch = useAppDispatch();
     const router = useRouter()
     const { httpPostWithData } = useAxios();
+    const { teamLink } = useParams<{ teamLink: string }>() // Get teamLink from URL
+    const { convertID_NameStringToURLFormat, linkName } = useURLLink(teamLink)
 
     // Internal variables
     const [email, setEmail] = useState("");
@@ -107,14 +109,22 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = (props) => {
             setUser(undefined);
             setRole(undefined);
 
-            props.setDisplayInviteForm("new")
+            props.setDisplayInviteForm(undefined)
 
-            router.push("?seatId=new")
+            window.location.href =
+                `/team/${convertID_NameStringToURLFormat(parseInt(props.teamId), linkName)}/roles-seats` // Forces a full page reload
         } catch (err) {
             console.error("Failed to create seat:", err);
             setError(props.t("team:rolesSeatsManager:createSeatError"));
         }
     };
+
+    const ifEnter = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.code === 'Enter') {
+            props.setDisplayInviteForm(email)
+            handleSearchUser()
+        }
+    }
 
     useEffect(() => {
         if (props.displayInviteForm && props.displayInviteForm !== "new") {
@@ -140,6 +150,7 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = (props) => {
                                 fullWidth
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                onKeyDown={ifEnter}
                                 className="bg-white"
                             />
                         </Grid>
@@ -184,7 +195,7 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = (props) => {
                                 >
                                     <option value="">-</option>
                                     {props.rolesAndPermissionsByTeamId?.map(role => (
-                                        <option value={role.Role_ID}>{role.Role_Name}</option>
+                                        <option key={role.Role_ID} value={role.Role_ID}>{role.Role_Name}</option>
                                     ))}
                                 </select>
                             </Block>

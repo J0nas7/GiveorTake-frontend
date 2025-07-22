@@ -20,7 +20,7 @@ export type SelectedSeatFormProps = {
     togglePermission: (permission: string, isChecked: boolean) => Promise<void>
     renderTeam: TeamStates
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
-    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string>>
+    setDisplayInviteForm: React.Dispatch<React.SetStateAction<string | undefined>>
     handleSeatChanges: () => void
 }
 
@@ -75,7 +75,7 @@ export const SelectedSeatForm: React.FC<SelectedSeatFormProps> = (props) => prop
                         href="?"
                         onClick={() => {
                             props.setSelectedSeat(undefined)
-                            props.setDisplayInviteForm("")
+                            props.setDisplayInviteForm(undefined)
                         }}
                     >
                         Cancel

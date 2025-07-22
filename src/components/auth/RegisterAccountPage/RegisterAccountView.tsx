@@ -7,14 +7,21 @@ import { FormEvent, useState } from 'react'
 
 // Internal
 import { Block, Field, Heading } from "@/components"
+import { useAuth } from '@/hooks'
 
 export const RegisterAccountView = () => {
+    // Hooks
+    const { handleRegister } = useAuth()
+
     // Internal variables
     const { t } = useTranslation(['guest'])
+    const [userFirstname, setUserFirstname] = useState<string>('')
+    const [userSurname, setUserSurname] = useState<string>('')
     const [userEmail, setUserEmail] = useState<string>('')
     const [userPassword, setUserPassword] = useState<string>('')
-    const [userPassword2, setUserPassword2] = useState<string>('')
+    const [userPassword_confirmation, setUserPassword_confirmation] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
+    const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
     const [createPending, setCreatePending] = useState<boolean>(false)
 
     // Methods
@@ -23,18 +30,23 @@ export const RegisterAccountView = () => {
 
         if (!createPending) {
             setCreatePending(true)
-            // TODO
-            // Simulate async profile creation
-            setTimeout(() => {
-                console.log("Profile created with email:", userEmail)
-                console.log("Password:", userPassword)
-                setCreatePending(false) // Reset pending state
-            }, 1000)
+
+            const formData = {
+                userFirstname,
+                userSurname,
+                userEmail,
+                userPassword,
+                userPassword_confirmation,
+                acceptTerms
+            }
+
+            handleRegister(formData)
+
+            setCreatePending(false) // Reset pending state
         }
     }
 
-    const ifEnter = (e: React.KeyboardEvent) =>
-        (e.key === 'Enter') ? doRegister(e as any) : null
+    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') && doRegister(e as any)
 
     return (
         <Block className="register-page">
@@ -42,6 +54,32 @@ export const RegisterAccountView = () => {
                 {t('guest:h2:Register')} {t('guest:h2:account')}
             </Heading>
             <form onSubmit={doRegister} className="guest-form">
+                <Field
+                    type="text"
+                    lbl={t('guest:forms:Firstname')}
+                    innerLabel={true}
+                    value={userFirstname}
+                    onChange={(e: string) => setUserFirstname(e)}
+                    onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                        ifEnter(event)
+                    }
+                    disabled={createPending}
+                    className="register-field"
+                    required={true}
+                />
+                <Field
+                    type="text"
+                    lbl={t('guest:forms:Surname')}
+                    innerLabel={true}
+                    value={userSurname}
+                    onChange={(e: string) => setUserSurname(e)}
+                    onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                        ifEnter(event)
+                    }
+                    disabled={createPending}
+                    className="register-field"
+                    required={true}
+                />
                 <Field
                     type="text"
                     lbl={t('guest:forms:Email')}
@@ -74,8 +112,8 @@ export const RegisterAccountView = () => {
                     type="password"
                     lbl={t('guest:forms:Confirm-password')}
                     innerLabel={true}
-                    value={userPassword2}
-                    onChange={(e: string) => setUserPassword2(e)}
+                    value={userPassword_confirmation}
+                    onChange={(e: string) => setUserPassword_confirmation(e)}
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
@@ -86,12 +124,13 @@ export const RegisterAccountView = () => {
                 <div className="flex items-center mb-4">
                     <input
                         type="checkbox"
-                        name="accept-terms"
-                        value="accept-terms"
+                        name="acceptTerms"
+                        checked={acceptTerms}
+                        onChange={() => setAcceptTerms(!acceptTerms)}
                         required={true}
                         className="checkbox appearance-none rounded text-[#1ab11f] mr-2 h-4 w-4 border border-solid border-gray-300 checked:bg-[#1ab11f]"
                     />
-                    <label htmlFor="accept-terms" className="text-black">
+                    <label htmlFor="acceptTerms" className="text-black">
                         {t('guest:forms:Accept-Terms-of-Service')}
                     </label>
                 </div>

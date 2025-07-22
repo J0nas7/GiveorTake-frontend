@@ -30,6 +30,6 @@
         "userFound": "User found",
         "sendInvite": "Send Invite",
         "createSeatError": "Failed to send invitation",
-        "inviteSent": "Invitation sent to"
+        "inviteSent": "Invitation send"
     }
 }
