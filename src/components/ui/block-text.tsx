@@ -1,7 +1,7 @@
-import { CSSProperties, forwardRef, LegacyRef } from "react"
+import { CSSProperties, forwardRef } from "react"
 
-type Variant = 'h1' | 'h2' | 'h3' | 'p' | 'span' | 'small' | 'div'
-type ReturnElement = 'h1' | 'h2' | 'h3' | 'p' | 'span' | 'small' | 'div'
+type Variant = 'h1' | 'h2' | 'h3' | 'p' | 'span' | 'small' | 'div' | 'button'
+type ReturnElement = 'h1' | 'h2' | 'h3' | 'p' | 'span' | 'small' | 'div' | 'button'
 
 const elements: Record<Variant, ReturnElement> = {
     h1: 'h1',
@@ -9,6 +9,7 @@ const elements: Record<Variant, ReturnElement> = {
     h3: 'h3',
     p: 'p',
     span: 'span',
+    button: 'button',
     small: 'small',
     div: 'div'
 }
@@ -19,6 +20,7 @@ const classes: Record<Variant, string> = {
     h3: '',
     p: 'block w-full float-left my-2',
     span: 'block',
+    button: 'block',
     small: 'text-xs',
     div: 'block'
 }

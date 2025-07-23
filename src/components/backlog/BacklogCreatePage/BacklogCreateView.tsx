@@ -8,11 +8,13 @@ import { BacklogCreate, BacklogCreateProps } from '@/components/backlog';
 import { useBacklogsContext, useProjectsContext } from "@/contexts";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
-import { selectAuthUser, useTypedSelector } from "@/redux";
+import { AppDispatch, selectAuthUser, setSnackMessage, useTypedSelector } from "@/redux";
 import { Backlog, BacklogFields } from "@/types";
+import { useDispatch } from 'react-redux';
 
 export const BacklogCreateView: React.FC = () => {
     // ---- Hooks ----
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter();
     const { projectLink } = useParams<{ projectLink: string }>();
     const { projectById, readProjectById } = useProjectsContext();
@@ -57,7 +59,7 @@ export const BacklogCreateView: React.FC = () => {
     const handleCreateBacklog = async () => {
         if (!projectById) return
         if (!newBacklog.Backlog_Name.trim()) {
-            alert("Please enter a backlog name.");
+            dispatch(setSnackMessage("Please enter a backlog name."))
             return;
         }
 

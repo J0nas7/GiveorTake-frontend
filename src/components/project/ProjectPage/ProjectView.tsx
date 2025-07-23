@@ -27,9 +27,10 @@ export const ProjectView: React.FC = () => {
     console.log("projectById", projectById)
 
     // ---- State ----
-    const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
+    const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
+    const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
     // Calculate the number of accessible backlogs for the authenticated user using useMemo
     const accessibleBacklogsCount = useMemo(() => {
         if (!renderProject || !renderProject.backlogs) return 0;
@@ -98,6 +99,8 @@ export const ProjectView: React.FC = () => {
         canManageProject,
         accessibleBacklogsCount,
         authUser,
+        showEditToggles,
+        setShowEditToggles,
         handleProjectChange,
         handleSaveChanges,
         handleDeleteProject,

@@ -156,8 +156,8 @@ export const useAuth = () => {
 
                     if (errors && typeof errors === 'object') {
                         // Flatten the object to a single array of messages
-                        let messages = Object.values(errors).flat();
-                        errorData.message = messages.join(', ');
+                        let messages = Object.values(errors).flat()
+                        errorData.message = messages.join(' ')
                         throw new Error(errorData.message)
                     } else {
                         errorData.message = data.message

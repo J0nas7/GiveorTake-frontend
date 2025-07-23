@@ -12,14 +12,19 @@ import { Block, Text } from '@/components/ui/block-text';
 import { useTasksContext } from '@/contexts';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { useURLLink } from '@/hooks';
+import { AppDispatch, setSnackMessage } from '@/redux';
 import { Task } from '@/types';
+import { useDispatch } from 'react-redux';
 
 export const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
+    // ---- Hooks ----
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
     const { taskDetail, setTaskDetail, removeTask, readTasksByBacklogId } = useTasksContext()
     const { taskLink } = useParams<{ taskLink: string }>()
     const { convertID_NameStringToURLFormat } = useURLLink(taskLink)
 
+    // ---- Methods ----
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
 
@@ -43,9 +48,9 @@ export const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
             const url = new URL(window.location.href)
             // Copy the task url to clipboard
             await navigator.clipboard.writeText(url.toString());
-            alert("Link to task was copied to your clipboard");
+            dispatch(setSnackMessage("Link to task was copied to your clipboard."))
         } catch (err) {
-            alert("Failed to copy link to task");
+            dispatch(setSnackMessage("Failed to copy link to task."))
         }
     };
 

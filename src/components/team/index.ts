@@ -5,6 +5,9 @@ export * from './CreateTeamPage/CreateTeamView'
 
 // TeamPage
 export * from './TeamPage/Team'
+export * from './TeamPage/TeamActions'
+export * from './TeamPage/TeamEditor'
+export * from './TeamPage/TeamProjectsOverview'
 export * from './TeamPage/TeamView'
 
 // RolesSeatsManager

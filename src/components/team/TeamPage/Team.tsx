@@ -1,19 +1,12 @@
 "use client"
 
 // External
-import { faBuilding, faLightbulb, faList, faUsers } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Box, Card, CardContent, Grid, TextField, Typography } from '@mui/material'
-import Link from 'next/link'
+import { faUsers } from '@fortawesome/free-solid-svg-icons'
 import React from 'react'
 
-// Dynamically import ReactQuill with SSR disabled
-import dynamic from "next/dynamic"
-import "react-quill/dist/quill.snow.css"; // Import the Quill styles
-const ReactQuill = dynamic(() => import("react-quill"), { ssr: false })
-
 // Internal
-import { Block, FlexibleBox, Text } from '@/components'
+import { Block, FlexibleBox } from '@/components'
+import { TeamActions, TeamEditor, TeamProjectsOverview } from '@/components/team'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import { TeamFields, TeamStates, User } from '@/types'
 
@@ -30,6 +23,8 @@ export type TeamProps = {
     handleSaveChanges: () => Promise<void>
     handleDeleteTeam: () => Promise<void>
     convertID_NameStringToURLFormat: (id: number, name: string) => string
+    showEditToggles: boolean
+    setShowEditToggles: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const Team: React.FC<TeamProps> = ({
@@ -40,6 +35,8 @@ export const Team: React.FC<TeamProps> = ({
     canManageTeamMembers,
     parsedPermissions,
     accessibleProjectsCount,
+    showEditToggles,
+    setShowEditToggles,
     handleHTMLInputChange,
     handleTeamChange,
     handleSaveChanges,
@@ -54,185 +51,40 @@ export const Team: React.FC<TeamProps> = ({
             className="no-box w-auto inline-block"
             numberOfColumns={2}
             titleAction={
-                renderTeam && (
-                    <Block className="flex flex-col sm:flex-row gap-2 w-full">
-                        {canManageTeamMembers && (
-                            <Link
-                                href={`${pathname}/roles-seats`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faUsers} />
-                                <Text variant="span">Roles & Seats</Text>
-                            </Link>
-                        )}
-                        {canModifyTeamSettings && (
-                            <Link
-                                href={`${pathname}/create-project`}
-                                className="blue-link !inline-flex gap-2 items-center"
-                            >
-                                <FontAwesomeIcon icon={faLightbulb} />
-                                <Text variant="span">Create Project</Text>
-                            </Link>
-                        )}
-
-                        <Link
-                            href={`/organisation/${convertID_NameStringToURLFormat(renderTeam.organisation?.Organisation_ID ?? 0, renderTeam.organisation?.Organisation_Name ?? "")}`}
-                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faBuilding} />
-                            <Text variant="span">Go to Organisation</Text>
-                        </Link>
-                    </Block>
-                )
+                <TeamActions
+                    renderTeam={renderTeam}
+                    canManageTeamMembers={canManageTeamMembers}
+                    pathname={pathname}
+                    canModifyTeamSettings={canModifyTeamSettings}
+                    convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
+                    showEditToggles={showEditToggles}
+                    setShowEditToggles={setShowEditToggles}
+                    handleSaveChanges={handleSaveChanges}
+                />
             }
         >
             <LoadingState singular="Team" renderItem={renderTeam} permitted={undefined}>
-                {renderTeam && (
-                    <Card>
-                        {canModifyTeamSettings ? (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Edit Team Details
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Team Name"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={renderTeam.Team_Name}
-                                            onChange={handleHTMLInputChange}
-                                            name="Team_Name"
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <Typography>Team Description</Typography>
-                                        <ReactQuill
-                                            className="w-full"
-                                            theme="snow"
-                                            value={renderTeam.Team_Description}
-                                            onChange={(e: string) => handleTeamChange("Team_Description", e)}
-                                            modules={{
-                                                toolbar: [
-                                                    [{ header: "1" }, { header: "2" }, { font: [] }],
-                                                    [{ list: "ordered" }, { list: "bullet" }],
-                                                    ["bold", "italic", "underline", "strike"],
-                                                    [{ align: [] }],
-                                                    ["link"],
-                                                    ["blockquote"],
-                                                ],
-                                            }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                                <Block className="mt-2 flex justify-between">
-                                    <button onClick={handleSaveChanges} className="button-blue">
-                                        Save Changes
-                                    </button>
-                                    <button onClick={handleDeleteTeam} className="blue-link-light red-link-light">
-                                        Delete Team
-                                    </button>
-                                </Block>
-                            </CardContent>
-                        ) : (
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Team Details
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
-                                        <strong>Team Name:</strong><br />
-                                        {renderTeam.Team_Name}
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <strong>Team Description:</strong><br />
-                                        <div className="bg-gray-100 p-2" dangerouslySetInnerHTML={{
-                                            __html: renderTeam.Team_Description || "No description available"
-                                        }} />
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        )}
-                    </Card>
-                )}
+                <TeamEditor
+                    renderTeam={renderTeam}
+                    canModifyTeamSettings={canModifyTeamSettings}
+                    handleTeamChange={handleTeamChange}
+                    handleSaveChanges={handleSaveChanges}
+                    handleHTMLInputChange={handleHTMLInputChange}
+                    handleDeleteTeam={handleDeleteTeam}
+                    showEditToggles={showEditToggles}
+                />
             </LoadingState>
         </FlexibleBox>
 
         {/* Projects Overview Section */}
         {renderTeam && (
-            <Box mb={4}>
-                <FlexibleBox
-                    title={`Projects Overview`}
-                    icon={faLightbulb}
-                    subtitle={
-                        `${accessibleProjectsCount} project${accessibleProjectsCount === 1 ? '' : 's'}`
-                    }
-                    className="no-box w-auto inline-block"
-                    numberOfColumns={2}
-                >
-                    <Grid container spacing={3}>
-                        {renderTeam.projects?.map((project) => {
-                            // Check if the authenticated user has access and modification rights for the project
-                            // Skip rendering if the user lacks permissions
-                            const canAccessAndModifyProjectWithId = (authUser && (
-                                renderTeam.organisation?.User_ID === authUser.User_ID ||
-                                parsedPermissions?.includes(`accessProject.${project.Project_ID}`)
-                            ))
-                            if (!canAccessAndModifyProjectWithId) return
-
-                            const accessibleBacklogsCount = project.backlogs?.filter(
-                                (backlog) =>
-                                    authUser &&
-                                    (
-                                        backlog.project?.team?.organisation?.User_ID === authUser.User_ID ||
-                                        parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`)
-                                    )
-                            ).length || 0
-
-                            return (
-                                <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
-                                    <Card>
-                                        <CardContent>
-                                            <Block className="flex justify-between items-center flex-col sm:flex-row w-full">
-                                                <Link
-                                                    href={`/project/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`}
-                                                    className="blue-link-light"
-                                                >
-                                                    {project.Project_Name}
-                                                </Link>
-                                                <Link
-                                                    href={`/backlogs/${convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`}
-                                                    className="blue-link !inline-flex gap-2 items-center"
-                                                >
-                                                    <FontAwesomeIcon icon={faList} />
-                                                    All backlogs and tasks
-                                                </Link>
-                                            </Block>
-                                            <Typography variant="body2" color="textSecondary" paragraph>
-                                                <div dangerouslySetInnerHTML={{
-                                                    __html: project.Project_Description || 'No description available'
-                                                }} />
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                Status: {project.Project_Status}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                Accessible Backlogs: {accessibleBacklogsCount}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                Start Date: {project.Project_Start_Date || 'N/A'}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                End Date: {project.Project_End_Date || 'N/A'}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            )
-                        })}
-                    </Grid>
-                </FlexibleBox>
-            </Box>
+            <TeamProjectsOverview
+                renderTeam={renderTeam}
+                accessibleProjectsCount={accessibleProjectsCount}
+                parsedPermissions={parsedPermissions}
+                authUser={authUser}
+                convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
+            />
         )}
     </Block>
 )

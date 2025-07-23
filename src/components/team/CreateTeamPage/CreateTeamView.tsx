@@ -9,10 +9,13 @@ import { CreateTeam, CreateTeamProps } from '@/components/team';
 import { useOrganisationsContext, useTeamsContext } from "@/contexts";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
+import { AppDispatch, setSnackMessage } from '@/redux';
 import { Team, TeamFields } from "@/types";
+import { useDispatch } from 'react-redux';
 
 export const CreateTeamView = () => {
     // ---- Hooks ----
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter();
     const { addTeam } = useTeamsContext()
     const { organisationById, readOrganisationById } = useOrganisationsContext()
@@ -40,7 +43,7 @@ export const CreateTeamView = () => {
     // Handle form submission
     const handleCreateTeam = async () => {
         if (!newTeam.Team_Name.trim()) {
-            alert("Please enter a team name.");
+            dispatch(setSnackMessage("Please enter a team name."))
             return;
         }
 

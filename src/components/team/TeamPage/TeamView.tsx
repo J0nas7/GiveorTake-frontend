@@ -24,8 +24,9 @@ export const TeamView = () => {
 
     // ---- State ----
     const authUser = useTypedSelector(selectAuthUser)
-    const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions) // Redux
+    const [renderTeam, setRenderTeam] = useState<TeamStates>(undefined)
+    const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
 
     const accessibleProjectsCount = renderTeam && renderTeam.projects?.filter(
         (project) =>
@@ -96,7 +97,9 @@ export const TeamView = () => {
         handleTeamChange,
         handleSaveChanges,
         handleDeleteTeam,
-        convertID_NameStringToURLFormat
+        convertID_NameStringToURLFormat,
+        showEditToggles,
+        setShowEditToggles
     }
 
     return <Team {...teamProps} />

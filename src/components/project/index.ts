@@ -1,6 +1,9 @@
 // ProjectPage
 export * from './ProjectPage/BacklogItem'
 export * from './ProjectPage/Project'
+export * from './ProjectPage/ProjectActions'
+export * from './ProjectPage/ProjectBacklogsOverview'
+export * from './ProjectPage/ProjectEditor'
 export * from './ProjectPage/ProjectView'
 
 // CreateProjectPage

@@ -191,11 +191,11 @@ export const BacklogEditView = () => {
                 localBacklog.Project_ID,
                 `/project/${convertID_NameStringToURLFormat(localBacklog.Project_ID, localBacklog.project?.Project_Name ?? "")}`
             );
-            alert('Backlog deleted.');
+            dispatch(setSnackMessage("Backlog deleted."))
             // optionally redirect or clear state
         } catch (err) {
             console.error(err);
-            alert('Failed to delete backlog.');
+            dispatch(setSnackMessage("Failed to delete backlog."))
         }
     };
 

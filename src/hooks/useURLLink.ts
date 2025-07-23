@@ -1,8 +1,14 @@
+import { AppDispatch, setSnackMessage } from '@/redux';
 import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 
 export const useURLLink = (URLLink: string) => {
+    const dispatch = useDispatch<AppDispatch>()
+
     useEffect(() => {
-        if (URLLink !== undefined && !URLLink?.includes('-')) alert('The URLLink does not contain hyphens.')
+        if (URLLink !== undefined && !URLLink?.includes('-')) {
+            dispatch(setSnackMessage("The URLLink does not contain hyphens."))
+        }
     }, [])
 
     const linkId = URLLink?.split('-')[0]

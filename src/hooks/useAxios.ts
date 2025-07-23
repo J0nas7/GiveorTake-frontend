@@ -136,7 +136,7 @@ export const useAxios = () => {
             /*console.log("handleError send", send)
             if (send.response?.data || !send) {
                 if (getAuthContext("accessToken")) {
-                    alert("Your login session has expired. You will be logged out.")
+                    dispatch(setSnackMessage("Your login session has expired. You will be logged out."))
                 }*/
             deleteTheCookie("accessToken")
             return false

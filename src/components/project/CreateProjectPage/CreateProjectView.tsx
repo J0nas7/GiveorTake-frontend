@@ -9,11 +9,13 @@ import { CreateProject, CreateProjectProps } from '@/components/project';
 import { useProjectsContext, useTeamsContext } from "@/contexts";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
-import { selectAuthUser, useTypedSelector } from "@/redux";
+import { AppDispatch, selectAuthUser, setSnackMessage, useTypedSelector } from "@/redux";
 import { Project, ProjectFields } from "@/types";
+import { useDispatch } from 'react-redux';
 
 export const CreateProjectView: React.FC = () => {
     // ---- Hooks ----
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter();
     const { addProject } = useProjectsContext();
     const { teamById, readTeamById } = useTeamsContext()
@@ -46,7 +48,11 @@ export const CreateProjectView: React.FC = () => {
     const handleCreateProject = async () => {
         if (!teamById) return
         if (!newProject.Project_Name.trim()) {
-            alert("Please enter a project name.");
+            dispatch(setSnackMessage("Please enter a project name."))
+            return;
+        }
+        if (!newProject.Project_Start_Date) {
+            dispatch(setSnackMessage("Please choose a start date."))
             return;
         }
 

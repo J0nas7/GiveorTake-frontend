@@ -1,5 +1,5 @@
-import { OrganisationEditView } from '@/components/organisation';
+import { OrganisationView } from '@/components/organisation';
 
-const OrganisationEditPage = () => <OrganisationEditView />
+const OrganisationPage = () => <OrganisationView />
 
-export default OrganisationEditPage;
+export default OrganisationPage;

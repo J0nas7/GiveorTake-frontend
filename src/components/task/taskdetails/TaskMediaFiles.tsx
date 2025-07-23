@@ -14,7 +14,9 @@ import { useTaskMediaFilesContext, useTasksContext } from '@/contexts';
 import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { env } from '@/env.urls';
+import { AppDispatch, setSnackMessage } from '@/redux';
 import { Task, TaskMediaFile } from '@/types';
+import { useDispatch } from 'react-redux';
 
 export const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
     const [toggleAddFile, setToggleAddFile] = useState<boolean>(false)
@@ -134,7 +136,8 @@ export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({
     task,
     setToggleAddFile
 }) => {
-    // Hooks
+    // ---- Hooks ----
+    const dispatch = useDispatch<AppDispatch>()
     const { addTaskMediaFile } = useTaskMediaFilesContext()
     const { readTasksByBacklogId, readTaskByKeys } = useTasksContext()
 
@@ -163,7 +166,7 @@ export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({
         if (!task.Task_ID) return
 
         if (!file || !mediaFileName || !mediaFileType) {
-            alert("Please select a file and provide all necessary details.");
+            dispatch(setSnackMessage("Please select a file and provide all necessary details."))
             return;
         }
 
@@ -182,7 +185,7 @@ export const AddTaskMediaFile: React.FC<AddTaskMediaFileProps> = ({
         // Send the file to the API through the context function
         if (addTaskMediaFile) {
             await addTaskMediaFile(task.Task_ID, newMediaFile);
-            alert("Media file uploaded successfully!");
+            dispatch(setSnackMessage("Media file uploaded successfully."))
             // Clear form
             setFile(null);
             setMediaFileName("");

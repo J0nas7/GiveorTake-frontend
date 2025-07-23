@@ -4,23 +4,25 @@
 import React from 'react';
 
 // Internal
-import { OrganisationDetailsCard, OrganisationEditActions, OrganisationTeamsOverview } from '@/components/organisation';
+import { OrganisationActions, OrganisationEditor, OrganisationTeamsOverview } from '@/components/organisation';
 import { Block } from '@/components/ui/block-text';
 import { FlexibleBox } from '@/components/ui/flexible-box';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { OrganisationFields, OrganisationStates } from '@/types';
 import { faBuilding } from '@fortawesome/free-solid-svg-icons';
 
-export type OrganisationEditProps = {
+export type OrganisationProps = {
     renderOrganisation: OrganisationStates;
     canModifyOrganisationSettings: boolean | undefined
     handleOrganisationChange: (field: OrganisationFields, value: string) => void;
     handleSaveChanges: () => Promise<void>
     handleDeleteOrganisation: () => Promise<void>
     convertID_NameStringToURLFormat: (id: number, name: string) => string
+    showEditToggles: boolean
+    setShowEditToggles: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export const OrganisationEdit: React.FC<OrganisationEditProps> = (props) => (
+export const Organisation: React.FC<OrganisationProps> = (props) => (
     <Block className="page-content">
         <FlexibleBox
             title="Organisation Settings"
@@ -30,23 +32,19 @@ export const OrganisationEdit: React.FC<OrganisationEditProps> = (props) => (
             numberOfColumns={2}
             titleAction={
                 props.renderOrganisation && (
-                    <OrganisationEditActions
-                        organisationId={props.renderOrganisation.Organisation_ID}
-                        organisationName={props.renderOrganisation.Organisation_Name}
-                        canModify={props.canModifyOrganisationSettings}
+                    <OrganisationActions
+                        renderOrganisation={props.renderOrganisation}
+                        canModifyOrganisationSettings={props.canModifyOrganisationSettings}
                         convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
+                        handleSaveChanges={props.handleSaveChanges}
+                        showEditToggles={props.showEditToggles}
+                        setShowEditToggles={props.setShowEditToggles}
                     />
                 )
             }
         >
-            <LoadingState
-                singular="Organisation"
-                renderItem={props.renderOrganisation}
-                permitted={undefined}
-            >
-                {props.renderOrganisation && (
-                    <OrganisationDetailsCard {...props} />
-                )}
+            <LoadingState singular="Organisation" renderItem={props.renderOrganisation} permitted={undefined}>
+                <OrganisationEditor {...props} />
             </LoadingState>
         </FlexibleBox>
 

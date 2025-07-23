@@ -10,13 +10,13 @@ import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // Internal
-import { OrganisationEdit, OrganisationEditProps } from '@/components/organisation';
+import { Organisation, OrganisationProps } from '@/components/organisation';
 import { useOrganisationsContext } from '@/contexts/'; // Ensure this is correctly set up
 import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
 import { OrganisationFields, OrganisationStates } from '@/types';
 
-export const OrganisationEditView: React.FC = () => {
+export const OrganisationView: React.FC = () => {
     // ---- Hooks ----
     const router = useRouter()
     const { organisationById, readOrganisationById, saveOrganisationChanges, removeOrganisation } = useOrganisationsContext()
@@ -26,6 +26,7 @@ export const OrganisationEditView: React.FC = () => {
 
     // ---- State ----
     const [renderOrganisation, setRenderOrganisation] = useState<OrganisationStates>(undefined)
+    const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
 
     // ---- Methods ----
     // Handles changes to HTML input fields and updates the organisation state.
@@ -46,6 +47,7 @@ export const OrganisationEditView: React.FC = () => {
 
     // Handles saving changes made to the organisation details.
     const handleSaveChanges = async () => {
+        console.log("save", renderOrganisation)
         if (renderOrganisation) await saveOrganisationChanges(renderOrganisation, renderOrganisation.User_ID)
     }
 
@@ -70,14 +72,16 @@ export const OrganisationEditView: React.FC = () => {
     }, [organisationById])
 
     // ---- Render ----
-    const organisationEditProps: OrganisationEditProps = {
+    const organisationProps: OrganisationProps = {
         renderOrganisation,
         canModifyOrganisationSettings,
         handleOrganisationChange,
         handleSaveChanges,
         handleDeleteOrganisation,
-        convertID_NameStringToURLFormat
+        convertID_NameStringToURLFormat,
+        showEditToggles,
+        setShowEditToggles
     }
 
-    return <OrganisationEdit {...organisationEditProps} />
+    return <Organisation {...organisationProps} />
 };

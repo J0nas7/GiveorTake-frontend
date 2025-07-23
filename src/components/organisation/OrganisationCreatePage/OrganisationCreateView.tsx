@@ -7,11 +7,13 @@ import React, { useEffect, useState } from "react";
 // Internal
 import { OrganisationCreate, OrganisationCreateProps } from '@/components/organisation';
 import { useOrganisationsContext } from "@/contexts";
-import { selectAuthUser, useTypedSelector } from "@/redux";
+import { AppDispatch, selectAuthUser, setSnackMessage, useTypedSelector } from "@/redux";
 import { Organisation, OrganisationFields } from "@/types";
+import { useDispatch } from 'react-redux';
 
 export const OrganisationCreateView: React.FC = () => {
     // ---- Hooks ----
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
     const { addOrganisation } = useOrganisationsContext()
 
@@ -35,12 +37,12 @@ export const OrganisationCreateView: React.FC = () => {
     // Handles the creation of a new organisation.
     const handleCreateOrganisation = async () => {
         if (!newOrganisation.Organisation_Name) {
-            alert("Please enter an organisation name.")
+            dispatch(setSnackMessage("Please enter an organisation name."))
             return
         }
 
         if (newOrganisation.User_ID === 0) {
-            alert("An error happened, assigning the organisation to you. Please try again.")
+            dispatch(setSnackMessage("An error happened, when assigning the organisation to your account. Please try again."))
             return
         }
 
