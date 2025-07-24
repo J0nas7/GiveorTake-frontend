@@ -9,8 +9,8 @@ import { TFunction } from "next-i18next"
 import React from "react"
 
 import {
+    DashboardActions,
     DashboardCharts,
-    DashboardHeaderLink,
     DashboardKPISection,
     DashboardProgressSection
 } from "@/components/backlog"
@@ -50,7 +50,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => props.renderBacklo
             className="no-box w-auto inline-block"
             numberOfColumns={2}
             titleAction={
-                <DashboardHeaderLink
+                <DashboardActions
                     renderBacklog={props.renderBacklog}
                     convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
                 />

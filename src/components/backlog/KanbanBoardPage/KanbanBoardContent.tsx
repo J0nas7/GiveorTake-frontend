@@ -1,5 +1,5 @@
 import { Block } from '@/components'
-import { KanbanBoardHeader, KanbanBoardProps } from '@/components/backlog'
+import { KanbanBoardActions, KanbanBoardProps } from '@/components/backlog'
 import { FlexibleBox } from '@/components/ui/flexible-box'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
@@ -18,7 +18,7 @@ export const KanbanBoardContent: React.FC<KanbanBoardContentProps> = (props) => 
         title="Kanban Board"
         subtitle={props.renderBacklog.Backlog_Name}
         titleAction={
-            <KanbanBoardHeader renderBacklog={props.renderBacklog} convertID_NameStringToURLFormat={() => ''} />
+            <KanbanBoardActions renderBacklog={props.renderBacklog} convertID_NameStringToURLFormat={() => ''} />
         }
         icon={faWindowRestore}
         className="no-box w-auto inline-block"

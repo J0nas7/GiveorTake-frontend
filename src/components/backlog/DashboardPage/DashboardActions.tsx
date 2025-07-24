@@ -1,12 +1,13 @@
 import { Block } from "@/components"
 import { DashboardProps, ProjectBacklogNavigation } from "@/components/backlog"
 
-type DashboardHeaderLinkProps = Pick<
+type DashboardActionsProps = Pick<
     DashboardProps,
-    'renderBacklog' | 'convertID_NameStringToURLFormat'
+    'renderBacklog' |
+    'convertID_NameStringToURLFormat'
 >
 
-export const DashboardHeaderLink: React.FC<DashboardHeaderLinkProps> = (props) => props.renderBacklog && (
+export const DashboardActions: React.FC<DashboardActionsProps> = (props) => props.renderBacklog && (
     <Block className="actions-wrapper w-auto ml-auto">
         <ProjectBacklogNavigation
             focus="Dashboard"
