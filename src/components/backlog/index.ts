@@ -1,4 +1,4 @@
-export * from './ProductBacklogNavigation'
+export * from './ProjectBacklogNavigation'
 
 // BacklogCreatePage
 export * from './BacklogCreatePage/BacklogCreate'

@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import Link from 'next/link'
 import React from 'react'
 
-type ProductBacklogNavigationProps = {
+type ProjectBacklogNavigationProps = {
     focus: string
     renderBacklog: BacklogStates | Backlog
     convertID_NameStringToURLFormat: (id: number, name: string) => string
@@ -30,7 +30,7 @@ const links = [
     },
 ]
 
-export const ProductBacklogNavigation: React.FC<ProductBacklogNavigationProps> = (props) => props.renderBacklog && (
+export const ProjectBacklogNavigation: React.FC<ProjectBacklogNavigationProps> = (props) => props.renderBacklog && (
     <>
         {links.map((link) => props.renderBacklog && (
             <Link

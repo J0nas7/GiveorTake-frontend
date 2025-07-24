@@ -1,5 +1,5 @@
 import { Block, Text } from '@/components';
-import { BacklogProps, ProductBacklogNavigation } from '@/components/backlog';
+import { BacklogProps, ProjectBacklogNavigation } from '@/components/backlog';
 import { faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -22,7 +22,7 @@ export const BacklogHeader: React.FC<BacklogHeaderProps> = (props) => props.rend
         </Text>
 
         <Block className="actions-wrapper w-auto">
-            <ProductBacklogNavigation
+            <ProjectBacklogNavigation
                 focus="Backlog"
                 renderBacklog={props.renderBacklog}
                 convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}

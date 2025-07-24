@@ -1,5 +1,5 @@
 import { Block } from '@/components'
-import { KanbanBoardProps, ProductBacklogNavigation } from '@/components/backlog'
+import { KanbanBoardProps, ProjectBacklogNavigation } from '@/components/backlog'
 
 type KanbanBoardHeaderProps = Pick<
     KanbanBoardProps,
@@ -9,7 +9,7 @@ type KanbanBoardHeaderProps = Pick<
 
 export const KanbanBoardHeader: React.FC<KanbanBoardHeaderProps> = (props) => props.renderBacklog && (
     <Block className="actions-wrapper w-auto ml-auto">
-        <ProductBacklogNavigation
+        <ProjectBacklogNavigation
             focus="Kanban"
             renderBacklog={props.renderBacklog}
             convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
