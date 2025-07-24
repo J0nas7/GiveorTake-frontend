@@ -112,11 +112,11 @@ export const CtaButtonsView: React.FC<CtaButtonsViewProps> = ({
             </Link>
         )}
 
-        <Block className="flex ml-auto gap-2">
+        <Block className="actions-wrapper ml-auto w-auto">
             <Link
                 onClick={() => setTaskDetail(undefined)}
                 href={`/project/${convertID_NameStringToURLFormat(task.backlog?.project?.Project_ID ?? 0, task.backlog?.project?.Project_Name ?? "")}`}
-                className="blue-link !inline-flex gap-2 items-center"
+                className="blue-link action-button"
             >
                 <FontAwesomeIcon icon={faLightbulb} />
                 <Text variant="span">Go to Project</Text>

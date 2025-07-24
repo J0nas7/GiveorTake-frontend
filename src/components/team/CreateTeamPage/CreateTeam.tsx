@@ -26,16 +26,18 @@ export const CreateTeam: React.FC<CreateTeamProps> = (props) => (
                 title="Create New Team"
                 titleAction={
                     props.organisationById && (
-                        <Link
-                            href={`/organisation/${props.convertID_NameStringToURLFormat(
-                                props.organisationById.Organisation_ID ?? 0,
-                                props.organisationById.Organisation_Name
-                            )}`}
-                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-                        >
-                            <FontAwesomeIcon icon={faBuilding} />
-                            <Text variant="span">Go to Organisation</Text>
-                        </Link>
+                        <Block className="actions-wrapper">
+                            <Link
+                                href={`/organisation/${props.convertID_NameStringToURLFormat(
+                                    props.organisationById.Organisation_ID ?? 0,
+                                    props.organisationById.Organisation_Name
+                                )}`}
+                                className="blue-link action-button button-right"
+                            >
+                                <FontAwesomeIcon icon={faBuilding} />
+                                <Text variant="span">Go to Organisation</Text>
+                            </Link>
+                        </Block>
                     )
                 }
                 icon={faUsers}

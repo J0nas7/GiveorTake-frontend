@@ -40,7 +40,9 @@ export const FinishBacklog: React.FC<FinishBacklogProps> = (props) => props.rend
             icon={faCheckCircle}
             className="no-box w-auto inline-block"
             numberOfColumns={2}
-            titleAction={<FinishBacklogHeaderLink renderBacklog={props.renderBacklog} />}
+            titleAction={
+                <FinishBacklogHeaderLink renderBacklog={props.renderBacklog} />
+            }
         >
             <LoadingState singular="Backlog" renderItem={props.renderBacklog} permitted={props.canManageBacklog}>
                 {props.renderBacklog && (

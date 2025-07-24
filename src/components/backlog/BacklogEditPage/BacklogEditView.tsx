@@ -37,6 +37,7 @@ export const BacklogEditView = () => {
         Status_Color: '',
     });
     const [localBacklog, setLocalBacklog] = useState<BacklogStates>(undefined);
+    const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
 
     // ---- Effects ----
     useEffect(() => {
@@ -219,7 +220,9 @@ export const BacklogEditView = () => {
         handleAssignDefaultStatus,
         handleAssignClosedStatus,
         removeStatus,
-        convertID_NameStringToURLFormat
+        convertID_NameStringToURLFormat,
+        showEditToggles,
+        setShowEditToggles
     }
 
     return <BacklogEdit {...backlogEditProps} />

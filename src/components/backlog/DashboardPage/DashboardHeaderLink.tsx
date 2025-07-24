@@ -1,24 +1,17 @@
-import { Text } from "@/components"
-import { DashboardProps } from "@/components/backlog"
-import { faLightbulb } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import Link from "next/link"
+import { Block } from "@/components"
+import { DashboardProps, ProductBacklogNavigation } from "@/components/backlog"
 
 type DashboardHeaderLinkProps = Pick<
     DashboardProps,
     'renderBacklog' | 'convertID_NameStringToURLFormat'
 >
 
-export const DashboardHeaderLink: React.FC<DashboardHeaderLinkProps> = (props) =>
-    props.renderBacklog ? (
-        <Link
-            href={`/project/${props.convertID_NameStringToURLFormat(
-                props.renderBacklog.Project_ID,
-                props.renderBacklog.project?.Project_Name ?? ""
-            )}`}
-            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-        >
-            <FontAwesomeIcon icon={faLightbulb} />
-            <Text variant="span">Go to Project</Text>
-        </Link>
-    ) : null
+export const DashboardHeaderLink: React.FC<DashboardHeaderLinkProps> = (props) => props.renderBacklog && (
+    <Block className="actions-wrapper w-auto ml-auto">
+        <ProductBacklogNavigation
+            focus="Dashboard"
+            renderBacklog={props.renderBacklog}
+            convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
+        />
+    </Block>
+)

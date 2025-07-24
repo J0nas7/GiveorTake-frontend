@@ -30,17 +30,17 @@ export const ProjectBacklogsOverview: React.FC<ProjectBacklogsOverviewProps> = (
             }
             titleAction={
                 props.renderProject && (
-                    <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
+                    <Block className="actions-wrapper">
                         <Link
                             href={`/time-tracks/${props.convertID_NameStringToURLFormat(props.renderProject?.Project_ID ?? 0, props.renderProject.Project_Name)}`}
-                            className="blue-link !inline-flex gap-2 items-center"
+                            className="blue-link action-button"
                         >
                             <FontAwesomeIcon icon={faClock} />
                             <Text variant="span">Time Entries</Text>
                         </Link>
                         <Link
                             href={`/backlogs/${props.convertID_NameStringToURLFormat(props.renderProject?.Project_ID ?? 0, props.renderProject.Project_Name)}`}
-                            className="blue-link !inline-flex gap-2 items-center"
+                            className="blue-link action-button"
                         >
                             <FontAwesomeIcon icon={faList} />
                             <Text variant="span">Backlogs and Tasks</Text>

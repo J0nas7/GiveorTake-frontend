@@ -17,7 +17,7 @@ export type BacklogsProps = {
 }
 
 export const Backlogs: React.FC<BacklogsProps> = (props) => (
-    <Block className="page-content">
+    <Block className="page-content overflow-x-visible">
         <FlexibleBox
             title={`Project backlogs`}
             subtitle={
@@ -27,13 +27,15 @@ export const Backlogs: React.FC<BacklogsProps> = (props) => (
             }
             titleAction={
                 props.renderProject && (
-                    <Link
-                        href={`/project/${props.convertID_NameStringToURLFormat(props.renderProject?.Project_ID ?? 0, props.renderProject.Project_Name)}`}
-                        className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-                    >
-                        <FontAwesomeIcon icon={faLightbulb} />
-                        <Text variant="span">Go to Project</Text>
-                    </Link>
+                    <Block className="actions-wrapper">
+                        <Link
+                            href={`/project/${props.convertID_NameStringToURLFormat(props.renderProject?.Project_ID ?? 0, props.renderProject.Project_Name)}`}
+                            className="blue-link action-button button-right"
+                        >
+                            <FontAwesomeIcon icon={faLightbulb} />
+                            <Text variant="span">Go to Project</Text>
+                        </Link>
+                    </Block>
                 )
             }
             icon={faList}

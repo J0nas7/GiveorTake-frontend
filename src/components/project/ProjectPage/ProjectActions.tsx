@@ -22,12 +22,12 @@ type ProjectActionsProps = Pick<
 >
 
 export const ProjectActions: React.FC<ProjectActionsProps> = (props) => props.renderProject && (
-    <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
+    <Block className="actions-wrapper">
         {props.canManageProject && (
             <>
                 <Link
                     href={`/project/${props.convertID_NameStringToURLFormat(props.renderProject?.Project_ID ?? 0, props.renderProject.Project_Name)}/create-backlog`}
-                    className="blue-link !inline-flex gap-2 items-center"
+                    className="blue-link action-button"
                 >
                     <FontAwesomeIcon icon={faList} />
                     <Text variant="span">Create Backlog</Text>
@@ -36,7 +36,7 @@ export const ProjectActions: React.FC<ProjectActionsProps> = (props) => props.re
                     variant="button"
                     className={clsx(
                         props.showEditToggles ? `button-blue` : `blue-link`,
-                        `!inline-flex gap-2 items-center`
+                        `action-button`
                     )}
                     onClick={() => {
                         if (props.showEditToggles) props.handleSaveChanges()
@@ -52,7 +52,7 @@ export const ProjectActions: React.FC<ProjectActionsProps> = (props) => props.re
         )}
         <Link
             href={`/team/${props.convertID_NameStringToURLFormat(props.renderProject?.team?.Team_ID ?? 0, props.renderProject.team?.Team_Name ?? "")}`}
-            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+            className="blue-link action-button button-right"
         >
             <FontAwesomeIcon icon={faUsers} />
             <Text variant="span">Go to Team</Text>

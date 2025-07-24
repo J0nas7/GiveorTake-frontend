@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 
 // Internal
-import { Backlogs } from '@/components/backlog'
+import { Backlogs, BacklogsProps } from '@/components/backlog'
 import { useProjectsContext } from '@/contexts'
 import { useURLLink } from '@/hooks'
 import useRoleAccess from '@/hooks/useRoleAccess'
@@ -50,14 +50,14 @@ export const BacklogsView = () => {
     }, [projectById])
 
     // ---- Render ----
-    return (
-        <Backlogs
-            renderProject={renderProject}
-            authUser={authUser}
-            canAccessProject={canAccessProject}
-            parsedPermissions={parsedPermissions}
-            accessibleBacklogsCount={accessibleBacklogsCount}
-            convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
-        />
-    )
+    const backlogsProps: BacklogsProps = {
+        renderProject,
+        authUser,
+        canAccessProject,
+        parsedPermissions,
+        accessibleBacklogsCount,
+        convertID_NameStringToURLFormat
+    }
+
+    return <Backlogs {...backlogsProps} />
 }

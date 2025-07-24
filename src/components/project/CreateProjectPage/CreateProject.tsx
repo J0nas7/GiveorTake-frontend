@@ -35,10 +35,10 @@ export const CreateProject: React.FC<CreateProjectProps> = (props) => (
                 title="Create New Project"
                 titleAction={
                     props.teamById && (
-                        <Block className="flex gap-2 w-full">
+                        <Block className="actions-wrapper">
                             <Link
                                 href={`/team/${props.convertID_NameStringToURLFormat(props.teamById.Team_ID ?? 0, props.teamById.Team_Name)}`}
-                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                                className="blue-link action-button button-right"
                             >
                                 <FontAwesomeIcon icon={faUsers} />
                                 <Text variant="span">Go to Team</Text>

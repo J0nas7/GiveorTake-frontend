@@ -55,7 +55,7 @@ export const TeamProjectsOverview: React.FC<TeamProjectsOverviewProps> = (props)
                         <Grid item xs={12} sm={6} md={4} key={project.Project_ID}>
                             <Card>
                                 <CardContent>
-                                    <Block className="flex justify-between items-center flex-col sm:flex-row w-full">
+                                    <Block className="actions-wrapper">
                                         <Link
                                             href={`/project/${props.convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`}
                                             className="blue-link-light"
@@ -64,12 +64,13 @@ export const TeamProjectsOverview: React.FC<TeamProjectsOverviewProps> = (props)
                                         </Link>
                                         <Link
                                             href={`/backlogs/${props.convertID_NameStringToURLFormat(project.Project_ID ?? 0, project.Project_Name)}`}
-                                            className="blue-link !inline-flex gap-2 items-center"
+                                            className="blue-link action-button"
                                         >
                                             <FontAwesomeIcon icon={faList} />
                                             All backlogs and tasks
                                         </Link>
                                     </Block>
+
                                     <p className="my-2" dangerouslySetInnerHTML={{
                                         __html: project.Project_Description || 'No description available'
                                     }} />

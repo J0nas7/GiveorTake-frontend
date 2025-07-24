@@ -19,12 +19,12 @@ type OrganisationActionsProps = Pick<
 >
 
 export const OrganisationActions: React.FC<OrganisationActionsProps> = (props) => props.renderOrganisation && (
-    <Block className="flex gap-3 w-full">
+    <Block className="actions-wrapper">
         {props.canModifyOrganisationSettings && (
             <>
                 <Link
                     href={`/organisation/${props.renderOrganisation && props.convertID_NameStringToURLFormat(props.renderOrganisation.Organisation_ID ?? 0, props.renderOrganisation.Organisation_Name)}/create-team`}
-                    className="blue-link !inline-flex gap-2 items-center"
+                    className="blue-link action-button"
                 >
                     <FontAwesomeIcon icon={faUsers} />
                     <Text variant="span">Create Team</Text>
@@ -33,7 +33,7 @@ export const OrganisationActions: React.FC<OrganisationActionsProps> = (props) =
                     variant="button"
                     className={clsx(
                         props.showEditToggles ? `button-blue` : `blue-link`,
-                        `!inline-flex gap-2 items-center`
+                        `action-button`
                     )}
                     onClick={() => {
                         if (props.showEditToggles) props.handleSaveChanges()
@@ -49,7 +49,7 @@ export const OrganisationActions: React.FC<OrganisationActionsProps> = (props) =
         )}
         <Link
             href="/"
-            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+            className="blue-link action-button button-right"
         >
             <FontAwesomeIcon icon={faHouseChimney} />
             <Text variant="span">Go to Home</Text>

@@ -34,10 +34,10 @@ export const BacklogCreate: React.FC<BacklogCreateProps> = (props) => (
                 title="Create New Backlog"
                 titleAction={
                     props.projectById && (
-                        <Block className="flex gap-2 w-full">
+                        <Block className="actions-wrapper">
                             <Link
                                 href={`/project/${props.convertID_NameStringToURLFormat(props.projectById.Project_ID ?? 0, props.projectById.Project_Name)}`}
-                                className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                                className="blue-link action-button button-right"
                             >
                                 <FontAwesomeIcon icon={faLightbulb} />
                                 <Text variant="span">Go to Project</Text>

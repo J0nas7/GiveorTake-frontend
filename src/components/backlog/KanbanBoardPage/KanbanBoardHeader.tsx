@@ -1,8 +1,5 @@
-import { Block, Text } from '@/components'
-import { KanbanBoardProps } from '@/components/backlog'
-import { faLightbulb } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import Link from 'next/link'
+import { Block } from '@/components'
+import { KanbanBoardProps, ProductBacklogNavigation } from '@/components/backlog'
 
 type KanbanBoardHeaderProps = Pick<
     KanbanBoardProps,
@@ -11,16 +8,11 @@ type KanbanBoardHeaderProps = Pick<
 >
 
 export const KanbanBoardHeader: React.FC<KanbanBoardHeaderProps> = (props) => props.renderBacklog && (
-    <Block className="flex gap-2 items-center w-full">
-        <Link
-            href={`/project/${props.convertID_NameStringToURLFormat(
-                props.renderBacklog.Project_ID,
-                props.renderBacklog.project?.Project_Name ?? ''
-            )}`}
-            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
-        >
-            <FontAwesomeIcon icon={faLightbulb} />
-            <Text variant="span">Go to Project</Text>
-        </Link>
+    <Block className="actions-wrapper w-auto ml-auto">
+        <ProductBacklogNavigation
+            focus="Kanban"
+            renderBacklog={props.renderBacklog}
+            convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
+        />
     </Block>
 )

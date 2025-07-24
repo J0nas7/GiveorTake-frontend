@@ -25,7 +25,7 @@ export type OrganisationProps = {
 export const Organisation: React.FC<OrganisationProps> = (props) => (
     <Block className="page-content">
         <FlexibleBox
-            title="Organisation Settings"
+            title="Organisation Details"
             subtitle={props.renderOrganisation ? props.renderOrganisation?.Organisation_Name : "-"}
             icon={faBuilding}
             className="no-box w-auto inline-block"

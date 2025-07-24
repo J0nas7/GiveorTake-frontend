@@ -54,13 +54,13 @@ export const TimeTracks: React.FC<TimeTracksProps> = (props) => (
         <FlexibleBox
             title={`${props.t("timetrack.title")}`}
             subtitle={props.renderProject ?
-                `${props.renderProject.Project_Name} (${props.renderTimeTracks?.length} timetracks) (${props.selectedTaskIds.length} selectedTaskIds) (${props.renderProject?.backlogs?.length} backlogs)` :
+                `${props.renderProject.Project_Name}` :
                 undefined}
             titleAction={
                 props.renderProject && (
-                    <Block className="flex flex-col sm:flex-row gap-2 items-center w-full">
+                    <Block className="actions-wrapper">
                         <button
-                            className="blue-link !inline-flex gap-2 items-center"
+                            className="blue-link action-button"
                             onClick={() => props.setFilterTimeEntries(!props.filterTimeEntries)}
                         >
                             <FontAwesomeIcon icon={faSliders} />
@@ -68,7 +68,7 @@ export const TimeTracks: React.FC<TimeTracksProps> = (props) => (
                         </button>
                         <Link
                             href={`/project/${props.convertID_NameStringToURLFormat(props.renderProject.Project_ID ?? 0, props.linkName)}`}
-                            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+                            className="blue-link action-button button-right"
                         >
                             <FontAwesomeIcon icon={faLightbulb} />
                             <Text variant="span">Go to Project</Text>

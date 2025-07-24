@@ -14,6 +14,7 @@ import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
 import { BacklogStates, Status, Task, TaskFields } from "@/types";
+import clsx from 'clsx';
 
 type BacklogWithSiblingsProps = {
     backlogId: number | undefined
@@ -261,39 +262,43 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
     return (
         <LoadingState singular="Backlog" renderItem={localBacklog} permitted={canAccessBacklog}>
             {localBacklog && (
-                <Block className="overflow-x-auto">
+                <Block>
                     <BacklogSiblingsHeader
                         localBacklog={localBacklog}
                         convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
                     />
 
-                    <table className={styles.taskTable}>
-                        <BacklogSiblingsTaskTableHeader
-                            selectAll={selectAll}
-                            handleSelectAllChange={handleSelectAllChange}
-                            currentSort={currentSort}
-                            currentOrder={currentOrder}
-                            handleSort={handleSort}
-                        />
-
-                        <tbody>
-                            <BacklogSiblingsNewTaskRow
-                                localNewTask={localNewTask}
-                                localBacklog={localBacklog}
-                                handleChangeLocalNewTask={handleChangeLocalNewTask}
-                                handleCreateTask={handleCreateTask}
-                                ifEnter={ifEnter}
+                    <Block className="relative w-full overflow-x-auto">
+                        <table className={clsx(
+                            styles.taskTable
+                        )}>
+                            <BacklogSiblingsTaskTableHeader
+                                selectAll={selectAll}
+                                handleSelectAllChange={handleSelectAllChange}
+                                currentSort={currentSort}
+                                currentOrder={currentOrder}
+                                handleSort={handleSort}
                             />
 
-                            <BacklogSiblingsTaskTableBody
-                                sortedTasks={sortedTasks}
-                                selectedTaskIds={selectedTaskIds}
-                                handleCheckboxChange={handleCheckboxChange}
-                                setTaskDetail={setTaskDetail}
-                                localBacklog={localBacklog}
-                            />
-                        </tbody>
-                    </table>
+                            <tbody>
+                                <BacklogSiblingsNewTaskRow
+                                    localNewTask={localNewTask}
+                                    localBacklog={localBacklog}
+                                    handleChangeLocalNewTask={handleChangeLocalNewTask}
+                                    handleCreateTask={handleCreateTask}
+                                    ifEnter={ifEnter}
+                                />
+
+                                <BacklogSiblingsTaskTableBody
+                                    sortedTasks={sortedTasks}
+                                    selectedTaskIds={selectedTaskIds}
+                                    handleCheckboxChange={handleCheckboxChange}
+                                    setTaskDetail={setTaskDetail}
+                                    localBacklog={localBacklog}
+                                />
+                            </tbody>
+                        </table>
+                    </Block>
                 </Block>
             )}
         </LoadingState>

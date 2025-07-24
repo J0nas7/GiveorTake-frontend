@@ -1,12 +1,14 @@
+export * from './ProductBacklogNavigation'
+
 // BacklogCreatePage
 export * from './BacklogCreatePage/BacklogCreate'
 export * from './BacklogCreatePage/BacklogCreateView'
 
 // BacklogEditPage
+export * from './BacklogEditPage/BacklogActions'
 export * from './BacklogEditPage/BacklogEdit'
 export * from './BacklogEditPage/BacklogEditEditor'
 export * from './BacklogEditPage/BacklogEditView'
-export * from './BacklogEditPage/BacklogHeaderLinks'
 export * from './BacklogEditPage/StatusListEditor'
 export * from './BacklogEditPage/TaskSummaryCard'
 

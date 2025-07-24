@@ -1,7 +1,7 @@
 "use client"
 
 import { Block, FlexibleBox } from '@/components';
-import { BacklogEditEditor, BacklogHeaderLinks, StatusListEditor, TaskSummaryCard } from '@/components/backlog';
+import { BacklogActions, BacklogEditEditor, StatusListEditor, TaskSummaryCard } from '@/components/backlog';
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { Backlog, BacklogStates, Status, User } from '@/types';
 import { faList } from '@fortawesome/free-solid-svg-icons';
@@ -26,6 +26,8 @@ export type BacklogEditProps = {
     handleAssignClosedStatus: (statusId: number) => Promise<void>
     removeStatus: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     convertID_NameStringToURLFormat: (id: number, name: string) => string
+    showEditToggles: boolean
+    setShowEditToggles: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const BacklogEdit: React.FC<BacklogEditProps> = (props) => {
@@ -47,12 +49,17 @@ export const BacklogEdit: React.FC<BacklogEditProps> = (props) => {
     return (
         <Block className="page-content">
             <FlexibleBox
-                title="Backlog"
+                title="Backlog Details"
                 subtitle={props.localBacklog ? props.localBacklog.Backlog_Name : ''}
                 titleAction={
-                    props.canAccessBacklog && props.localBacklog && (
-                        <BacklogHeaderLinks {...props} />
-                    )
+                    <BacklogActions
+                        localBacklog={props.localBacklog}
+                        canAccessBacklog={props.canAccessBacklog}
+                        convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
+                        showEditToggles={props.showEditToggles}
+                        setShowEditToggles={props.setShowEditToggles}
+                        handleSaveBacklogChanges={props.handleSaveBacklogChanges}
+                    />
                 }
                 icon={faList}
                 className="no-box w-auto inline-block"

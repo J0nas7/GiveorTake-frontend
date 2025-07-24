@@ -45,7 +45,7 @@ export const Team: React.FC<TeamProps> = ({
 }) => (
     <Block className="page-content">
         <FlexibleBox
-            title="Team Settings"
+            title="Team Details"
             subtitle={renderTeam ? renderTeam.Team_Name : undefined}
             icon={faUsers}
             className="no-box w-auto inline-block"

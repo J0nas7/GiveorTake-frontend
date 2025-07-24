@@ -5,10 +5,10 @@ import Link from "next/link";
 import React from "react";
 
 export const ProfileHeader: React.FC = () => (
-    <Block className="flex gap-3 w-full">
+    <Block className="actions-wrapper">
         <Link
             href={`/`}
-            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+            className="blue-link action-button button-right"
         >
             <FontAwesomeIcon icon={faHouseChimney} />
             <Text variant="span">Go to Home</Text>

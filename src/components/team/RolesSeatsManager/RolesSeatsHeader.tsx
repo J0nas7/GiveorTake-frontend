@@ -5,18 +5,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
 
 export const RolesSeatsHeader: React.FC<RolesSeatsProps> = (props) => props.renderTeam && (
-    <Block className="flex gap-2 items-center w-full">
+    <Block className="actions-wrapper">
         {props.canManageTeamMembers && (
             <>
                 <Link
-                    className="blue-link !inline-flex gap-2 items-center"
+                    className="blue-link action-button"
                     href="?seatId=new"
                 >
                     <FontAwesomeIcon icon={faUser} />
                     <Text variant="span">New Invite</Text>
                 </Link>
                 <Link
-                    className="blue-link !inline-flex gap-2 items-center"
+                    className="blue-link action-button"
                     href="?roleId=new"
                 >
                     <FontAwesomeIcon icon={faShield} />
@@ -26,7 +26,7 @@ export const RolesSeatsHeader: React.FC<RolesSeatsProps> = (props) => props.rend
         )}
         <Link
             href={`/team/${props.convertID_NameStringToURLFormat(props.renderTeam.Team_ID ?? 0, props.renderTeam.Team_Name)}`}
-            className="blue-link sm:ml-auto !inline-flex gap-2 items-center"
+            className="blue-link action-button button-right"
         >
             <FontAwesomeIcon icon={faUsers} />
             <Text variant="span">Go to Team</Text>

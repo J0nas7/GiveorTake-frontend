@@ -5,12 +5,12 @@
     &.max-cols-2 {
         @apply lg:grid-cols-2;
         @apply xl:grid-cols-2;
-        @apply w-full;// xl:w-3/4 2xl:w-1/2;
+        @apply w-full; // xl:w-3/4 2xl:w-1/2;
     }
-    
+
     &.max-cols-3 {
         @apply xl:grid-cols-3;
-        @apply w-full;// xl:w-3/4 2xl:w-1/2;
+        @apply w-full; // xl:w-3/4 2xl:w-1/2;
     }
 
     &.max-cols-4 {
@@ -23,7 +23,7 @@
 }
 
 .content-box-flexible {
-    
+
     // General
     &:not(.no-box) {
         padding: 24px;
@@ -67,7 +67,8 @@
     }
 
     .box-subtitle {
-        @apply -mt-4 mb-4 block clear-both;
+        @apply mt-4 mb-4 block clear-both;
+        @apply sm:-mt-4;
     }
 
     .box-title {

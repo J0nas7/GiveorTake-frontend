@@ -1,0 +1,21 @@
+.actions-wrapper {
+    @apply flex-col sm:flex-row !flex gap-2 items-center w-full;
+
+    .action-button {
+        @apply gap-2 !inline-flex items-center cursor-pointer;
+
+        &.button-right {
+            @apply sm:ml-auto;
+        }
+    }
+}
+
+.editor-wrapper {
+    .button-right {
+        @apply mt-2 flex justify-end;
+    }
+
+    .description-area {
+        @apply bg-gray-100 p-2;
+    }
+}

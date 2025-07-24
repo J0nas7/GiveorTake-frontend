@@ -31,14 +31,15 @@ export const StartView = () => {
             <FlexibleBox
                 title={`Hej ${authUser?.User_FirstName}`}
                 titleAction={<>
-                    <Block className="flex gap-3 w-full">
-                        <Link href={`/organisation/create`} className="blue-link !inline-flex gap-2 items-center">
+                    <Block className="actions-wrapper">
+                        {/* Create Organisation Link */}
+                        <Link href={`/organisation/create`} className="blue-link action-button">
                             <FontAwesomeIcon icon={faBuilding} />
                             <Text variant="span">Create Organisation</Text>
                         </Link>
 
                         {/* Profile Link */}
-                        <Link href={`/profile`} className="blue-link sm:ml-auto !inline-flex gap-2 items-center">
+                        <Link href={`/profile`} className="blue-link action-button button-right">
                             <FontAwesomeIcon icon={faUser} />
                             <Text variant="span">Go to Profile Settings</Text>
                         </Link>

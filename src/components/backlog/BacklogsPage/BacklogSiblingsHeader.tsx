@@ -3,6 +3,7 @@ import { BacklogSiblingsProps } from '@/components/backlog';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { faGauge, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import clsx from 'clsx';
 import Link from 'next/link';
 
 type BacklogSiblingsHeaderProps = Pick<
@@ -12,8 +13,8 @@ type BacklogSiblingsHeaderProps = Pick<
 >
 
 export const BacklogSiblingsHeader: React.FC<BacklogSiblingsHeaderProps> = (props) => props.localBacklog && (
-    <Block className={styles.taskTable}>
-        <Block className="flex justify-between">
+    <Block className={clsx(styles.taskTable, "p-2")}>
+        <Block className="actions-wrapper sm:justify-between">
             <Block className="flex gap-4 items-center">
                 <Text>{props.localBacklog.Backlog_Name}</Text>
                 <Text className="text-sm text-gray-600">{props.localBacklog.tasks?.length} tasks</Text>
@@ -27,7 +28,7 @@ export const BacklogSiblingsHeader: React.FC<BacklogSiblingsHeaderProps> = (prop
                     <Link
                         key={path}
                         href={`/${path}/${props.localBacklog && props.convertID_NameStringToURLFormat(props.localBacklog.Backlog_ID ?? 0, props.localBacklog.Backlog_Name)}`}
-                        className="blue-link !inline-flex gap-2 items-center"
+                        className="blue-link action-button"
                     >
                         <FontAwesomeIcon icon={icon} />
                         <Text variant="span">{label}</Text>

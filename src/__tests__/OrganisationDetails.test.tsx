@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 
 // Internal
-import { OrganisationDetailsView } from '@/components/organisation/OrganisationPage/OrganisationEditView';
+import { OrganisationDetailsView } from '@/components/organisation/OrganisationPage/OrganisationView';
 import { Organisation, User } from '@/types';
 
 const mockOrganisation: Organisation = {
