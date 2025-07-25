@@ -4,13 +4,15 @@
 import { faStop } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // Internal
 import { Block, Text } from '@/components/ui/block-text';
 import { useTasksContext, useTaskTimeTrackContext } from '@/contexts';
 import { selectAuthUserTaskTimeTrack, selectSnackMessage, useAppDispatch, useAuthActions, useTypedSelector } from '@/redux';
 import { TaskTimeTrack } from '@/types';
+
+void React.createElement
 
 export const TaskTimeTrackPlayer = () => {
     // Hooks

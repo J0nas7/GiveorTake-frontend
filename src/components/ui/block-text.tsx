@@ -1,4 +1,7 @@
-import { CSSProperties, forwardRef } from "react"
+import React, { CSSProperties, forwardRef } from "react";
+
+// Use React minimally so it isn't removed by IDE
+void React.createElement;
 
 type Variant = 'h1' | 'h2' | 'h3' | 'p' | 'span' | 'small' | 'div' | 'button'
 type ReturnElement = 'h1' | 'h2' | 'h3' | 'p' | 'span' | 'small' | 'div' | 'button'

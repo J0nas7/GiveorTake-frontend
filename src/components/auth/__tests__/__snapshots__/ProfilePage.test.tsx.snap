@@ -1,0 +1,54 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProfilePage Components ProfileOrganisation matches snapshot when organisation is not provided 1`] = `
+<div>
+   
+  <div
+    class="userTeamsContainer"
+  >
+    <h3
+      class=" teamsHeading"
+    >
+      Organisation this user is a part of
+    </h3>
+    <p>
+      This user is not part of any organisation.
+    </p>
+  </div>
+</div>
+`;
+
+exports[`ProfilePage Components ProfileOrganisation matches snapshot when organisation is provided 1`] = `
+<div>
+   
+  <div
+    class="userTeamsContainer"
+  >
+    <h3
+      class=" teamsHeading"
+    >
+      Organisation this user is a part of
+    </h3>
+    <ul
+      class="teamsList"
+    >
+      <li
+        class="teamItem"
+      >
+        <p>
+          <strong>
+            Organisation Name:
+          </strong>
+           
+          <a
+            class="blue-link-light"
+            href="/organisation/1"
+          >
+            Test Org
+          </a>
+        </p>
+      </li>
+    </ul>
+  </div>
+</div>
+`;

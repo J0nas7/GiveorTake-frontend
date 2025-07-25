@@ -49,3 +49,5 @@ npm i:
         identity-obj-proxy
         @babel/plugin-transform-runtime @babel/preset-typescript
         @types/quill
+        redux-mock-store
+

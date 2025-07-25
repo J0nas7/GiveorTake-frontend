@@ -3,7 +3,7 @@
 // External
 import { useTranslation } from 'next-i18next'
 import Link from 'next/link'
-import { FormEvent, useState } from 'react'
+import React, { useState } from 'react'
 
 // Internal
 import { Block, Field, Heading } from "@/components"
@@ -25,7 +25,7 @@ export const RegisterAccountView = () => {
     const [createPending, setCreatePending] = useState<boolean>(false)
 
     // Methods
-    const doRegister = (e?: FormEvent) => {
+    const doRegister = (e?: React.FormEvent) => {
         e?.preventDefault()
 
         if (!createPending) {

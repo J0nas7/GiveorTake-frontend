@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import React from "react"
 
 import { useAxios } from "@/hooks"
 import { Status, StatusesStates, StatusFields, StatusStates } from "@/types"
@@ -24,7 +24,7 @@ export type StatusContextType = {
     assignClosed: (statusId: number) => Promise<boolean>
 }
 
-const StatusContext = createContext<StatusContextType | undefined>(undefined)
+const StatusContext = React.createContext<StatusContextType | undefined>(undefined)
 
 export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const {
@@ -111,7 +111,7 @@ export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 }
 
 export const useStatusContext = () => {
-    const context = useContext(StatusContext)
+    const context = React.useContext(StatusContext)
     if (!context) {
         throw new Error("useStatusContext must be used within a StatusProvider")
     }

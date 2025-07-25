@@ -24,7 +24,7 @@ export type ProfileProps = {
     Canvas: <T_1 extends HTMLCanvasElement>({ text, options, logo, }: IQRCode) => React.JSX.Element
 }
 
-export const Profile: React.FC<ProfileProps> = (props) => props.renderUser && (
+export const Profile: React.FC<ProfileProps> = (props) => props.renderUser ? (
     <Block className="page-content">
         <FlexibleBox
             title={`Profile Settings`}
@@ -41,4 +41,4 @@ export const Profile: React.FC<ProfileProps> = (props) => props.renderUser && (
 
         <ProfileOrganisation renderOrganisation={props.renderOrganisation} />
     </Block>
-);
+) : null;

@@ -33,14 +33,20 @@ export const ProfileForm: React.FC<ProfileFormProps> = (props) => (
         </div>
 
         <div className={styles.formGroup}>
-            <label className={styles.label}>Profile Image</label>
+            <label htmlFor="profileImageUpload" className={styles.label}>Profile Image</label>
             <div className={styles.profileImageContainer}>
                 {props.imagePreview ? (
                     <img src={props.imagePreview} alt="User Profile" className={styles.userProfileImage} />
                 ) : (
                     <div className={styles.noImage}>No image</div>
                 )}
-                <input type="file" onChange={props.handleImageUpload} className={styles.imageUploadInput} accept="image/*" />
+                <input
+                    id="profileImageUpload"
+                    type="file"
+                    onChange={props.handleImageUpload}
+                    className={styles.imageUploadInput}
+                    accept="image/*"
+                />
             </div>
         </div>
 

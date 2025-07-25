@@ -1,6 +1,6 @@
 // Renders a form field.
 /**
- * 
+ *
  * @param {Object} props - Incoming props for the component.
  * @param {string} props.type - The type of input (e.g., "text", "password", "email").
  * @param {string} props.lbl - The label text for the form field.
@@ -26,10 +26,13 @@
  * @param {Object} [props.props] - Additional properties passed to the input field (e.g., `id`, `aria-label`, or other HTML attributes).
  */
 
-import { IconButton, InputAdornment, TextField } from "@mui/material"
-import { Block, Text } from "./block-text"
-import TextareaAutosize from 'react-textarea-autosize'
-import { RefObject } from "react"
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import React, { RefObject } from "react";
+import TextareaAutosize from 'react-textarea-autosize';
+import { Block, Text } from "./block-text";
+
+// Use React minimally so it isn't removed by IDE
+void React.createElement;
 
 type FieldProps = {
     type: string,
@@ -94,8 +97,8 @@ export const Field = ({
                                 refRef :
                                 undefined}
                             onChange={
-                                (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => 
-                                onChange(event.target.value)
+                                (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) =>
+                                    onChange(event.target.value)
                             }
                             onKeyDown={onKeyDown ?
                                 (event) => onKeyDown!(event) :

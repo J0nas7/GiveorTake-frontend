@@ -1,10 +1,10 @@
 // External
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 // Internal
-import { useAxios } from "."; // Assuming you have a custom hook for Axios requests
 import { selectDeleteConfirm, setDeleteConfirm, setSnackMessage, useAppDispatch, useTypedSelector } from "@/redux";
 import { useRouter } from "next/navigation";
+import { useAxios } from "."; // Assuming you have a custom hook for Axios requests
 
 interface APIResponse<T> {
     data: T;
@@ -18,8 +18,8 @@ type HasIDField<T, IDKey extends string> = T & {
 
 // A generic hook for handling API operations on different resources
 export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof T>(
-    resource: string, 
-    idFieldName: IDKey, 
+    resource: string,
+    idFieldName: IDKey,
     parentResource: string
 ) => {
     // Hooks
@@ -36,7 +36,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
             // : APIResponse<T[]>
             const data = await httpGetRequest(`${parentResource}/${parentId}/${resource}`);
             console.log(`${parentResource}/${parentId}/${resource}`, data)
-            
+
             if (data) return data
 
             throw new Error(`Failed to fetchItemsByParent ${resource}`);
@@ -52,7 +52,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
             // : APIResponse<T>
             const response = await httpGetRequest(`${resource}/${itemId}`)
             // console.log(`fetch${resource}`, response)
-            
+
             if (response) return response
 
             throw new Error(`Failed to fetchItem ${resource}`);
@@ -66,7 +66,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     const postItem = async (newItem: Omit<T, IDKey>) => {
         try {
             const response: APIResponse<T> = await httpPostWithData(resource, newItem);
-            
+
             console.log(`${resource} postItem`, response)
             if (response) return true
 
@@ -96,30 +96,30 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
     const deleteItem = async (itemId: number, redirect: string | undefined) => {
         let singular = resource
         if (resource.endsWith("s")) singular = resource.slice(0, -1)
-        
+
         dispatch(setDeleteConfirm({ singular, resource, itemId, confirm: undefined, redirect }))
     }
 
     const doDelete = async () => {
         if (
-            deleteConfirm && 
-            deleteConfirm.confirm && 
+            deleteConfirm &&
+            deleteConfirm.confirm &&
             deleteConfirm.resource === resource &&
             deleteConfirm.itemId
         ) {
             try {
                 const response = await httpDeleteRequest(`${deleteConfirm.resource}/${deleteConfirm.itemId}`);
-                
+
                 if (!response.message) {
                     throw new Error(`Failed to delete ${deleteConfirm.resource}`);
                 }
-                
+
                 // Show success message
                 dispatch(setSnackMessage(`
-                    ${deleteConfirm.singular.charAt(0).toUpperCase()}${deleteConfirm.singular.slice(1)} 
+                    ${deleteConfirm.singular.charAt(0).toUpperCase()}${deleteConfirm.singular.slice(1)}
                     deleted successfully
                 `));
-                
+
                 // Redirect if specified
                 if (deleteConfirm.redirect) window.location.replace(deleteConfirm.redirect);
             } catch (error: any) {
@@ -127,10 +127,10 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
                 // Show error message
                 dispatch(setSnackMessage(`Failed to delete ${deleteConfirm.singular}`));
             }
-            
+
             dispatch(setDeleteConfirm(undefined))
         } else if (
-            deleteConfirm && 
+            deleteConfirm &&
             deleteConfirm.confirm === false
         ) {
             // User cancelled the delete action
@@ -140,7 +140,6 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
 
     // Effects
     useEffect(() => {
-        console.log("deleteConfirm", deleteConfirm)
         doDelete()
     }, [deleteConfirm]);
 

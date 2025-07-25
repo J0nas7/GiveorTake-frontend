@@ -4,7 +4,7 @@
 import { useTranslation } from "next-i18next"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { FormEvent, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 
 // Internal
 import { Block, Field, Heading } from "@/components"
@@ -23,7 +23,7 @@ export const SignInView = () => {
     const [loginPending, setLoginPending] = useState<boolean>(false)
 
     // Methods
-    const doLogin = (e?: FormEvent) => {
+    const doLogin = (e?: React.FormEvent) => {
         e?.preventDefault()
 
         if (loginPending) return

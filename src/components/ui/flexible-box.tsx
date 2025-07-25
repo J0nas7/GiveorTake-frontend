@@ -1,11 +1,14 @@
 // External
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { clsx } from 'clsx'
-import { CSSProperties, forwardRef, LegacyRef } from "react"
+import React, { CSSProperties, forwardRef } from "react"
 
 // Internal
-import { Block, Text, Heading } from '..'
+import { Block, Heading, Text } from '..'
+
+// Use React minimally so it isn't removed by IDE
+void React.createElement;
 
 type Variant = 'h1' | 'h2' | 'h3'
 /**
@@ -59,7 +62,7 @@ const FlexibleBox = forwardRef<any, Props>(
             >
                 {title && (
                     <>
-                        <Block 
+                        <Block
                             className={
                                 clsx(
                                     "box-title-with-icon flex items-center",
@@ -71,7 +74,7 @@ const FlexibleBox = forwardRef<any, Props>(
                             {icon && (<FontAwesomeIcon icon={icon} className="box-title-icon" />)}
                             {titleAction && (
                                 <>&nbsp;{titleAction}</>
-                            )}    
+                            )}
                         </Block>
                         {subtitle && <Text variant="span" className="box-subtitle">{subtitle}</Text>}
                     </>
@@ -89,4 +92,4 @@ const FlexibleBox = forwardRef<any, Props>(
 FlexibleBox.displayName = 'FlexibleBox';
 
 // Named export
-export { FlexibleBox };
+export { FlexibleBox }

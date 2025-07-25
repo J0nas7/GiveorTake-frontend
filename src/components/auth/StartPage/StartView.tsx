@@ -4,7 +4,7 @@
 import { faBuilding, faHouseChimney, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
-import { useEffect } from "react";
+import React from "react";
 
 // Internal
 import { Block, FlexibleBox, Text } from "@/components";
@@ -21,7 +21,7 @@ export const StartView = () => {
     const authUser = useTypedSelector(selectAuthUser);
 
     // Effects
-    useEffect(() => {
+    React.useEffect(() => {
         if (authUser && authUser.User_ID) readOrganisationsByUserId(authUser.User_ID);
         document.title = "Welcome - GiveOrTake";
     }, [authUser]);
