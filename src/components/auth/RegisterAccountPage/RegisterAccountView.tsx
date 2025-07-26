@@ -3,7 +3,7 @@
 // External
 import { useTranslation } from 'next-i18next'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 // Internal
 import { Block, Field, Heading } from "@/components"
@@ -22,27 +22,29 @@ export const RegisterAccountView = () => {
     const [userPassword_confirmation, setUserPassword_confirmation] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
-    const [createPending, setCreatePending] = useState<boolean>(false)
+    // const [createPending, setCreatePending] = useState<boolean>(false)
+    const submittingRef = useRef(false);
 
     // Methods
-    const doRegister = (e?: React.FormEvent) => {
+    const doRegister = async (e?: React.FormEvent) => {
         e?.preventDefault()
 
-        if (!createPending) {
-            setCreatePending(true)
+        if (submittingRef.current) return;
+        submittingRef.current = true;
 
-            const formData = {
-                userFirstname,
-                userSurname,
-                userEmail,
-                userPassword,
-                userPassword_confirmation,
-                acceptTerms
-            }
+        const formData = {
+            userFirstname,
+            userSurname,
+            userEmail,
+            userPassword,
+            userPassword_confirmation,
+            acceptTerms
+        }
 
-            handleRegister(formData)
-
-            setCreatePending(false) // Reset pending state
+        try {
+            await handleRegister(formData);
+        } finally {
+            submittingRef.current = false; // Reset pending state
         }
     }
 
@@ -63,7 +65,7 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={createPending}
+                    disabled={submittingRef.current}
                     className="register-field"
                     required={true}
                 />
@@ -76,7 +78,7 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={createPending}
+                    disabled={submittingRef.current}
                     className="register-field"
                     required={true}
                 />
@@ -89,7 +91,7 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={createPending}
+                    disabled={submittingRef.current}
                     className="register-field"
                     required={true}
                 />
@@ -104,7 +106,7 @@ export const RegisterAccountView = () => {
                     }
                     endButton={() => setShowPassword(!showPassword)}
                     endContent={!showPassword ? t('guest:forms:Show') : t('guest:forms:Hide')}
-                    disabled={createPending}
+                    disabled={submittingRef.current}
                     className="register-field"
                     required={true}
                 />
@@ -117,12 +119,13 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={createPending}
+                    disabled={submittingRef.current}
                     className="register-field"
                     required={true}
                 />
                 <div className="flex items-center mb-4">
                     <input
+                        id="acceptTerms"
                         type="checkbox"
                         name="acceptTerms"
                         checked={acceptTerms}
@@ -136,6 +139,7 @@ export const RegisterAccountView = () => {
                 </div>
                 <div className="flex items-center mb-4">
                     <input
+                        id="confirmnewsletter"
                         type="checkbox"
                         name="confirmMarketing"
                         value="1"
@@ -149,7 +153,7 @@ export const RegisterAccountView = () => {
                     type="submit"
                     value={t('guest:forms:buttons:Sign-up')}
                     className="w-full text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1"
-                    disabled={createPending} // Disable submit if pending
+                    disabled={submittingRef.current} // Disable submit if pending
                 />
             </form>
             <p className="mt-2">

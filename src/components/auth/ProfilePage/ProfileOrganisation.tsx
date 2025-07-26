@@ -12,7 +12,7 @@ type ProfileOrganisationProps = Pick<
 export const ProfileOrganisation: React.FC<ProfileOrganisationProps> = (props) => (
     <div className={styles.userTeamsContainer}>
         <Heading variant="h3" className={styles.teamsHeading}>Organisation this user is a part of</Heading>
-        {props.renderOrganisation ? (
+        {props.renderOrganisation && "Organisation_ID" in props.renderOrganisation ? (
             <ul className={styles.teamsList}>
                 <li className={styles.teamItem}>
                     <p>
