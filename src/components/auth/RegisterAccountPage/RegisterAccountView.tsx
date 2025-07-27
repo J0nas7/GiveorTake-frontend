@@ -7,6 +7,7 @@ import React, { useRef, useState } from 'react'
 
 // Internal
 import { Block, Field, Heading } from "@/components"
+import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAuth } from '@/hooks'
 
 export const RegisterAccountView = () => {
@@ -22,8 +23,8 @@ export const RegisterAccountView = () => {
     const [userPassword_confirmation, setUserPassword_confirmation] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
-    // const [createPending, setCreatePending] = useState<boolean>(false)
-    const submittingRef = useRef(false);
+    const [createPending, setCreatePending] = useState<boolean>(false) // UI: Reactive
+    const submittingRef = useRef(false) // Logic: Immediate update, avoids race condition
 
     // Methods
     const doRegister = async (e?: React.FormEvent) => {
@@ -31,6 +32,7 @@ export const RegisterAccountView = () => {
 
         if (submittingRef.current) return;
         submittingRef.current = true;
+        setCreatePending(true)
 
         const formData = {
             userFirstname,
@@ -45,6 +47,7 @@ export const RegisterAccountView = () => {
             await handleRegister(formData);
         } finally {
             submittingRef.current = false; // Reset pending state
+            setCreatePending(false)
         }
     }
 
@@ -65,7 +68,7 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={submittingRef.current}
+                    disabled={createPending}
                     className="register-field"
                     required={true}
                 />
@@ -78,7 +81,7 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={submittingRef.current}
+                    disabled={createPending}
                     className="register-field"
                     required={true}
                 />
@@ -91,7 +94,7 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={submittingRef.current}
+                    disabled={createPending}
                     className="register-field"
                     required={true}
                 />
@@ -106,7 +109,7 @@ export const RegisterAccountView = () => {
                     }
                     endButton={() => setShowPassword(!showPassword)}
                     endContent={!showPassword ? t('guest:forms:Show') : t('guest:forms:Hide')}
-                    disabled={submittingRef.current}
+                    disabled={createPending}
                     className="register-field"
                     required={true}
                 />
@@ -119,7 +122,7 @@ export const RegisterAccountView = () => {
                     onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         ifEnter(event)
                     }
-                    disabled={submittingRef.current}
+                    disabled={createPending}
                     className="register-field"
                     required={true}
                 />
@@ -149,12 +152,17 @@ export const RegisterAccountView = () => {
                         {t('guest:forms:Sign-me-up-for-news-and-marketing')}
                     </label>
                 </div>
-                <input
+                <button
                     type="submit"
-                    value={t('guest:forms:buttons:Sign-up')}
-                    className="w-full text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1"
-                    disabled={submittingRef.current} // Disable submit if pending
-                />
+                    data-testid="register-submit"
+                    className="w-full flex justify-center h-12 text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1 hover:cursor-pointer"
+                >
+                    {createPending ? (
+                        <LoadingButton />
+                    ) : (
+                        <>{t('guest:forms:buttons:Sign-up')}</>
+                    )}
+                </button>
             </form>
             <p className="mt-2">
                 <Link className="text-[#1ab11f] font-bold" href="/sign-in">

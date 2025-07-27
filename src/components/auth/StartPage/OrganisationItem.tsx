@@ -10,26 +10,21 @@ import { Block, Text } from "@/components";
 import { TeamItem } from '@/components/auth';
 import { useTeamUserSeatsContext } from "@/contexts";
 import { useURLLink } from "@/hooks";
-import useRoleAccess from '@/hooks/useRoleAccess';
-import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from "@/redux";
-import { Organisation, TeamUserSeat } from "@/types";
+import { setSnackMessage, useAppDispatch } from "@/redux";
+import { Organisation, TeamUserSeat, User } from "@/types";
 
 type OrganisationItemProps = {
+    authUser: User | undefined
     organisation: Organisation
+    canModifyOrganisationSettings: boolean | undefined
 }
 
-export const OrganisationItem: React.FC<OrganisationItemProps> = ({
-    organisation
-}) => {
+export const OrganisationItem: React.FC<OrganisationItemProps> = (props) => {
     // Hooks
     const dispatch = useAppDispatch()
     const router = useRouter()
-    const { canModifyOrganisationSettings } = useRoleAccess(organisation ? organisation.User_ID : undefined)
     const { saveTeamUserSeatChanges, removeTeamUserSeat } = useTeamUserSeatsContext()
     const { convertID_NameStringToURLFormat } = useURLLink("-")
-
-    // State
-    const authUser = useTypedSelector(selectAuthUser)
 
     // Methods
     const approvePending = async (mySeat: TeamUserSeat) => {
@@ -44,9 +39,9 @@ export const OrganisationItem: React.FC<OrganisationItemProps> = ({
     }
 
     let seat = null;
-    if (organisation.teams && organisation.teams?.length > 0) {
-        seat = organisation.teams[0]?.user_seats?.find(
-            seat => seat.User_ID === authUser?.User_ID
+    if (props.organisation.teams && props.organisation.teams?.length > 0) {
+        seat = props.organisation.teams[0]?.user_seats?.find(
+            seat => seat.User_ID === props.authUser?.User_ID
         );
     }
 
@@ -54,8 +49,8 @@ export const OrganisationItem: React.FC<OrganisationItemProps> = ({
 
     if (seat && seat?.Seat_Status === "Pending") {
         return (
-            <Block key={organisation.Organisation_ID} className="bg-yellow-100 p-5 rounded-lg shadow-md">
-                <Text className="text-xl font-bold text-yellow-800">{organisation.Organisation_Name}</Text>
+            <Block key={props.organisation.Organisation_ID} className="bg-yellow-100 p-5 rounded-lg shadow-md">
+                <Text className="text-xl font-bold text-yellow-800">{props.organisation.Organisation_Name}</Text>
                 <Text className="text-sm text-yellow-700">Your access is pending your approval.</Text>
                 <Block className="mt-2 flex gap-2 items-center">
                     <button
@@ -80,35 +75,39 @@ export const OrganisationItem: React.FC<OrganisationItemProps> = ({
     }
 
     return (
-        <Block key={organisation.Organisation_ID} className="bg-white p-5 rounded-lg shadow-md">
+        <Block key={props.organisation.Organisation_ID} className="bg-white p-5 rounded-lg shadow-md">
             {/* Organisation Name */}
             <Link
-                href={`/organisation/${convertID_NameStringToURLFormat(organisation.Organisation_ID ?? 0, organisation.Organisation_Name)}`}
+                href={`/organisation/${convertID_NameStringToURLFormat(props.organisation.Organisation_ID ?? 0, props.organisation.Organisation_Name)}`}
                 className="blue-link-light"
             >
-                <Text className="text-xl font-bold">{organisation.Organisation_Name}</Text>
+                <Text className="text-xl font-bold">{props.organisation.Organisation_Name}</Text>
             </Link>
             <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{
-                __html: organisation.Organisation_Description || 'No description available'
+                __html: props.organisation.Organisation_Description || 'No description available'
             }} />
 
             {/* Teams & Projects */}
-            {organisation.teams?.length ? (
+            {props.organisation.teams?.length ? (
                 <Block className="mt-4">
                     <Text className="font-semibold text-gray-700">Teams:</Text>
                     <Block className="mt-2 space-y-3">
-                        {organisation.teams.map((team) => (
-                            <TeamItem team={team} ownerId={organisation.User_ID} />
+                        {props.organisation.teams.map((team) => (
+                            <TeamItem
+                                key={team.Team_ID}
+                                team={team}
+                                ownerId={props.organisation.User_ID}
+                            />
                         ))}
                     </Block>
                 </Block>
             ) : (
                 <Text className="text-gray-500 mt-2">Ingen teams tilgængelige.</Text>
             )}
-            {canModifyOrganisationSettings && (
+            {props.canModifyOrganisationSettings && (
                 <Link
                     className="blue-link-light mt-3"
-                    href={`/organisation/${convertID_NameStringToURLFormat(organisation.Organisation_ID ?? 0, organisation.Organisation_Name)}/create-team`}
+                    href={`/organisation/${convertID_NameStringToURLFormat(props.organisation.Organisation_ID ?? 0, props.organisation.Organisation_Name)}/create-team`}
                 >
                     <small>Create Team</small>
                 </Link>

@@ -27,7 +27,7 @@ describe('RegisterAccountView Components', () => {
     describe("RegisterAccountView - Casual Cases", () => {
         const renderRegisterView = () => {
             (useAuth as jest.Mock).mockReturnValue({ handleRegister: mockHandleRegister });
-            RegisterAccountView
+
             return render(
                 <TestProvider>
                     <RegisterAccountView />
@@ -86,6 +86,40 @@ describe('RegisterAccountView Components', () => {
                     userPassword_confirmation: "secret123",
                     acceptTerms: true,
                 });
+            });
+        });
+
+        it('shows "Sign-up" text again after register resolves', async () => {
+            cleanup();
+
+            let resolveRegister!: (value?: unknown) => void;
+            const mockPromise = new Promise((resolve) => {
+                resolveRegister = resolve;
+            });
+
+            mockHandleRegister.mockReturnValue(mockPromise);
+
+            renderRegisterView();
+
+            fireEvent.change(screen.getByLabelText(/Email/i), {
+                target: { value: 'finished@test.com' },
+            });
+
+            const passwordFields = screen.getAllByLabelText(/password/i);
+            fireEvent.change(passwordFields[0], {
+                target: { value: 'done123' },
+            });
+
+            await act(async () => {
+                fireEvent.click(screen.getByTestId('register-submit'));
+            });
+
+            await act(async () => {
+                resolveRegister();
+            });
+
+            await waitFor(() => {
+                expect(screen.getByTestId('register-submit')).toHaveTextContent(/Sign-up/i);
             });
         });
     })

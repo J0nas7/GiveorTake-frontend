@@ -27,7 +27,7 @@ export const TeamItem: React.FC<TeamItemProps> = ({
     return (
         <Block key={team.Team_ID} className="p-4 border-l-4 border-blue-500 bg-gray-50 rounded-md">
             {/* Team Name */}
-            <Link href={`/team/${convertID_NameStringToURLFormat(team.Team_ID ?? 0, team.Team_Name)}`} className="blue-link-light">
+            <Link data-testid="team-link" href={`/team/${convertID_NameStringToURLFormat(team.Team_ID ?? 0, team.Team_Name)}`} className="blue-link-light">
                 <Text className="text-lg font-medium">{team.Team_Name}</Text>
             </Link>
             <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{

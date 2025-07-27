@@ -19,6 +19,7 @@ export * from './SignInPage/SignInView';
 
 // StartPage
 export * from './StartPage/OrganisationItem';
+export * from './StartPage/Start';
 export * from './StartPage/StartView';
 export * from './StartPage/TeamItem';
 

@@ -4,10 +4,11 @@
 import { useTranslation } from "next-i18next"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 // Internal
 import { Block, Field, Heading } from "@/components"
+import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAuth } from "@/hooks"
 
 export const SignInView = () => {
@@ -20,13 +21,15 @@ export const SignInView = () => {
     const [userEmail, setUserEmail] = useState<string>('')
     const [userPassword, setUserPassword] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
-    const [loginPending, setLoginPending] = useState<boolean>(false)
+    const [loginPending, setLoginPending] = useState<boolean>(false) // UI: Reactive
+    const submittingRef = useRef(false) // Logic: Immediate update, avoids race condition
 
     // Methods
     const doLogin = (e?: React.FormEvent) => {
         e?.preventDefault()
 
-        if (loginPending) return
+        if (submittingRef.current) return
+        submittingRef.current = true
         setLoginPending(true)
 
         handleLoginSubmit(userEmail, userPassword)
@@ -34,11 +37,20 @@ export const SignInView = () => {
                 // if (loginResult) router.push('/')
             })
             .finally(() => {
+                submittingRef.current = false
                 setLoginPending(false)
             })
     }
 
-    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? doLogin() : null
+    const ifEnter = (e: React.KeyboardEvent) => {
+        if (
+            e.key === 'Enter' &&
+            userEmail.trim() !== '' &&
+            userPassword.trim() !== ''
+        ) {
+            doLogin();
+        }
+    }
 
     useEffect(() => {
         document.title = 'GiveOrTake - Log på eller tilmeld dig'
@@ -82,9 +94,14 @@ export const SignInView = () => {
                 />
                 <button
                     type="submit"
-                    className="w-full text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1 hover:cursor-pointer"
+                    data-testid="login-submit"
+                    className="w-full flex justify-center h-12 text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1 hover:cursor-pointer"
                 >
-                    {t('guest:forms:buttons:Login')}
+                    {loginPending ? (
+                        <LoadingButton />
+                    ) : (
+                        <>{t('guest:forms:buttons:Login')}</>
+                    )}
                 </button>
             </form>
             <p className="mt-2">

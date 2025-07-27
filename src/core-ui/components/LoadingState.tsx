@@ -44,3 +44,13 @@ export const LoadingState: React.FC<LoadingStateProps> = (props) => (
         )}
     </>
 )
+
+export const LoadingButton = () => (
+    <Image
+        src="/button.gif"
+        alt="Loading..."
+        width={20}
+        height={20}
+        fetchPriority="high"
+    />
+)

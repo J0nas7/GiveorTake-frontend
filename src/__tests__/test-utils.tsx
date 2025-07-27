@@ -1,8 +1,8 @@
 // src/test-utils.tsx
+import { mockHandleLoginSubmit } from '@/components/auth/__tests__/SignInView.test';
 import {
-    OrganisationsContextType,
     OrganisationsProvider,
-    UsersContextType,
+    TeamUserSeatsProvider,
     UsersProvider
 } from "@/contexts";
 import { render } from "@testing-library/react";
@@ -27,6 +27,7 @@ jest.mock('next/navigation', () => ({
         back: jest.fn(),
         forward: jest.fn(),
     }),
+    usePathname: () => '/',
     useParams: () => ({
         organisationLink: '1-test-org',
     }),
@@ -35,24 +36,36 @@ jest.mock('next/navigation', () => ({
     }),
 }));
 
-// Mock properties context value
-const mockPropertiesContextValue: Partial<OrganisationsContextType> = {
-    organisationsById: undefined,
-    organisationById: undefined,
-    organisationDetail: undefined
-};
-const mockUsersContextTypeValue: Partial<UsersContextType> = {
-    usersById: undefined,
-    userDetail: undefined,
-    newUser: undefined
-};
+jest.mock('@/hooks', () => ({
+    useRoleAccess: jest.fn(() => ({
+        canModifyOrganisationSettings: true,
+    })),
+    useAxios: jest.fn(() => ({
+        httpGetRequest: jest.fn()
+    })),
+    useAuth: jest.fn(() => ({
+        handleLoginSubmit: mockHandleLoginSubmit,
+    })),
+    useURLLink: jest.fn(() => ({
+        convertID_NameStringToURLFormat: (id: number, name: string) => `${id}-${name.toLowerCase().replace(/\s+/g, '-')}`
+    })),
+    useTypeAPI: jest.fn(() => ({
+        fetchItemsByParent: jest.fn(),
+        fetchItem: jest.fn(),
+        postItem: jest.fn(),
+        updateItem: jest.fn(),
+        deleteItem: jest.fn(),
+    })),
+}));
 
 export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <Provider store={store}>
             <OrganisationsProvider> {/* Use the Provider instead of manually setting context */}
                 <UsersProvider>
-                    {children}
+                    <TeamUserSeatsProvider>
+                        {children}
+                    </TeamUserSeatsProvider>
                 </UsersProvider>
             </OrganisationsProvider>
         </Provider>
