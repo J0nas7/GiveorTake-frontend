@@ -2,6 +2,7 @@
 
 import { Block, Text } from '@/components';
 import { BacklogEditProps } from '@/components/backlog';
+import { LoadingButton } from '@/core-ui/components/LoadingState';
 import { faCheck, faLightbulb, faList, faPencil } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
@@ -12,6 +13,7 @@ type BacklogActionsProps = Pick<
     "localBacklog" |
     "canAccessBacklog" |
     "convertID_NameStringToURLFormat" |
+    "editPending" |
     "showEditToggles" |
     "setShowEditToggles" |
     "handleSaveBacklogChanges"
@@ -31,9 +33,13 @@ export const BacklogActions: React.FC<BacklogActionsProps> = (props) => props.ca
                 props.setShowEditToggles(!props.showEditToggles)
             }}
         >
-            <FontAwesomeIcon icon={
-                props.showEditToggles ? faCheck : faPencil
-            } />
+            {props.editPending ? (
+                <LoadingButton />
+            ) : (
+                <FontAwesomeIcon icon={
+                    props.showEditToggles ? faCheck : faPencil
+                } />
+            )}
         </Text>
 
         <Block className="actions-wrapper w-auto">

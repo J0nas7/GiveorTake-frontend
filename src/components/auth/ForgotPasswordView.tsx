@@ -1,9 +1,10 @@
 "use client"
 
 import { Block, Field, Heading } from '@/components'
+import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAuth } from '@/hooks'
 import Link from 'next/link'
-import React, { FormEvent, useState } from 'react'
+import React, { FormEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const ForgotPasswordView = () => {
@@ -14,18 +15,25 @@ export const ForgotPasswordView = () => {
     const { t } = useTranslation(['guest'])
     const [userEmail, setUserEmail] = useState<string>('')
     const [forgotPending, setForgotPending] = useState<boolean>(false)
+    const submittingRef = useRef(false) // Logic: Immediate update, avoids race condition
 
     // Methods
     const doForgot = (e?: FormEvent) => {
         e?.preventDefault()
 
-        if (!forgotPending) {
-            setForgotPending(true)
+        if (submittingRef.current) return
+        submittingRef.current = true
+        setForgotPending(true)
 
-            handleForgotRequest(userEmail) // Trigger password reset
-
-            setForgotPending(false)
-        }
+        handleForgotRequest(userEmail)
+            .catch((error) => {
+                console.error('Failed to send reset email:', error)
+                // optionally show a user-facing message here
+            })
+            .finally(() => {
+                submittingRef.current = false
+                setForgotPending(false)
+            })
     }
 
     const ifEnter = (e: React.KeyboardEvent) => e.key === 'Enter' && doForgot(e as any)
@@ -48,13 +56,20 @@ export const ForgotPasswordView = () => {
                     disabled={forgotPending}
                     className="forgot-field"
                     required={true}
+                    props={{ 'data-testid': 'email-input' }}
                 />
-                <input
+
+                <button
                     type="submit"
-                    value={t('guest:forms:buttons:Forgot')}
-                    className="w-full text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1"
-                    disabled={forgotPending} // Disable during pending
-                />
+                    data-testid="forgot-submit"
+                    className="w-full flex justify-center h-12 text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1 hover:cursor-pointer"
+                >
+                    {forgotPending ? (
+                        <LoadingButton />
+                    ) : (
+                        <>{t('guest:forms:buttons:Forgot')}</>
+                    )}
+                </button>
             </form>
             <p className="mt-2 text-black">
                 {t('guest:helptexts:Reset-link')}

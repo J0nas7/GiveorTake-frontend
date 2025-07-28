@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // Internal
 import { BacklogCreate, BacklogCreateProps } from '@/components/backlog';
@@ -36,6 +36,8 @@ export const BacklogCreateView: React.FC = () => {
         Backlog_StartDate: "",
         Backlog_EndDate: "",
     })
+    const [createPending, setCreatePending] = useState<boolean>(false)
+    const submittingRef = useRef<boolean>(false)
 
     // ---- Effects ----
     useEffect(() => {
@@ -57,13 +59,18 @@ export const BacklogCreateView: React.FC = () => {
     };
 
     const handleCreateBacklog = async () => {
+        if (submittingRef.current) return
         if (!projectById) return
         if (!newBacklog.Backlog_Name.trim()) {
             dispatch(setSnackMessage("Please enter a backlog name."))
-            return;
+            return
         }
+        submittingRef.current = true
+        setCreatePending(true)
 
         await addBacklog(parseInt(projectId), newBacklog);
+        submittingRef.current = false
+        setCreatePending(false)
         router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
     };
 
@@ -71,6 +78,7 @@ export const BacklogCreateView: React.FC = () => {
         projectById,
         canManageProject,
         newBacklog,
+        createPending,
         handleInputChange,
         handleCreateBacklog,
         convertID_NameStringToURLFormat

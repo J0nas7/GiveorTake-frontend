@@ -15,13 +15,14 @@ import { Block, Text } from "@/components/ui/block-text";
 import { FlexibleBox } from "@/components/ui/flexible-box";
 import { Heading } from "@/components/ui/heading";
 import { Field } from "@/components/ui/input-field";
-import { LoadingState } from "@/core-ui/components/LoadingState";
+import { LoadingButton, LoadingState } from "@/core-ui/components/LoadingState";
 import { Backlog, BacklogFields, ProjectStates } from "@/types";
 
 export type BacklogCreateProps = {
     projectById: ProjectStates;
     canManageProject: boolean | undefined
-    newBacklog: Backlog;
+    newBacklog: Backlog
+    createPending: boolean
     handleInputChange: (field: BacklogFields, value: string | boolean) => void;
     handleCreateBacklog: () => Promise<void>;
     convertID_NameStringToURLFormat: (id: number, name: string) => string
@@ -104,8 +105,16 @@ export const BacklogCreate: React.FC<BacklogCreateProps> = (props) => (
                             </div>
                         </div>
                         <div className="mt-4">
-                            <button onClick={props.handleCreateBacklog} className="button-blue">
-                                Create Backlog
+                            <button
+                                onClick={props.handleCreateBacklog}
+                                disabled={props.createPending}
+                                className="button-blue w-32 flex justify-center"
+                            >
+                                {props.createPending ? (
+                                    <LoadingButton />
+                                ) : (
+                                    <>Create Backlog</>
+                                )}
                             </button>
                         </div>
                     </div>

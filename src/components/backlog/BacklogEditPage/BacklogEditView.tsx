@@ -2,7 +2,7 @@
 
 // External
 import { useParams, usePathname } from "next/navigation";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Internal
 import { BacklogEdit, BacklogEditProps } from '@/components/backlog';
@@ -38,6 +38,14 @@ export const BacklogEditView = () => {
     });
     const [localBacklog, setLocalBacklog] = useState<BacklogStates>(undefined);
     const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
+    const [editPending, setEditPending] = useState<boolean>(false)
+    const submittingRef = useRef<boolean>(false)
+    const [createStatusPending, setCreateStatusPending] = useState<boolean>(false)
+    const createStatusRef = useRef<boolean>(false)
+    const [saveStatusPending, setSaveStatusPending] = useState<undefined | number>(undefined)
+    const saveStatusRef = useRef<undefined | number>(undefined)
+    const [moveStatusPending, setMoveStatusPending] = useState<undefined | string>(undefined)
+    const moveStatusRef = useRef<undefined | string>(undefined)
 
     // ---- Effects ----
     useEffect(() => {
@@ -79,7 +87,11 @@ export const BacklogEditView = () => {
 
     // Save backlog changes to backend
     const handleSaveBacklogChanges = async () => {
-        if (!localBacklog) return;
+        if (!localBacklog) return
+        if (submittingRef.current) return
+        submittingRef.current = true
+        setEditPending(true)
+
         try {
             const saveChanges = await saveBacklogChanges(localBacklog, localBacklog.Project_ID);
 
@@ -89,6 +101,9 @@ export const BacklogEditView = () => {
         } catch (err) {
             console.error(err);
             dispatch(setSnackMessage("Failed to update backlog."));
+        } finally {
+            submittingRef.current = false
+            setEditPending(false)
         }
     };
 
@@ -98,6 +113,10 @@ export const BacklogEditView = () => {
     // Save status changes to backend
     const handleSaveStatusChanges = async (status: Status) => {
         if (!localBacklog) return;
+        if (saveStatusRef.current) return
+        saveStatusRef.current = status.Status_ID
+        setSaveStatusPending(status.Status_ID)
+
         try {
             const saveChanges = await saveStatusChanges(status, localBacklog.Project_ID)
 
@@ -112,12 +131,19 @@ export const BacklogEditView = () => {
         } catch (err) {
             console.error(err);
             dispatch(setSnackMessage("Failed to save update status."))
+        } finally {
+            saveStatusRef.current = undefined
+            setSaveStatusPending(undefined)
         }
     };
 
     // Handles the movement of a status within the backlog by changing its order.
     const handleMoveStatusChanges = async (statusId: number, direction: "up" | "down") => {
         if (!localBacklog) return;
+        if (moveStatusRef.current) return
+        moveStatusRef.current = `${direction}-${statusId}`
+        setMoveStatusPending(`${direction}-${statusId}`)
+
         try {
             const saveChanges = await moveOrder(statusId, direction)
 
@@ -128,6 +154,9 @@ export const BacklogEditView = () => {
         } catch (err) {
             console.error(err);
             dispatch(setSnackMessage("Failed to update status order."))
+        } finally {
+            moveStatusRef.current = undefined
+            setMoveStatusPending(undefined)
         }
     };
 
@@ -173,6 +202,10 @@ export const BacklogEditView = () => {
             return;
         }
 
+        if (createStatusRef.current) return
+        createStatusRef.current = true
+        setCreateStatusPending(true)
+
         await addStatus(parseInt(backlogId), newStatus)
         setNewStatus({
             ...newStatus,
@@ -180,6 +213,9 @@ export const BacklogEditView = () => {
         })
         setLocalBacklog(undefined)
         readBacklogById(parseInt(backlogId))
+
+        createStatusRef.current = false
+        setCreateStatusPending(false)
     };
 
     // Delete backlog from backend
@@ -207,6 +243,10 @@ export const BacklogEditView = () => {
         authUser,
         canAccessBacklog,
         canManageBacklog,
+        editPending,
+        createStatusPending,
+        saveStatusPending,
+        moveStatusPending,
         setNewStatus,
         handleBacklogInputChange,
         handleBacklogChange,

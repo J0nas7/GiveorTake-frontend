@@ -12,6 +12,10 @@ export type BacklogEditProps = {
     authUser?: User
     canAccessBacklog: boolean | undefined
     canManageBacklog: boolean | undefined
+    editPending: boolean
+    createStatusPending: boolean
+    saveStatusPending: undefined | number
+    moveStatusPending: undefined | string
     setNewStatus: React.Dispatch<React.SetStateAction<Status>>
     handleBacklogInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleBacklogChange: (field: keyof Backlog, value: string) => void;
@@ -56,6 +60,7 @@ export const BacklogEdit: React.FC<BacklogEditProps> = (props) => {
                         localBacklog={props.localBacklog}
                         canAccessBacklog={props.canAccessBacklog}
                         convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
+                        editPending={props.editPending}
                         showEditToggles={props.showEditToggles}
                         setShowEditToggles={props.setShowEditToggles}
                         handleSaveBacklogChanges={props.handleSaveBacklogChanges}

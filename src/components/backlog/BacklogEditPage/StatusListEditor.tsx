@@ -2,10 +2,12 @@
 
 import { Block, Field, FlexibleBox, Text } from '@/components';
 import { BacklogEditProps } from '@/components/backlog';
+import { LoadingButton } from '@/core-ui/components/LoadingState';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { Status } from '@/types';
-import { faArrowDown, faArrowUp, faCheckDouble, faLock, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowUp, faCheckDouble, faHourglass, faLock, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import clsx from 'clsx';
 import React, { useState } from 'react';
 
 type StatusListEditorProps = Pick<
@@ -16,13 +18,16 @@ type StatusListEditorProps = Pick<
     "ifEnterCreateStatus" |
     "handleCreateStatus" |
     "ifEnterSaveStatus" |
+    "saveStatusPending" |
+    "moveStatusPending" |
     "handleSaveStatusChanges" |
     "removeStatus" |
     "convertID_NameStringToURLFormat" |
     "handleMoveStatusChanges" |
     "handleAssignDefaultStatus" |
     "handleAssignClosedStatus" |
-    "showEditToggles"
+    "showEditToggles" |
+    "createStatusPending"
 >
 
 export const StatusListEditor: React.FC<StatusListEditorProps> = (props) => (
@@ -63,8 +68,18 @@ export const StatusListEditor: React.FC<StatusListEditorProps> = (props) => (
                                         disabled={false}
                                         className="status-name-field"
                                     />
-                                    <button className="blue-link" onClick={props.handleCreateStatus}>
-                                        Create status
+                                    <button
+                                        onClick={props.handleCreateStatus}
+                                        className={clsx(
+                                            props.createStatusPending ? "button-blue" : "blue-link",
+                                            "w-[118px] flex justify-center"
+                                        )}
+                                    >
+                                        {props.createStatusPending ? (
+                                            <LoadingButton />
+                                        ) : (
+                                            <>Create status</>
+                                        )}
                                     </button>
                                 </Block>
                             </td>
@@ -101,24 +116,40 @@ export const StatusListEditor: React.FC<StatusListEditorProps> = (props) => (
                                                     className="status-name-field"
                                                 />
                                                 {statusName !== status.Status_Name ? (
-                                                    <button>
-                                                        <FontAwesomeIcon icon={faPencil} color="green"
-                                                            onClick={() => props.handleSaveStatusChanges(
-                                                                {
-                                                                    ...status,
-                                                                    Status_Name: statusName
-                                                                }
-                                                            )}
-                                                        />
+                                                    <button
+                                                        onClick={() => props.handleSaveStatusChanges(
+                                                            {
+                                                                ...status,
+                                                                Status_Name: statusName
+                                                            }
+                                                        )}
+                                                        className={clsx(
+                                                            props.saveStatusPending === status.Status_ID ? "button-blue" : "blue-link",
+                                                            "flex justify-center"
+                                                        )}
+                                                    >
+                                                        {props.saveStatusPending && props.saveStatusPending === status.Status_ID ? (
+                                                            <LoadingButton />
+                                                        ) : (
+                                                            <FontAwesomeIcon
+                                                                icon={faPencil}
+                                                                color="green"
+                                                            />
+                                                        )}
                                                     </button>
                                                 ) : status.Status_ID && !status.Status_Is_Default && !status.Status_Is_Closed ? (
-                                                    <button>
-                                                        <FontAwesomeIcon icon={faTrashCan} color="red" size="xs"
-                                                            onClick={() => props.removeStatus(
-                                                                status.Status_ID!,
-                                                                status.Backlog_ID,
-                                                                `/backlog/${props.localBacklog && props.convertID_NameStringToURLFormat(props.localBacklog.Backlog_ID ?? 0, props.localBacklog.Backlog_Name)}/edit`
-                                                            )}
+                                                    <button
+                                                        onClick={() => props.removeStatus(
+                                                            status.Status_ID!,
+                                                            status.Backlog_ID,
+                                                            `/backlog/${props.localBacklog && props.convertID_NameStringToURLFormat(props.localBacklog.Backlog_ID ?? 0, props.localBacklog.Backlog_Name)}/edit`
+                                                        )}
+                                                        className="blue-link flex justify-center"
+                                                    >
+                                                        <FontAwesomeIcon
+                                                            icon={faTrashCan}
+                                                            color="red"
+                                                            size="xs"
                                                         />
                                                     </button>
                                                 ) : null}
@@ -138,19 +169,25 @@ export const StatusListEditor: React.FC<StatusListEditorProps> = (props) => (
                                                         <>
                                                             <Text className="w-3">
                                                                 {status.Status_ID && (status.Status_Order || 0) > 2 && (
-                                                                    <button>
-                                                                        <FontAwesomeIcon icon={faArrowUp} size="xs"
-                                                                            onClick={() => props.handleMoveStatusChanges(status.Status_ID!, "up")}
-                                                                        />
+                                                                    <button onClick={() => props.handleMoveStatusChanges(status.Status_ID!, "up")}>
+                                                                        {props.moveStatusPending &&
+                                                                            props.moveStatusPending === `up-${status.Status_ID}` ? (
+                                                                            <FontAwesomeIcon icon={faHourglass} size="xs" />
+                                                                        ) : (
+                                                                            <FontAwesomeIcon icon={faArrowUp} size="xs" />
+                                                                        )}
                                                                     </button>
                                                                 )}
                                                             </Text>
                                                             <Text className="w-3">
                                                                 {status.Status_ID && props.localBacklog.statuses && props.localBacklog.statuses.length > (status.Status_Order || 0) + 1 && (
-                                                                    <button>
-                                                                        <FontAwesomeIcon icon={faArrowDown} size="xs"
-                                                                            onClick={() => props.handleMoveStatusChanges(status.Status_ID!, "down")}
-                                                                        />
+                                                                    <button onClick={() => props.handleMoveStatusChanges(status.Status_ID!, "down")}>
+                                                                        {props.moveStatusPending &&
+                                                                            props.moveStatusPending === `down-${status.Status_ID}` ? (
+                                                                            <FontAwesomeIcon icon={faHourglass} size="xs" />
+                                                                        ) : (
+                                                                            <FontAwesomeIcon icon={faArrowDown} size="xs" />
+                                                                        )}
                                                                     </button>
                                                                 )}
                                                             </Text>

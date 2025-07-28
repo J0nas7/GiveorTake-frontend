@@ -1,9 +1,10 @@
 "use client"
 
 import { Block, Field, Heading } from '@/components'
+import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAuth } from '@/hooks'
 import Link from 'next/link'
-import React, { FormEvent, useState } from 'react'
+import React, { FormEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const ForgotPasswordResetView = () => {
@@ -17,16 +18,20 @@ export const ForgotPasswordResetView = () => {
     const [password1, setPassword1] = useState<string>('')
     const [password2, setPassword2] = useState<string>('')
     const [resetPending, setResetPending] = useState<boolean>(false)
+    const submittingRef = useRef<boolean>(false)
 
     // Methods
-    const doReset = (e?: FormEvent) => {
+    const doReset = async (e?: FormEvent) => {
         e?.preventDefault()
 
-        if (!resetPending) {
-            setResetPending(true)
+        if (submittingRef.current) return
+        submittingRef.current = true
+        setResetPending(true)
 
-            handleResetRequest(userEmail, rememberToken, password1, password2) // Trigger password reset
-
+        try {
+            await handleResetRequest(userEmail, rememberToken, password1, password2) // Trigger password reset
+        } finally {
+            submittingRef.current = false
             setResetPending(false)
         }
     }
@@ -80,7 +85,7 @@ export const ForgotPasswordResetView = () => {
                 />
                 <Field
                     type="password"
-                    lbl={t('guest:forms:Password')}
+                    lbl={t('guest:forms:Confirm-password')}
                     innerLabel={true}
                     value={password2}
                     onChange={(e: string) => setPassword2(e)}
@@ -91,12 +96,19 @@ export const ForgotPasswordResetView = () => {
                     className="forgot-field"
                     required={true}
                 />
-                <input
+
+                <button
                     type="submit"
-                    value={t('guest:forms:buttons:Reset')}
-                    className="w-full text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1"
-                    disabled={resetPending} // Disable during pending
-                />
+                    data-testid="reset-submit"
+                    disabled={resetPending}
+                    className="w-full flex justify-center h-12 text-center py-3 rounded bg-[#1ab11f] text-white focus:outline-none my-1 hover:cursor-pointer"
+                >
+                    {resetPending ? (
+                        <LoadingButton />
+                    ) : (
+                        <>{t('guest:forms:buttons:Reset')}</>
+                    )}
+                </button>
             </form>
             <p className="mt-2">
                 <Link className="text-[#1ab11f] font-bold" href="/sign-in">

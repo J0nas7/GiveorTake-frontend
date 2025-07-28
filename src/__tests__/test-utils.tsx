@@ -45,6 +45,7 @@ jest.mock('@/hooks', () => ({
     })),
     useAuth: jest.fn(() => ({
         handleLoginSubmit: mockHandleLoginSubmit,
+        // handleForgotRequest: mockHandleForgotRequest,
     })),
     useURLLink: jest.fn(() => ({
         convertID_NameStringToURLFormat: (id: number, name: string) => `${id}-${name.toLowerCase().replace(/\s+/g, '-')}`
