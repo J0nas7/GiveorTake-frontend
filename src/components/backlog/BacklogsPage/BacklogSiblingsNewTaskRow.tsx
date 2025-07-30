@@ -1,5 +1,6 @@
 import { Field } from '@/components';
 import { BacklogSiblingsProps } from '@/components/backlog';
+import { LoadingButton } from '@/core-ui/components/LoadingState';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -10,7 +11,8 @@ type BacklogSiblingsNewTaskRowProps = Pick<
     'localBacklog' |
     'handleChangeLocalNewTask' |
     'handleCreateTask' |
-    'ifEnter'
+    'ifEnter' |
+    'createTaskPending'
 >
 
 export const BacklogSiblingsNewTaskRow: React.FC<BacklogSiblingsNewTaskRowProps> = (props) => (
@@ -58,8 +60,16 @@ export const BacklogSiblingsNewTaskRow: React.FC<BacklogSiblingsNewTaskRowProps>
             </select>
         </td>
         <td>
-            <button type="submit" onClick={props.handleCreateTask} className={styles.addButton}>
-                <FontAwesomeIcon icon={faPlus} /> Create
+            <button
+                type="submit"
+                onClick={() => !props.createTaskPending && props.handleCreateTask}
+                className={styles.addButton}
+            >
+                {props.createTaskPending ? (
+                    <LoadingButton />
+                ) : (
+                    <><FontAwesomeIcon icon={faPlus} /> Create</>
+                )}
             </button>
         </td>
     </tr>

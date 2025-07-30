@@ -5,11 +5,12 @@ import { faCheck, faCopy, faEye, faEyeSlash, faPencil, faTrashCan, faXmark } fro
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 // Internal
 import { Block, Field, Heading, Text } from '@/components'
 import { useBacklogsContext, useTasksContext } from '@/contexts'
+import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAxios, useURLLink } from '@/hooks'
 import { selectSnackMessage, useTypedSelector } from '@/redux'
 import { Project, Task } from '@/types'
@@ -197,12 +198,17 @@ const BulkEdit: React.FC<BulkEditProps> = ({
     const [newDueDate, setNewDueDate] = useState<string>("")
     const [newStatus, setNewStatus] = useState<string>("")
     const [newBacklog, setNewBacklog] = useState<number>(0)
+    const [bulkUpdatePending, setBulkUpdatePending] = useState<boolean>(false)
+    const bulkUpdateRef = useRef<boolean>(false)
 
     /**
      * Methods
      */
     const handleBulkUpdate = async () => {
+        if (bulkUpdateRef.current) return
         if (!selectedTaskIds.length) return
+        bulkUpdateRef.current = true
+        setBulkUpdatePending(true)
 
         const updatedTasks = selectedTaskIds.map((taskId) => ({
             Task_ID: taskId,
@@ -221,6 +227,9 @@ const BulkEdit: React.FC<BulkEditProps> = ({
             await readTasksByBacklogId(parseInt(backlogId), true)
             setTaskBulkEditing(false)
         }
+
+        bulkUpdateRef.current = false
+        setBulkUpdatePending(false)
     }
 
     /**
@@ -317,8 +326,15 @@ const BulkEdit: React.FC<BulkEditProps> = ({
                 <button onClick={() => setTaskBulkEditing(false)}>
                     Cancel
                 </button>
-                <button className="button-blue" onClick={handleBulkUpdate}>
-                    Confirm
+                <button
+                    className="button-blue"
+                    onClick={handleBulkUpdate}
+                >
+                    {bulkUpdatePending ? (
+                        <LoadingButton />
+                    ) : (
+                        <>Confirm</>
+                    )}
                 </button>
             </Block>
         </Block>

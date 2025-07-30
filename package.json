@@ -39,7 +39,8 @@
     "react-quill": "^2.0.0",
     "react-redux": "^9.2.0",
     "react-textarea-autosize": "^8.5.7",
-    "sass": "^1.83.4"
+    "sass": "^1.83.4",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

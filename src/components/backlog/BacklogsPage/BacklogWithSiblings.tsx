@@ -3,7 +3,7 @@
 // External
 import { TFunction, useTranslation } from "next-i18next";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 // Internal
 import { Block } from "@/components";
@@ -30,6 +30,7 @@ export type BacklogSiblingsProps = {
     selectedTaskIds: string[]
     selectAll: boolean
     canAccessBacklog: boolean | undefined
+    createTaskPending: boolean
     handleSort: (column: string) => void;
     handleCreateTask: () => void;
     ifEnter: (e: React.KeyboardEvent) => Promise<void> | null
@@ -59,6 +60,8 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
+    const [createTaskPending, setCreateTaskPending] = useState<boolean>(false)
+    const createTaskRef = useRef<boolean>(false)
 
     const { canAccessBacklog } = useRoleAccess(
         localBacklog ? localBacklog.project?.team?.organisation?.User_ID : undefined,
@@ -87,7 +90,10 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
 
     // Prepares and creates a new task in the backlog.
     const handleCreateTask = async () => {
+        if (createTaskRef.current) return
         if (!localBacklog || !localBacklog.Backlog_ID) return
+        createTaskRef.current = true
+        setCreateTaskPending(true)
 
         const newTaskPlaceholder: Task = {
             Backlog_ID: parseInt(localBacklog.Backlog_ID.toString()),
@@ -103,6 +109,9 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
         if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
 
         if (theTasks && theTasks.length) setRenderTasks(theTasks)
+
+        createTaskRef.current = false
+        setCreateTaskPending(false)
     }
 
     // Archives a task by removing it from the backlog and updating the rendered tasks.
@@ -284,6 +293,7 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
                                 <BacklogSiblingsNewTaskRow
                                     localNewTask={localNewTask}
                                     localBacklog={localBacklog}
+                                    createTaskPending={createTaskPending}
                                     handleChangeLocalNewTask={handleChangeLocalNewTask}
                                     handleCreateTask={handleCreateTask}
                                     ifEnter={ifEnter}

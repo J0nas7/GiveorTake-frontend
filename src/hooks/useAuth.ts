@@ -133,18 +133,6 @@ export const useAuth = () => {
             "data": false
         }
         let error = false
-        // Resetting the errorType triggers another dispatch that resets the error
-        // dispatch(setLoginErrorType({ "data": "" }))
-
-        // If fields are empty
-        if (!Object.values(formData).length) {
-            errorData = {
-                "success": false,
-                "message": "Missing neccesary credentials.",
-                "data": false
-            }
-            error = true
-        }
 
         // Send email to the API for token generation
         try {

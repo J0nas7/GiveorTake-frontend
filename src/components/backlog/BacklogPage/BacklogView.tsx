@@ -3,7 +3,7 @@
 // External
 import { useTranslation } from "next-i18next";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 // Internal
 import { Backlog, BacklogProps } from '@/components/backlog';
@@ -51,6 +51,8 @@ export const BacklogView = () => {
     const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
     const [statusUrlEditing, setStatusUrlEditing] = useState<boolean>(false)
+    const [createTaskPending, setCreateTaskPending] = useState<boolean>(false)
+    const createTaskRef = useRef<boolean>(false)
 
     // ---- Effects ----
     useEffect(() => {
@@ -115,7 +117,10 @@ export const BacklogView = () => {
 
     // Prepares and creates a new task in the backlog.
     const handleCreateTask = async () => {
+        if (createTaskRef.current) return
         if (!renderBacklog) return
+        createTaskRef.current = true
+        setCreateTaskPending(true)
 
         const newTaskPlaceholder: Task = {
             Backlog_ID: parseInt(backlogId),
@@ -131,6 +136,9 @@ export const BacklogView = () => {
         await addTask(parseInt(backlogId), newTaskPlaceholder)
 
         await readTasksByBacklogId(parseInt(backlogId), true)
+
+        createTaskRef.current = false
+        setCreateTaskPending(false)
     }
 
     // Archives a task by removing it and refreshing the backlog tasks.
@@ -259,6 +267,7 @@ export const BacklogView = () => {
         selectAll,
         canAccessBacklog,
         canManageBacklog,
+        createTaskPending,
         handleSort,
         handleCreateTask,
         ifEnter,

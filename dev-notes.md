@@ -39,6 +39,7 @@ npm i:
     cookies-next@4.0
     react-dnd react-dnd-html5-backend
     next-qrcode
+    yup
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event

@@ -1,5 +1,6 @@
 import { Field } from '@/components';
 import { BacklogProps } from '@/components/backlog';
+import { LoadingButton } from '@/core-ui/components/LoadingState';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -10,7 +11,8 @@ type BacklogNewTaskRowProps = Pick<
     'handleChangeNewTask' |
     'handleCreateTask' |
     'ifEnter' |
-    'renderBacklog'
+    'renderBacklog' |
+    'createTaskPending'
 >
 
 export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
@@ -26,7 +28,7 @@ export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
                 onKeyDown={
                     (event: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) =>
                         props.ifEnter(event)}
-                disabled={false}
+                disabled={props.createTaskPending}
                 className="w-full"
             />
         </td>
@@ -35,6 +37,7 @@ export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
                 value={props.newTask?.Status_ID}
                 onChange={(e) => props.handleChangeNewTask("Status_ID", e.target.value)}
                 className="p-2 border rounded"
+                disabled={props.createTaskPending}
             >
                 {props.renderBacklog && props.renderBacklog.statuses
                     ?.sort((a, b) => (a.Status_Order ?? 0) - (b.Status_Order ?? 0))
@@ -48,6 +51,7 @@ export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
                 value={props.newTask?.Assigned_User_ID}
                 onChange={(e) => props.handleChangeNewTask("Assigned_User_ID", e.target.value)}
                 className="p-2 border rounded"
+                disabled={props.createTaskPending}
             >
                 <option value="">Assignee</option>
                 {props.renderBacklog && props.renderBacklog.project?.team?.user_seats?.map(userSeat => (
@@ -58,8 +62,16 @@ export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
             </select>
         </td>
         <td>
-            <button type="submit" onClick={props.handleCreateTask} className={styles.addButton}>
-                <FontAwesomeIcon icon={faPlus} /> Create
+            <button
+                type="submit"
+                onClick={() => !props.createTaskPending && props.handleCreateTask}
+                className={styles.addButton}
+            >
+                {props.createTaskPending ? (
+                    <LoadingButton />
+                ) : (
+                    <><FontAwesomeIcon icon={faPlus} /> Create</>
+                )}
             </button>
         </td>
     </tr>

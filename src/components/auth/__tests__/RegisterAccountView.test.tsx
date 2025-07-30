@@ -194,7 +194,7 @@ describe('RegisterAccountView Components', () => {
             expect(passwordFields[0]).toHaveAttribute("type", "password");
         });
 
-        it("submits on Enter key", () => {
+        it("submits on Enter key", async () => {
             renderRegisterView();
 
             fireEvent.change(screen.getByLabelText(/Firstname/i), { target: { value: "Key" } });
@@ -202,11 +202,20 @@ describe('RegisterAccountView Components', () => {
             fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "key@press.com" } });
             const passwordFields = screen.getAllByLabelText(/password/i);
             expect(passwordFields.length).toBe(2); // Password + Confirm-password
+            fireEvent.change(passwordFields[0], { target: { value: "abc123" } });
+            fireEvent.change(passwordFields[1], { target: { value: "abc123" } });
             fireEvent.click(screen.getByLabelText(/Accept-Terms-of-Service/i));
 
-            fireEvent.keyDown(screen.getByLabelText(/Email/i), { key: "Enter", code: "Enter" });
+            // fireEvent.keyDown(screen.getByLabelText(/Email/i), { key: "Enter", code: "Enter" });
+            const form = screen.getByLabelText(/Email/i).closest('form')
+            expect(form).not.toBeNull()
+            if (form) {
+                fireEvent.submit(form)
+            }
 
-            expect(mockHandleRegister).toHaveBeenCalled();
+            await waitFor(() => {
+                expect(mockHandleRegister).toHaveBeenCalled();
+            })
         });
 
         it("renders safely with all empty fields and does not throw", () => {

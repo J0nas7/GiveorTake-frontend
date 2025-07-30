@@ -18,6 +18,7 @@ export type BacklogProps = {
     selectAll: boolean
     canAccessBacklog: boolean | undefined
     canManageBacklog: boolean | undefined
+    createTaskPending: boolean
     handleSort: (column: string) => void;
     handleCreateTask: () => void;
     ifEnter: (e: React.KeyboardEvent) => Promise<void> | null
@@ -58,7 +59,14 @@ export const Backlog: React.FC<BacklogProps> = (props) => props.renderBacklog &&
                             <table className={styles.taskTable}>
                                 <BacklogTaskTableHeader {...props} />
                                 <tbody>
-                                    <BacklogNewTaskRow {...props} />
+                                    <BacklogNewTaskRow
+                                        newTask={props.newTask}
+                                        handleChangeNewTask={props.handleChangeNewTask}
+                                        handleCreateTask={props.handleCreateTask}
+                                        ifEnter={props.ifEnter}
+                                        renderBacklog={props.renderBacklog}
+                                        createTaskPending={props.createTaskPending}
+                                    />
 
                                     {props.sortedTasks.map(task => (
                                         <BacklogTaskRow

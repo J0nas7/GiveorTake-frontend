@@ -1,17 +1,30 @@
 "use client"
 
 // External
-import { useTranslation } from 'next-i18next'
-import Link from 'next/link'
-import React, { useRef, useState } from 'react'
+import { useTranslation } from 'next-i18next';
+import Link from 'next/link';
+import React, { useRef, useState } from 'react';
+import * as Yup from 'yup';
 
 // Internal
-import { Block, Field, Heading } from "@/components"
-import { LoadingButton } from '@/core-ui/components/LoadingState'
-import { useAuth } from '@/hooks'
+import { Block, Field, Heading } from "@/components";
+import { LoadingButton } from '@/core-ui/components/LoadingState';
+import { useAuth } from '@/hooks';
+import { setSnackMessage, useAppDispatch } from '@/redux';
+
+// Define the Yup validation schema
+export const registerSchema = Yup.object().shape({
+    userFirstname: Yup.string().required('First name is required'),
+    userSurname: Yup.string().required('Surname is required'),
+    userEmail: Yup.string().email('Invalid email format').required('Email is required'),
+    userPassword: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+    userPassword_confirmation: Yup.string().oneOf([Yup.ref('userPassword'), undefined], 'Passwords must match').required('Password confirmation is required'),
+    acceptTerms: Yup.boolean().oneOf([true], 'Accepting terms is required'),
+});
 
 export const RegisterAccountView = () => {
     // Hooks
+    const dispatch = useAppDispatch()
     const { handleRegister } = useAuth()
 
     // Internal variables
@@ -32,7 +45,7 @@ export const RegisterAccountView = () => {
 
         if (submittingRef.current) return;
         submittingRef.current = true;
-        setCreatePending(true)
+        setCreatePending(true);
 
         const formData = {
             userFirstname,
@@ -44,10 +57,25 @@ export const RegisterAccountView = () => {
         }
 
         try {
+            // Validate the form data using the Yup schema
             await handleRegister(formData);
+
+            await registerSchema.validate(formData, { abortEarly: false });
+
+        } catch (error) {
+            // Handle validation errors
+            if (error instanceof Yup.ValidationError) {
+                // Flatten the error messages into a single array and join them into a string
+                const errorMessages = error.inner.map(err => err.message);
+                const combinedErrorMessage = errorMessages.join('. ');
+                dispatch(setSnackMessage(combinedErrorMessage));
+            } else {
+                // Handle other errors
+                console.error('Registration error:', error);
+            }
         } finally {
-            submittingRef.current = false; // Reset pending state
-            setCreatePending(false)
+            submittingRef.current = false;
+            setCreatePending(false);
         }
     }
 
