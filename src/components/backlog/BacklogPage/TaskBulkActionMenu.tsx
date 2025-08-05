@@ -137,6 +137,7 @@ export const TaskBulkActionMenu: React.FC<{ project?: Project | undefined }> = (
                 <Link
                     href={handleFocus(!taskBulkFocus)}
                     className="flex gap-2 items-center cursor-pointer"
+                    data-testid="task-bulk-focus-toggle"
                 >
                     <FontAwesomeIcon icon={taskBulkFocus ? faEye : faEyeSlash} />
                     <Text variant="span">

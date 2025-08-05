@@ -1,7 +1,9 @@
 // src/test-utils.tsx
 import { mockHandleLoginSubmit } from '@/components/auth/__tests__/SignInView.test';
 import {
+    BacklogsProvider,
     OrganisationsProvider,
+    ProjectsProvider,
     TeamUserSeatsProvider,
     UsersProvider
 } from "@/contexts";
@@ -9,6 +11,15 @@ import { render } from "@testing-library/react";
 import React from "react";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
+
+// Shared mock functions
+export const mockConvertID_NameStringToURLFormat = jest.fn(
+    (id: number, name: string) => {
+        const safeName = name?.toLowerCase().replace(/\s+/g, '-') ?? 'unknown';
+        return `${id}-${safeName}`;
+    }
+);
+export const pushMock = jest.fn();
 
 // Create mock store
 const mockStore = configureStore([]);
@@ -19,21 +30,21 @@ const store = mockStore({
 });
 
 jest.mock('next/navigation', () => ({
-    useRouter: () => ({
-        push: jest.fn(),
+    useRouter: jest.fn(() => ({
+        push: pushMock,
         replace: jest.fn(),
         refresh: jest.fn(),
         prefetch: jest.fn(),
         back: jest.fn(),
         forward: jest.fn(),
-    }),
+    })),
     usePathname: () => '/',
-    useParams: () => ({
+    useParams: jest.fn(() => ({
         organisationLink: '1-test-org',
-    }),
-    useSearchParams: () => ({
+    })),
+    useSearchParams: jest.fn(() => ({
         get: jest.fn().mockReturnValue(null),
-    }),
+    })),
 }));
 
 jest.mock('@/hooks', () => ({
@@ -41,14 +52,15 @@ jest.mock('@/hooks', () => ({
         canModifyOrganisationSettings: true,
     })),
     useAxios: jest.fn(() => ({
-        httpGetRequest: jest.fn()
+        httpGetRequest: jest.fn(),
+        httpPostWithData: jest.fn(() => Promise.resolve({ success: true })),
     })),
     useAuth: jest.fn(() => ({
         handleLoginSubmit: mockHandleLoginSubmit,
         // handleForgotRequest: mockHandleForgotRequest,
     })),
     useURLLink: jest.fn(() => ({
-        convertID_NameStringToURLFormat: (id: number, name: string) => `${id}-${name.toLowerCase().replace(/\s+/g, '-')}`
+        convertID_NameStringToURLFormat: mockConvertID_NameStringToURLFormat
     })),
     useTypeAPI: jest.fn(() => ({
         fetchItemsByParent: jest.fn(),
@@ -59,13 +71,26 @@ jest.mock('@/hooks', () => ({
     })),
 }));
 
+jest.mock('react-dnd', () => ({
+    useDrag: jest.fn(),
+    useDrop: jest.fn(),
+}));
+
+jest.mock('react-dnd-html5-backend', () => ({
+    HTML5Backend: jest.fn(),
+}));
+
 export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <Provider store={store}>
             <OrganisationsProvider> {/* Use the Provider instead of manually setting context */}
                 <UsersProvider>
                     <TeamUserSeatsProvider>
-                        {children}
+                        <ProjectsProvider>
+                            <BacklogsProvider>
+                                {children}
+                            </BacklogsProvider>
+                        </ProjectsProvider>
                     </TeamUserSeatsProvider>
                 </UsersProvider>
             </OrganisationsProvider>

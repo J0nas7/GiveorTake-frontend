@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { FinishBacklog, FinishBacklogProps } from '@/components/backlog';
 import { useBacklogsContext, useProjectsContext, useTasksContext } from '@/contexts';
@@ -9,6 +9,8 @@ import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
 import { setSnackMessage, useAppDispatch } from '@/redux';
 import { Backlog, Task } from '@/types';
+
+void React.createElement
 
 export const FinishBacklogView = () => {
     // ---- Hooks ----
@@ -36,11 +38,16 @@ export const FinishBacklogView = () => {
         Project_ID: 0,
         Backlog_IsPrimary: false,
     })
+    const [finishBacklogPending, setFinishBacklogPending] = useState<boolean>(false)
+    const finishBacklogRef = useRef<boolean>(false)
 
     // ---- Methods ----
     // Handles the finishing of the current backlog and redirects accordingly
     const doFinishBacklog = async () => {
         if (!renderBacklog) return
+        if (finishBacklogRef.current) return; // Prevent multiple submissions
+        finishBacklogRef.current = true;
+        setFinishBacklogPending(true)
 
         const targetBacklog = await finishBacklog(backlogId, moveAction, newBacklog)
         if (targetBacklog) {
@@ -48,6 +55,9 @@ export const FinishBacklogView = () => {
         } else {
             dispatch(setSnackMessage("Error happened while finishing backlog. Try again."))
         }
+
+        finishBacklogRef.current = false;
+        setFinishBacklogPending(false)
     }
 
     // ---- Effects ----
@@ -91,6 +101,7 @@ export const FinishBacklogView = () => {
         newBacklog,
         projectById,
         backlogId,
+        finishBacklogPending,
         setMoveAction,
         setNewBacklog,
         doFinishBacklog

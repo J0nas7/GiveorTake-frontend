@@ -1,6 +1,9 @@
 import { Block, Heading, Text } from "@/components"
 import { DashboardProps } from "@/components/backlog"
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
+import React from 'react'
+
+void React.createElement
 
 type DashboardKPISectionProps = Pick<
     DashboardProps,

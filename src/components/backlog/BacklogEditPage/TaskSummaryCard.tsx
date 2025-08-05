@@ -2,6 +2,9 @@
 
 import { FlexibleBox } from '@/components';
 import { Card, CardContent, Grid, Typography } from '@mui/material';
+import React from 'react';
+
+void React.createElement
 
 export const TaskSummaryCard: React.FC<{
     stats: {

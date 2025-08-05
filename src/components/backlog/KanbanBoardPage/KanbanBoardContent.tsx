@@ -4,6 +4,9 @@ import { FlexibleBox } from '@/components/ui/flexible-box'
 import { LoadingState } from '@/core-ui/components/LoadingState'
 import styles from "@/core-ui/styles/modules/KanbanBoard.module.scss"
 import { faWindowRestore } from '@fortawesome/free-solid-svg-icons'
+import React from 'react'
+
+void React.createElement
 
 type KanbanBoardContentProps = Pick<
     KanbanBoardProps,

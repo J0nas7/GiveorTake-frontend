@@ -7,8 +7,11 @@ import { faCheck, faLightbulb, faList, faPencil } from '@fortawesome/free-solid-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
 import Link from 'next/link';
+import React from 'react';
 
-type BacklogActionsProps = Pick<
+void React.createElement
+
+export type BacklogActionsProps = Pick<
     BacklogEditProps,
     "localBacklog" |
     "canAccessBacklog" |

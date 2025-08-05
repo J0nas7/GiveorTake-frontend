@@ -5,6 +5,9 @@ import { BacklogActions, BacklogEditEditor, StatusListEditor, TaskSummaryCard } 
 import { LoadingState } from '@/core-ui/components/LoadingState';
 import { Backlog, BacklogStates, Status, User } from '@/types';
 import { faList } from '@fortawesome/free-solid-svg-icons';
+import React from 'react';
+
+void React.createElement
 
 export type BacklogEditProps = {
     localBacklog: BacklogStates;

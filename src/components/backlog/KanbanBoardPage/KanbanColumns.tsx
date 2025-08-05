@@ -1,4 +1,7 @@
 import { Column, ColumnProps, KanbanBoardProps } from '@/components/backlog'
+import React from 'react'
+
+void React.createElement
 
 type KanbanColumnsProps = Pick<
     KanbanBoardProps,

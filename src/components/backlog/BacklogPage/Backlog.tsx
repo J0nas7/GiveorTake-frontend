@@ -5,6 +5,9 @@ import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { BacklogStates, Task, TaskFields } from '@/types';
 import { faList } from '@fortawesome/free-solid-svg-icons';
 import { TFunction } from 'next-i18next';
+import React from 'react';
+
+void React.createElement
 
 export type BacklogProps = {
     renderBacklog?: BacklogStates;
@@ -33,7 +36,11 @@ export type BacklogProps = {
 
 export const Backlog: React.FC<BacklogProps> = (props) => props.renderBacklog && (
     <>
-        <BacklogStatusActionMenu {...props} />
+        <BacklogStatusActionMenu
+            renderBacklog={props.renderBacklog}
+            selectedStatusIds={props.selectedStatusIds}
+            statusUrlEditing={props.statusUrlEditing}
+        />
 
         <TaskBulkActionMenu project={props.renderBacklog.project} />
 

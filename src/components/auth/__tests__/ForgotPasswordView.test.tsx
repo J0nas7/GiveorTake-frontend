@@ -55,7 +55,7 @@ describe('ForgotPasswordView Components', () => {
                 target: { value: 'test@example.com' },
             })
 
-            act(() => {
+            await act(() => {
                 fireEvent.click(screen.getByRole('button', { name: 'guest:forms:buttons:Forgot' }))
             })
 

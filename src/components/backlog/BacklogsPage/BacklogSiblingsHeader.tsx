@@ -5,6 +5,9 @@ import { faGauge, faList, faWindowRestore } from '@fortawesome/free-solid-svg-ic
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
 import Link from 'next/link';
+import React from 'react';
+
+void React.createElement
 
 type BacklogSiblingsHeaderProps = Pick<
     BacklogSiblingsProps,

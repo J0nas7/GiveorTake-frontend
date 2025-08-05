@@ -1,5 +1,8 @@
 import { Block, Field } from "@/components"
 import { FinishBacklogProps } from "@/components/backlog"
+import React from 'react'
+
+void React.createElement
 
 type FinishBacklogMoveToNewProps = Pick<
     FinishBacklogProps,

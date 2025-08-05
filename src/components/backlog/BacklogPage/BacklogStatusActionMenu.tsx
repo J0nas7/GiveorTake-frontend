@@ -8,7 +8,14 @@ import { Block, Text } from '@/components';
 import { BacklogProps } from '@/components/backlog';
 import { Status } from '@/types';
 
-export const BacklogStatusActionMenu: React.FC<BacklogProps> = (props) => {
+export type BacklogStatusActionMenuProps = Pick<
+    BacklogProps,
+    'renderBacklog' |
+    'selectedStatusIds' |
+    'statusUrlEditing'
+>
+
+export const BacklogStatusActionMenu: React.FC<BacklogStatusActionMenuProps> = (props) => {
     // Hooks
     const router = useRouter()
 

@@ -1,5 +1,8 @@
 import { Block } from "@/components"
 import { DashboardProps, ProjectBacklogNavigation } from "@/components/backlog"
+import React from 'react'
+
+void React.createElement
 
 type DashboardActionsProps = Pick<
     DashboardProps,

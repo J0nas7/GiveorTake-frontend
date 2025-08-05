@@ -2,7 +2,7 @@
 
 import { useTranslation } from "next-i18next"
 import { useParams } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 
 // External chart library
 import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from 'chart.js'
@@ -13,6 +13,8 @@ import { useBacklogsContext, useTasksContext } from "@/contexts"
 import { useURLLink } from "@/hooks"
 import useRoleAccess from "@/hooks/useRoleAccess"
 import { Task } from "@/types"
+
+void React.createElement
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale)

@@ -2,6 +2,9 @@ import { Text } from '@/components';
 import { BacklogSiblingsProps } from '@/components/backlog';
 import { faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from 'react';
+
+void React.createElement
 
 type BacklogSiblingsTaskTableHeaderProps = Pick<
     BacklogSiblingsProps,

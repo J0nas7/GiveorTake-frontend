@@ -1,7 +1,10 @@
 import { Block, Heading } from "@/components"
 import { DashboardProps } from "@/components/backlog"
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
+import React from 'react'
 import { Bar, Pie } from "react-chartjs-2"
+
+void React.createElement
 
 type DashboardChartsProps = Pick<
     DashboardProps,

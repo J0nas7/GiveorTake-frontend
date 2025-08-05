@@ -15,6 +15,7 @@ Create testing of UserDetailsView, including UserDetailsViewProps variables bein
 
 
 Add a second describe() => {}, testing 5 new edge cases.
+Arrow to search in tests:  ›
 
 
 

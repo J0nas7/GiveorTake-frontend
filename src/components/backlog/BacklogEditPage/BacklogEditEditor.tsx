@@ -3,13 +3,16 @@
 import { Block } from '@/components';
 import { BacklogEditProps } from '@/components/backlog';
 import { Card, CardContent, Grid, TextField, Typography } from '@mui/material';
+import React from 'react';
 
 // Dynamically import ReactQuill with SSR disabled
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css"; // Import the Quill styles
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
-type BacklogEditorProps = Pick<
+void React.createElement
+
+export type BacklogEditorProps = Pick<
     BacklogEditProps,
     "localBacklog" |
     "handleBacklogChange" |

@@ -2,6 +2,9 @@ import { BacklogProps } from '@/components/backlog';
 import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { Task } from '@/types';
+import React from 'react';
+
+void React.createElement
 
 type BacklogTaskRowProps = Pick<
     BacklogProps,

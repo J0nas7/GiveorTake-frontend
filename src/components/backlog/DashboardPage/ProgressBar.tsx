@@ -1,4 +1,7 @@
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
+import React from 'react'
+
+void React.createElement
 
 type ProgressBarProps = {
     completed: number // Completion percentage (0 - 100)

@@ -1,7 +1,7 @@
 "use client"
 
 // External
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 // Internal
 import { Backlogs, BacklogsProps } from '@/components/backlog'
@@ -11,6 +11,8 @@ import useRoleAccess from '@/hooks/useRoleAccess'
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/redux'
 import { ProjectStates } from '@/types'
 import { useParams } from 'next/navigation'
+
+void React.createElement
 
 export const BacklogsView = () => {
     // ---- Hooks ----

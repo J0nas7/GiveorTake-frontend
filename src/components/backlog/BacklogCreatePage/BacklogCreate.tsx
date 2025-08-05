@@ -64,10 +64,14 @@ export const BacklogCreate: React.FC<BacklogCreateProps> = (props) => (
                             />
 
                             <div className="w-full">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label
+                                    htmlFor="isPrimaryBacklog"
+                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                >
                                     Is Primary Backlog?
                                 </label>
                                 <select
+                                    id="isPrimaryBacklog"
                                     className="border rounded w-full p-2"
                                     value={props.newBacklog.Backlog_IsPrimary ? "true" : "false"}
                                     onChange={(e) => props.handleInputChange("Backlog_IsPrimary", e.target.value === "true")}
@@ -98,6 +102,7 @@ export const BacklogCreate: React.FC<BacklogCreateProps> = (props) => (
                                 <Text>Backlog Description</Text>
                                 <ReactQuill
                                     className="w-full mt-2 border border-gray-300 rounded-md"
+                                    data-testid="backlog-description-editor"
                                     theme="snow"
                                     value={props.newBacklog.Backlog_Description || ""}
                                     onChange={(value) => props.handleInputChange("Backlog_Description", value)}
@@ -108,6 +113,7 @@ export const BacklogCreate: React.FC<BacklogCreateProps> = (props) => (
                             <button
                                 onClick={props.handleCreateBacklog}
                                 disabled={props.createPending}
+                                data-testid="create-backlog-button"
                                 className="button-blue w-32 flex justify-center"
                             >
                                 {props.createPending ? (

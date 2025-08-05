@@ -1,7 +1,7 @@
 "use client"
 
 import { Block, FlexibleBox } from "@/components"
-import { LoadingState } from "@/core-ui/components/LoadingState"
+import { LoadingButton, LoadingState } from "@/core-ui/components/LoadingState"
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons"
 import { Card, CardContent } from "@mui/material"
 import React from "react"
@@ -27,6 +27,7 @@ export type FinishBacklogProps = {
     newBacklog: Backlog
     projectById: ProjectStates
     backlogId: string
+    finishBacklogPending: boolean
     setMoveAction: React.Dispatch<React.SetStateAction<string>>
     setNewBacklog: React.Dispatch<React.SetStateAction<Backlog>>
     doFinishBacklog: () => Promise<void>
@@ -75,7 +76,17 @@ export const FinishBacklog: React.FC<FinishBacklogProps> = (props) => props.rend
                             )}
 
                             <Block className="mt-3">
-                                <button className="blue-link" onClick={props.doFinishBacklog}>Finish backlog</button>
+                                <button
+                                    className={props.finishBacklogPending ? "button-blue" : "blue-link"}
+                                    onClick={props.doFinishBacklog}
+                                    disabled={props.finishBacklogPending}
+                                >
+                                    {props.finishBacklogPending ? (
+                                        <LoadingButton />
+                                    ) : (
+                                        <>Finish backlog</>
+                                    )}
+                                </button>
                             </Block>
                         </CardContent>
                     </Card>

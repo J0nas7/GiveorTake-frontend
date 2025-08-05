@@ -1,5 +1,8 @@
 import { BacklogSiblingsProps } from '@/components/backlog';
 import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
+import React from 'react';
+
+void React.createElement
 
 type BacklogSiblingsTaskTableBodyProps = Pick<
     BacklogSiblingsProps,

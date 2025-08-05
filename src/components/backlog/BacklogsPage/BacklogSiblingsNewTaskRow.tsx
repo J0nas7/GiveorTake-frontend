@@ -4,6 +4,9 @@ import { LoadingButton } from '@/core-ui/components/LoadingState';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from 'react';
+
+void React.createElement
 
 type BacklogSiblingsNewTaskRowProps = Pick<
     BacklogSiblingsProps,
@@ -62,8 +65,11 @@ export const BacklogSiblingsNewTaskRow: React.FC<BacklogSiblingsNewTaskRowProps>
         <td>
             <button
                 type="submit"
-                onClick={() => !props.createTaskPending && props.handleCreateTask}
+                onClick={() => {
+                    if (!props.createTaskPending) props.handleCreateTask()
+                }}
                 className={styles.addButton}
+                disabled={props.createTaskPending}
             >
                 {props.createTaskPending ? (
                     <LoadingButton />

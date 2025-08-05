@@ -4,8 +4,11 @@ import { LoadingButton } from '@/core-ui/components/LoadingState';
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from 'react';
 
-type BacklogNewTaskRowProps = Pick<
+void React.createElement
+
+export type BacklogNewTaskRowProps = Pick<
     BacklogProps,
     'newTask' |
     'handleChangeNewTask' |
@@ -34,6 +37,7 @@ export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
         </td>
         <td>
             <select
+                aria-label="Status"
                 value={props.newTask?.Status_ID}
                 onChange={(e) => props.handleChangeNewTask("Status_ID", e.target.value)}
                 className="p-2 border rounded"
@@ -48,6 +52,7 @@ export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
         </td>
         <td>
             <select
+                aria-label="Assignee"
                 value={props.newTask?.Assigned_User_ID}
                 onChange={(e) => props.handleChangeNewTask("Assigned_User_ID", e.target.value)}
                 className="p-2 border rounded"
@@ -64,7 +69,10 @@ export const BacklogNewTaskRow: React.FC<BacklogNewTaskRowProps> = (props) => (
         <td>
             <button
                 type="submit"
-                onClick={() => !props.createTaskPending && props.handleCreateTask}
+                data-testid="create-task-button"
+                onClick={() => {
+                    if (!props.createTaskPending) props.handleCreateTask()
+                }}
                 className={styles.addButton}
             >
                 {props.createTaskPending ? (

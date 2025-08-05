@@ -58,7 +58,9 @@ describe('ForgotPasswordResetView Components', () => {
                 target: { value: 'pass1' }
             })
 
-            fireEvent.click(screen.getByRole('button', { name: /Reset/i }))
+            act(() => {
+                fireEvent.click(screen.getByRole('button', { name: /Reset/i }))
+            })
 
             await waitFor(() => {
                 expect(mockHandleResetRequest).toHaveBeenCalledWith(

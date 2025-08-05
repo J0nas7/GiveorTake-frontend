@@ -2,6 +2,9 @@ import { Block, Text } from '@/components';
 import { BacklogProps, ProjectBacklogNavigation } from '@/components/backlog';
 import { faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from 'react';
+
+void React.createElement
 
 type BacklogHeaderProps = Pick<
     BacklogProps,

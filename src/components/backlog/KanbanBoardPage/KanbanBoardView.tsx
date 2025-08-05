@@ -2,7 +2,7 @@
 
 // External
 import { useParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 
 // Internal
 import { KanbanBoard, KanbanBoardProps } from '@/components/backlog'
@@ -10,6 +10,8 @@ import { useBacklogsContext, useTasksContext } from "@/contexts"
 import { useURLLink } from "@/hooks"
 import useRoleAccess from "@/hooks/useRoleAccess"
 import { Status, Task } from "@/types"
+
+void React.createElement
 
 export const KanbanBoardView = () => {
     // ---- Hooks ----

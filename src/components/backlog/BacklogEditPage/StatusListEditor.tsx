@@ -114,9 +114,11 @@ export const StatusListEditor: React.FC<StatusListEditorProps> = (props) => (
                                                     }
                                                     disabled={false}
                                                     className="status-name-field"
+                                                    data-testid="status-name-field"
                                                 />
                                                 {statusName !== status.Status_Name ? (
                                                     <button
+                                                        data-testid="save-status-button"
                                                         onClick={() => props.handleSaveStatusChanges(
                                                             {
                                                                 ...status,
@@ -131,10 +133,13 @@ export const StatusListEditor: React.FC<StatusListEditorProps> = (props) => (
                                                         {props.saveStatusPending && props.saveStatusPending === status.Status_ID ? (
                                                             <LoadingButton />
                                                         ) : (
-                                                            <FontAwesomeIcon
-                                                                icon={faPencil}
-                                                                color="green"
-                                                            />
+                                                            <>
+                                                                test
+                                                                <FontAwesomeIcon
+                                                                    icon={faPencil}
+                                                                    color="green"
+                                                                />
+                                                            </>
                                                         )}
                                                     </button>
                                                 ) : status.Status_ID && !status.Status_Is_Default && !status.Status_Is_Closed ? (

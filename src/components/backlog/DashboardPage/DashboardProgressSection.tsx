@@ -1,6 +1,9 @@
 import { Heading } from "@/components"
 import { DashboardProps, ProgressBar } from "@/components/backlog"
 import styles from "@/core-ui/styles/modules/Dashboard.module.scss"
+import React from 'react'
+
+void React.createElement
 
 type DashboardProgressSectionProps = Pick<
     DashboardProps,
