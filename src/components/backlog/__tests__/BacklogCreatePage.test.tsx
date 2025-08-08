@@ -2,7 +2,7 @@ import { TestProvider, mockConvertID_NameStringToURLFormat } from '@/__tests__/t
 import { BacklogCreate, BacklogCreateProps } from '@/components/backlog';
 
 import '@testing-library/jest-dom';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 void React.createElement
@@ -35,17 +35,28 @@ const mockProps: BacklogCreateProps = {
     convertID_NameStringToURLFormat: mockConvertID,
 };
 
-describe('BacklogCreateView Components', () => {
-    const renderBacklogCreateView = (customProps = {}) =>
-        render(
-            <TestProvider>
-                <BacklogCreate {...mockProps} {...customProps} />
-            </TestProvider>
-        );
+jest.mock('react-quill', () => (props: any) => (
+    <textarea
+        data-testid="mock-quill"
+        value={props.value}
+        onChange={e => props.onChange(e.target.value)}
+    />
+));
 
-    beforeEach(() => {
+describe('BacklogCreateView Components', () => {
+    const renderBacklogCreateView = async (customProps = {}) => {
+        await waitFor(() =>
+            render(
+                <TestProvider>
+                    <BacklogCreate {...mockProps} {...customProps} />
+                </TestProvider>
+            )
+        );
+    };
+
+    beforeEach(async () => {
         jest.clearAllMocks();
-        renderBacklogCreateView();
+        await renderBacklogCreateView();
     });
 
     afterEach(() => {

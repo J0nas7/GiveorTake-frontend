@@ -6,9 +6,11 @@ import { Bar, Pie } from "react-chartjs-2"
 
 void React.createElement
 
-type DashboardChartsProps = Pick<
+export type DashboardChartsProps = Pick<
     DashboardProps,
-    'chartData' | 'barChartData' | 't'
+    'chartData' |
+    'barChartData' |
+    't'
 >
 
 export const DashboardCharts: React.FC<DashboardChartsProps> = (props) => (

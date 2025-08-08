@@ -5,9 +5,10 @@ import React from 'react'
 
 void React.createElement
 
-type DashboardProgressSectionProps = Pick<
+export type DashboardProgressSectionProps = Pick<
     DashboardProps,
-    'completionRate' | 't'
+    'completionRate' |
+    't'
 >
 
 export const DashboardProgressSection: React.FC<DashboardProgressSectionProps> = (props) => (

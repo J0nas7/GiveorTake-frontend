@@ -9,13 +9,14 @@ void React.createElement
 
 type FinishBacklogHeaderLinkProps = Pick<
     FinishBacklogProps,
-    'renderBacklog'
+    'renderBacklog' |
+    'convertID_NameStringToURLFormat'
 >
 
 export const FinishBacklogHeaderLink: React.FC<FinishBacklogHeaderLinkProps> = (props) => props.renderBacklog && (
     <Block className="actions-wrapper">
         <Link
-            href={`/project/${props.renderBacklog.Project_ID}`}
+            href={`/project/${props.convertID_NameStringToURLFormat(props.renderBacklog.Project_ID ?? 0, props.renderBacklog.project?.Project_Name ?? '')}`}
             className="blue-link action-button button-right"
         >
             <FontAwesomeIcon icon={faLightbulb} />

@@ -34,6 +34,7 @@ export const ProjectBacklogNavigation: React.FC<ProjectBacklogNavigationProps> =
     <>
         {links.map((link) => props.renderBacklog && (
             <Link
+                key={link.link}
                 href={`/${link.link}/${(props.convertID_NameStringToURLFormat(
                     props.renderBacklog.Backlog_ID ?? 0, props.renderBacklog.Backlog_Name
                 )) || props.renderBacklog.Backlog_ID}`}

@@ -63,9 +63,23 @@ export const Dashboard: React.FC<DashboardProps> = (props) => props.renderBacklo
             >
                 {props.renderBacklog && (
                     <>
-                        <DashboardKPISection {...props} />
-                        <DashboardProgressSection {...props} />
-                        <DashboardCharts {...props} />
+                        <DashboardKPISection
+                            totalTasks={props.totalTasks}
+                            completedTasks={props.completedTasks}
+                            completionRate={props.completionRate}
+                            overdueTasks={props.overdueTasks}
+                            inProgressTasks={props.inProgressTasks}
+                            t={props.t}
+                        />
+                        <DashboardProgressSection
+                            completionRate={props.completionRate}
+                            t={props.t}
+                        />
+                        <DashboardCharts
+                            chartData={props.chartData}
+                            barChartData={props.barChartData}
+                            t={props.t}
+                        />
                     </>
                 )}
             </LoadingState>

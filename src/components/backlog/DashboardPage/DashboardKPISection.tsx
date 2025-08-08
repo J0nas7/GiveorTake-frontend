@@ -5,7 +5,7 @@ import React from 'react'
 
 void React.createElement
 
-type DashboardKPISectionProps = Pick<
+export type DashboardKPISectionProps = Pick<
     DashboardProps,
     'totalTasks' |
     'completedTasks' |

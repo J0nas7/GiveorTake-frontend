@@ -104,7 +104,8 @@ export const FinishBacklogView = () => {
         finishBacklogPending,
         setMoveAction,
         setNewBacklog,
-        doFinishBacklog
+        doFinishBacklog,
+        convertID_NameStringToURLFormat
     }
 
     return <FinishBacklog {...finishBacklogProps} />

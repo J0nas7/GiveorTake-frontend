@@ -4,7 +4,7 @@ import React from 'react'
 
 void React.createElement
 
-type FinishBacklogStatsProps = Pick<
+export type FinishBacklogStatsProps = Pick<
     FinishBacklogProps,
     'tasksById' |
     'taskStatusCounter'

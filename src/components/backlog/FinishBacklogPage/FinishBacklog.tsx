@@ -31,6 +31,7 @@ export type FinishBacklogProps = {
     setMoveAction: React.Dispatch<React.SetStateAction<string>>
     setNewBacklog: React.Dispatch<React.SetStateAction<Backlog>>
     doFinishBacklog: () => Promise<void>
+    convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
 export const FinishBacklog: React.FC<FinishBacklogProps> = (props) => props.renderBacklog && (
@@ -42,7 +43,10 @@ export const FinishBacklog: React.FC<FinishBacklogProps> = (props) => props.rend
             className="no-box w-auto inline-block"
             numberOfColumns={2}
             titleAction={
-                <FinishBacklogHeaderLink renderBacklog={props.renderBacklog} />
+                <FinishBacklogHeaderLink
+                    renderBacklog={props.renderBacklog}
+                    convertID_NameStringToURLFormat={props.convertID_NameStringToURLFormat}
+                />
             }
         >
             <LoadingState singular="Backlog" renderItem={props.renderBacklog} permitted={props.canManageBacklog}>

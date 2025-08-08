@@ -2,7 +2,7 @@ import { mockConvertID_NameStringToURLFormat, TestProvider } from '@/__tests__/t
 import { BacklogActions, BacklogActionsProps, BacklogEditEditor, BacklogEditorProps, StatusListEditor, TaskSummaryCard } from '@/components/backlog';
 import { Backlog } from '@/types';
 import '@testing-library/jest-dom';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 void React.createElement
@@ -52,7 +52,7 @@ describe('BacklogEditPage Components', () => {
                 <TestProvider>
                     <BacklogActions {...mockProps} {...props} />
                 </TestProvider>
-            );
+            )
 
         beforeEach(() => {
             jest.clearAllMocks();
@@ -68,11 +68,15 @@ describe('BacklogEditPage Components', () => {
             expect(screen.getByText(/Go to Project/i)).toBeInTheDocument();
         });
 
-        it('does not render when canAccessBacklog is false', () => {
+        it('does not render when canAccessBacklog is false', async () => {
             cleanup()
-            const { container } = renderBacklogActions({ canAccessBacklog: false })
+            const { container } = render(
+                <TestProvider>
+                    <BacklogActions {...mockProps} canAccessBacklog={false} />
+                </TestProvider>
+            );
 
-            expect(container.textContent?.trim()).toBe('')
+            expect(container?.textContent?.trim()).toBe('')
         });
 
         it('toggles showEditToggles when edit button is clicked', () => {
@@ -145,16 +149,18 @@ describe('BacklogEditPage Components', () => {
             showEditToggles: false
         };
 
-        const renderEditor = (props = {}) =>
-            render(
-                <TestProvider>
-                    <BacklogEditEditor {...defaultProps} {...props} />
-                </TestProvider>
+        const renderEditor = async (props = {}) =>
+            await waitFor(() =>
+                render(
+                    <TestProvider>
+                        <BacklogEditEditor {...defaultProps} {...props} />
+                    </TestProvider>
+                )
             );
 
-        beforeEach(() => {
+        beforeEach(async () => {
             jest.clearAllMocks();
-            renderEditor();
+            await renderEditor();
         });
 
         afterEach(cleanup);
@@ -202,16 +208,18 @@ describe('BacklogEditPage Components', () => {
             showEditToggles: true
         };
 
-        const renderEditor = (props = {}) =>
-            render(
-                <TestProvider>
-                    <BacklogEditEditor {...defaultProps} {...props} />
-                </TestProvider>
+        const renderEditor = async (props = {}) =>
+            await waitFor(() =>
+                render(
+                    <TestProvider>
+                        <BacklogEditEditor {...defaultProps} {...props} />
+                    </TestProvider>
+                )
             );
 
-        beforeEach(() => {
+        beforeEach(async () => {
             jest.clearAllMocks()
-            renderEditor()
+            await renderEditor()
         })
 
         afterEach(cleanup);

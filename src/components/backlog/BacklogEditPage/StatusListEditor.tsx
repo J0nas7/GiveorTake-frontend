@@ -96,7 +96,7 @@ export const StatusListEditor: React.FC<StatusListEditorProps> = (props) => (
                             const [statusName, setStatusName] = useState<string>(status.Status_Name)
 
                             return (
-                                <tr>
+                                <tr key={status.Status_ID}>
                                     <td>
                                         {props.showEditToggles ? (
                                             <Block className="flex gap-2 items-center">

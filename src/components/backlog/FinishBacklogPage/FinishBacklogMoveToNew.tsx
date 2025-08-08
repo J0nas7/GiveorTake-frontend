@@ -4,7 +4,7 @@ import React from 'react'
 
 void React.createElement
 
-type FinishBacklogMoveToNewProps = Pick<
+export type FinishBacklogMoveToNewProps = Pick<
     FinishBacklogProps,
     'newBacklog' |
     'setNewBacklog'

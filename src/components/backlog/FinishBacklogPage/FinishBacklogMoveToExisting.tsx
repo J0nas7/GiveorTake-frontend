@@ -4,7 +4,7 @@ import React from 'react'
 
 void React.createElement
 
-type FinishBacklogMoveToExistingProps = Pick<
+export type FinishBacklogMoveToExistingProps = Pick<
     FinishBacklogProps,
     'newBacklog' |
     'setNewBacklog' |
@@ -12,7 +12,7 @@ type FinishBacklogMoveToExistingProps = Pick<
     'backlogId'
 >
 
-export const FinishBacklogMoveToExisting: React.FC<FinishBacklogMoveToExistingProps> = (props) => (
+export const FinishBacklogMoveToExisting: React.FC<FinishBacklogMoveToExistingProps> = (props) => props.projectById && (
     <Block className="my-3 flex flex-col gap-2 p-4 bg-gray-200 rounded">
         <label htmlFor="existing-backlog-select" className="font-semibold">Select an existing backlog:</label>
         <select

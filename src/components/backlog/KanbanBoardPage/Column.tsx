@@ -45,7 +45,7 @@ export const Column: React.FC<ColumnProps> = ({
         )}>
             <Heading variant="h2" className={styles.columnTitle}>{label}</Heading>
             <Block className={styles.taskList}>
-                {tasks && tasks.map((task) => (
+                {tasks && tasks.length && tasks.map((task) => (
                     <TaskCard
                         key={task.Task_ID}
                         task={task}
