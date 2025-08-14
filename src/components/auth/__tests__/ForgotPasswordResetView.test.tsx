@@ -1,3 +1,4 @@
+import { TestProvider } from '@/__tests__/test-utils'
 import { ForgotPasswordResetView } from '@/components/auth'
 import { useAuth } from '@/hooks'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -28,7 +29,11 @@ describe('ForgotPasswordResetView Components', () => {
 
         cleanup();
 
-        render(<ForgotPasswordResetView />)
+        render(
+            <TestProvider>
+                <ForgotPasswordResetView />
+            </TestProvider>
+        )
     })
 
     describe('ForgotPasswordResetView - Casual Cases ✅', () => {

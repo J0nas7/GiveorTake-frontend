@@ -11,6 +11,7 @@ import { Block, Field, Heading } from "@/components";
 import { LoadingButton } from '@/core-ui/components/LoadingState';
 import { useAuth } from '@/hooks';
 import { setSnackMessage, useAppDispatch } from '@/redux';
+import { useMutation } from '@tanstack/react-query';
 
 // Define the Yup validation schema
 export const registerSchema = Yup.object().shape({
@@ -36,57 +37,60 @@ export const RegisterAccountView = () => {
     const [userPassword_confirmation, setUserPassword_confirmation] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [acceptTerms, setAcceptTerms] = useState<boolean>(false)
-    const [createPending, setCreatePending] = useState<boolean>(false) // UI: Reactive
-    const submittingRef = useRef(false) // Logic: Immediate update, avoids race condition
+    // const [createPending, setCreatePending] = useState<boolean>(false) // UI: Reactive
+    const submittingRef = useRef<boolean>(false) // Logic: Immediate update, avoids race condition
 
     // Methods
-    const doRegister = async (e?: React.FormEvent) => {
-        e?.preventDefault()
+    const { mutate: doRegister, isPending: createPending } = useMutation({
+        mutationFn: () =>
+            registerSchema.validate(
+                {
+                    userFirstname,
+                    userSurname,
+                    userEmail,
+                    userPassword,
+                    userPassword_confirmation,
+                    acceptTerms,
+                },
+                { abortEarly: false }
+            ).then(() => handleRegister({
+                userFirstname,
+                userSurname,
+                userEmail,
+                userPassword,
+                userPassword_confirmation,
+                acceptTerms,
+            })),
+    });
 
+    const handleSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
         if (submittingRef.current) return;
         submittingRef.current = true;
-        setCreatePending(true);
+        doRegister(undefined, {
+            onError: (error) => {
+                if (error instanceof Yup.ValidationError) {
+                    const errorMessages = error.inner.map((err) => err.message);
+                    const combinedErrorMessage = errorMessages.join(". ");
+                    dispatch(setSnackMessage(combinedErrorMessage));
+                } else {
+                    console.error("Registration error:", error);
+                }
+            },
+            onSettled: () => {
+                submittingRef.current = false;
+            },
+        });
+    };
 
-        const formData = {
-            userFirstname,
-            userSurname,
-            userEmail,
-            userPassword,
-            userPassword_confirmation,
-            acceptTerms
-        }
-
-        try {
-            // Validate the form data using the Yup schema
-            await handleRegister(formData);
-
-            await registerSchema.validate(formData, { abortEarly: false });
-
-        } catch (error) {
-            // Handle validation errors
-            if (error instanceof Yup.ValidationError) {
-                // Flatten the error messages into a single array and join them into a string
-                const errorMessages = error.inner.map(err => err.message);
-                const combinedErrorMessage = errorMessages.join('. ');
-                dispatch(setSnackMessage(combinedErrorMessage));
-            } else {
-                // Handle other errors
-                console.error('Registration error:', error);
-            }
-        } finally {
-            submittingRef.current = false;
-            setCreatePending(false);
-        }
-    }
-
-    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') && doRegister(e as any)
+    const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') && handleSubmit(e as any)
 
     return (
         <Block className="register-page">
             <Heading variant="h2">
                 {t('guest:h2:Register')} {t('guest:h2:account')}
             </Heading>
-            <form onSubmit={doRegister} className="guest-form">
+            <form onSubmit={handleSubmit} className="guest-form">
                 <Field
                     type="text"
                     lbl={t('guest:forms:Firstname')}

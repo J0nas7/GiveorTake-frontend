@@ -14,6 +14,7 @@ import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAxios, useURLLink } from '@/hooks'
 import { selectSnackMessage, useTypedSelector } from '@/redux'
 import { Project, Task } from '@/types'
+import { useMutation } from '@tanstack/react-query'
 import clsx from 'clsx'
 
 export const TaskBulkActionMenu: React.FC<{ project?: Project | undefined }> = ({
@@ -199,39 +200,44 @@ const BulkEdit: React.FC<BulkEditProps> = ({
     const [newDueDate, setNewDueDate] = useState<string>("")
     const [newStatus, setNewStatus] = useState<string>("")
     const [newBacklog, setNewBacklog] = useState<number>(0)
-    const [bulkUpdatePending, setBulkUpdatePending] = useState<boolean>(false)
+    // const [bulkUpdatePending, setBulkUpdatePending] = useState<boolean>(false)
     const bulkUpdateRef = useRef<boolean>(false)
 
     /**
      * Methods
      */
-    const handleBulkUpdate = async () => {
-        if (bulkUpdateRef.current) return
-        if (!selectedTaskIds.length) return
-        bulkUpdateRef.current = true
-        setBulkUpdatePending(true)
+    const { mutate: doBulkUpdate, isPending: bulkUpdatePending } = useMutation({
+        mutationFn: () => {
+            const updatedTasks = selectedTaskIds.map((taskId) => ({
+                Task_ID: taskId,
+                Backlog_ID: newBacklog || null,
+                Status_ID: newStatus,
+                Task_Due_Date: newDueDate,
+                Assigned_User_ID: newUserId,
+            }));
+            console.log("Bulk update data:", updatedTasks);
+            return httpPostWithData("tasks/bulk-update", { tasks: updatedTasks });
+        },
+        onSuccess: (result) => {
+            console.log("Bulk update result:", result);
+            if (result.updated_tasks) {
+                readTasksByBacklogId(parseInt(backlogId), true);
+                setTaskBulkEditing(false);
+            }
+        },
+    });
 
-        const updatedTasks = selectedTaskIds.map((taskId) => ({
-            Task_ID: taskId,
-            Backlog_ID: newBacklog || null,
-            Status_ID: newStatus,
-            Task_Due_Date: newDueDate,
-            Assigned_User_ID: newUserId,
-        }))
-        console.log("Bulk update data:", updatedTasks)
+    const handleBulkUpdate = () => {
+        if (bulkUpdateRef.current) return;
+        if (!selectedTaskIds.length) return;
 
-        const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks })
-
-        console.log("Bulk update result:", result)
-
-        if (result.updated_tasks) {
-            await readTasksByBacklogId(parseInt(backlogId), true)
-            setTaskBulkEditing(false)
-        }
-
-        bulkUpdateRef.current = false
-        setBulkUpdatePending(false)
-    }
+        bulkUpdateRef.current = true;
+        doBulkUpdate(undefined, {
+            onSettled: () => {
+                bulkUpdateRef.current = false;
+            },
+        });
+    };
 
     /**
      * Effects

@@ -7,6 +7,7 @@ import {
     TeamUserSeatsProvider,
     UsersProvider
 } from "@/contexts";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from "@testing-library/react";
 import React from "react";
 import { Provider } from "react-redux";
@@ -81,20 +82,24 @@ jest.mock('react-dnd-html5-backend', () => ({
 }));
 
 export const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const queryClient = new QueryClient()
+
     return (
-        <Provider store={store}>
-            <OrganisationsProvider> {/* Use the Provider instead of manually setting context */}
-                <UsersProvider>
-                    <TeamUserSeatsProvider>
-                        <ProjectsProvider>
-                            <BacklogsProvider>
-                                {children}
-                            </BacklogsProvider>
-                        </ProjectsProvider>
-                    </TeamUserSeatsProvider>
-                </UsersProvider>
-            </OrganisationsProvider>
-        </Provider>
+        <QueryClientProvider client={queryClient}>
+            <Provider store={store}>
+                <OrganisationsProvider> {/* Use the Provider instead of manually setting context */}
+                    <UsersProvider>
+                        <TeamUserSeatsProvider>
+                            <ProjectsProvider>
+                                <BacklogsProvider>
+                                    {children}
+                                </BacklogsProvider>
+                            </ProjectsProvider>
+                        </TeamUserSeatsProvider>
+                    </UsersProvider>
+                </OrganisationsProvider>
+            </Provider>
+        </QueryClientProvider>
     );
 };
 

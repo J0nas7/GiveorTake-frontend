@@ -8,7 +8,7 @@ import React from 'react';
 void React.createElement
 
 let mockHandleInputChange: jest.Mock = jest.fn();
-let mockHandleCreateBacklog: jest.Mock = jest.fn();
+let mockHandleSubmit: jest.Mock = jest.fn();
 let mockConvertID: jest.Mock = mockConvertID_NameStringToURLFormat;
 
 const mockProps: BacklogCreateProps = {
@@ -31,7 +31,7 @@ const mockProps: BacklogCreateProps = {
     },
     createPending: false,
     handleInputChange: mockHandleInputChange,
-    handleCreateBacklog: mockHandleCreateBacklog,
+    handleSubmit: mockHandleSubmit,
     convertID_NameStringToURLFormat: mockConvertID,
 };
 
@@ -105,9 +105,9 @@ describe('BacklogCreateView Components', () => {
         //     expect(mockHandleInputChange).toHaveBeenCalled();
         // });
 
-        it('Clicking Create Backlog triggers handleCreateBacklog', () => {
+        it('Clicking Create Backlog triggers handleSubmit', () => {
             fireEvent.click(screen.getByTestId('create-backlog-button'));
-            expect(mockHandleCreateBacklog).toHaveBeenCalledTimes(1);
+            expect(mockHandleSubmit).toHaveBeenCalledTimes(1);
         });
 
         it('Button disabled when createPending is true', () => {
@@ -161,7 +161,7 @@ describe('BacklogCreateView Components', () => {
             cleanup();
             renderBacklogCreateView({ createPending: true });
             fireEvent.click(screen.getByTestId('create-backlog-button'));
-            expect(mockHandleCreateBacklog).not.toHaveBeenCalled();
+            expect(mockHandleSubmit).not.toHaveBeenCalled();
         });
 
         it('Handles special characters in Backlog_Name', () => {

@@ -11,6 +11,7 @@ import { useBacklogsContext, useProjectsContext, useTasksContext } from "@/conte
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
 import { Status, Task } from "@/types";
+import { useMutation } from '@tanstack/react-query';
 
 export const BacklogView = () => {
     // ---- Hooks ----
@@ -51,7 +52,7 @@ export const BacklogView = () => {
     const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
     const [statusUrlEditing, setStatusUrlEditing] = useState<boolean>(false)
-    const [createTaskPending, setCreateTaskPending] = useState<boolean>(false)
+    // const [createTaskPending, setCreateTaskPending] = useState<boolean>(false)
     const createTaskRef = useRef<boolean>(false)
 
     // ---- Effects ----
@@ -112,34 +113,42 @@ export const BacklogView = () => {
     }, [urlStatusIds, renderBacklog])
 
     // ---- Methods ----
+    // Prepares and creates a new task in the backlog.
+    const { mutate: doCreateTask, isPending: createTaskPending } = useMutation({
+        mutationFn: async () => {
+            if (!renderBacklog) return false
+
+            const newTaskPlaceholder: Task = {
+                Backlog_ID: parseInt(backlogId),
+                Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
+                Task_Title: newTask?.Task_Title || "",
+                Status_ID: newTask?.Status_ID || renderBacklog.statuses?.sort(
+                    (a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0)
+                )[0]?.Status_ID || 0,
+                Assigned_User_ID: newTask?.Assigned_User_ID
+            };
+
+            return await addTask(parseInt(backlogId), newTaskPlaceholder);
+        },
+        onSuccess: async () => {
+            await readTasksByBacklogId(parseInt(backlogId), true);
+        },
+    });
+
+    const handleCreateTask = () => {
+        if (createTaskRef.current) return;
+        if (!renderBacklog) return;
+
+        createTaskRef.current = true;
+        doCreateTask(undefined, {
+            onSettled: () => {
+                createTaskRef.current = false;
+            },
+        });
+    };
+
     // Handles the 'Enter' key press event to trigger task creation.
     const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? handleCreateTask() : null
-
-    // Prepares and creates a new task in the backlog.
-    const handleCreateTask = async () => {
-        if (createTaskRef.current) return
-        if (!renderBacklog) return
-        createTaskRef.current = true
-        setCreateTaskPending(true)
-
-        const newTaskPlaceholder: Task = {
-            Backlog_ID: parseInt(backlogId),
-            Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
-            Task_Title: newTask?.Task_Title || "",
-            Status_ID: newTask?.Status_ID || renderBacklog.statuses && renderBacklog.statuses?.
-                // Status_Order low to high:
-                sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
-                ?.Status_ID || 0,
-            Assigned_User_ID: newTask?.Assigned_User_ID
-        }
-
-        await addTask(parseInt(backlogId), newTaskPlaceholder)
-
-        await readTasksByBacklogId(parseInt(backlogId), true)
-
-        createTaskRef.current = false
-        setCreateTaskPending(false)
-    }
 
     // Archives a task by removing it and refreshing the backlog tasks.
     const archiveTask = async (task: Task) => {

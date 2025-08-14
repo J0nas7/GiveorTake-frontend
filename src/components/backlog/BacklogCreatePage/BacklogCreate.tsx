@@ -24,7 +24,7 @@ export type BacklogCreateProps = {
     newBacklog: Backlog
     createPending: boolean
     handleInputChange: (field: BacklogFields, value: string | boolean) => void;
-    handleCreateBacklog: () => Promise<void>;
+    handleSubmit: () => Promise<void>
     convertID_NameStringToURLFormat: (id: number, name: string) => string
 };
 
@@ -111,7 +111,7 @@ export const BacklogCreate: React.FC<BacklogCreateProps> = (props) => (
                         </div>
                         <div className="mt-4">
                             <button
-                                onClick={props.handleCreateBacklog}
+                                onClick={props.handleSubmit}
                                 disabled={props.createPending}
                                 data-testid="create-backlog-button"
                                 className="button-blue w-32 flex justify-center"

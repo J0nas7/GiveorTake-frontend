@@ -11,6 +11,7 @@ import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
 import { selectAuthUser, setSnackMessage, useAppDispatch, useTypedSelector } from '@/redux';
 import { Backlog, BacklogStates, Status } from '@/types';
+import { useMutation } from '@tanstack/react-query';
 
 export const BacklogEditView = () => {
     // ---- Hooks ----
@@ -38,9 +39,9 @@ export const BacklogEditView = () => {
     });
     const [localBacklog, setLocalBacklog] = useState<BacklogStates>(undefined);
     const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
-    const [editPending, setEditPending] = useState<boolean>(false)
+    // const [editPending, setEditPending] = useState<boolean>(false)
     const submittingRef = useRef<boolean>(false)
-    const [createStatusPending, setCreateStatusPending] = useState<boolean>(false)
+    // const [createStatusPending, setCreateStatusPending] = useState<boolean>(false)
     const createStatusRef = useRef<boolean>(false)
     const [saveStatusPending, setSaveStatusPending] = useState<undefined | number>(undefined)
     const saveStatusRef = useRef<undefined | number>(undefined)
@@ -86,25 +87,32 @@ export const BacklogEditView = () => {
     };
 
     // Save backlog changes to backend
-    const handleSaveBacklogChanges = async () => {
-        if (!localBacklog) return
-        if (submittingRef.current) return
-        submittingRef.current = true
-        setEditPending(true)
+    const { mutate: doSaveBacklogChanges, isPending: editPending } = useMutation({
+        mutationFn: async () => {
+            if (!localBacklog) return false;
+            return await saveBacklogChanges(localBacklog, localBacklog.Project_ID);
+        },
+    });
 
-        try {
-            const saveChanges = await saveBacklogChanges(localBacklog, localBacklog.Project_ID);
+    const handleSaveBacklogChanges = () => {
+        if (!localBacklog) return;
+        if (submittingRef.current) return;
 
-            dispatch(setSnackMessage(
-                saveChanges ? "Backlog updated successfully." : "Failed to update backlog."
-            ));
-        } catch (err) {
-            console.error(err);
-            dispatch(setSnackMessage("Failed to update backlog."));
-        } finally {
-            submittingRef.current = false
-            setEditPending(false)
-        }
+        submittingRef.current = true;
+        doSaveBacklogChanges(undefined, {
+            onSuccess: (saveChanges) => {
+                dispatch(setSnackMessage(
+                    saveChanges ? "Backlog updated successfully." : "Failed to update backlog."
+                ));
+            },
+            onError: (err) => {
+                console.error(err);
+                dispatch(setSnackMessage("Failed to update backlog."));
+            },
+            onSettled: () => {
+                submittingRef.current = false;
+            },
+        });
     };
 
     // Handles the 'Enter' key press event to trigger update status name.
@@ -196,26 +204,34 @@ export const BacklogEditView = () => {
     const ifEnterCreateStatus = (e: React.KeyboardEvent) => (e.key === 'Enter') ? handleCreateStatus() : null
 
     // Handles the creation of a new status for the backlog.
-    const handleCreateStatus = async () => {
+    const { mutate: doCreateStatus, isPending: createStatusPending } = useMutation({
+        mutationFn: () => addStatus(parseInt(backlogId), newStatus),
+    });
+
+    const handleCreateStatus = () => {
         if (!newStatus.Status_Name.trim()) {
-            dispatch(setSnackMessage("Please enter a status name."))
+            dispatch(setSnackMessage("Please enter a status name."));
             return;
         }
+        if (createStatusRef.current) return;
 
-        if (createStatusRef.current) return
-        createStatusRef.current = true
-        setCreateStatusPending(true)
-
-        await addStatus(parseInt(backlogId), newStatus)
-        setNewStatus({
-            ...newStatus,
-            Status_Name: ""
-        })
-        setLocalBacklog(undefined)
-        readBacklogById(parseInt(backlogId))
-
-        createStatusRef.current = false
-        setCreateStatusPending(false)
+        createStatusRef.current = true;
+        doCreateStatus(undefined, {
+            onSuccess: () => {
+                setNewStatus({
+                    ...newStatus,
+                    Status_Name: "",
+                });
+                setLocalBacklog(undefined);
+                readBacklogById(parseInt(backlogId));
+            },
+            onError: (error) => {
+                console.error("Error creating status:", error);
+            },
+            onSettled: () => {
+                createStatusRef.current = false;
+            },
+        });
     };
 
     // Delete backlog from backend

@@ -22,11 +22,11 @@ export type BacklogEditProps = {
     setNewStatus: React.Dispatch<React.SetStateAction<Status>>
     handleBacklogInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleBacklogChange: (field: keyof Backlog, value: string) => void;
-    handleSaveBacklogChanges: () => Promise<void>;
+    handleSaveBacklogChanges: () => void
     handleSaveStatusChanges: (status: Status) => Promise<void>
     ifEnterSaveStatus: (e: React.KeyboardEvent, status: Status) => Promise<void> | null
-    handleCreateStatus: () => Promise<void>
-    ifEnterCreateStatus: (e: React.KeyboardEvent) => Promise<void> | null
+    handleCreateStatus: () => void
+    ifEnterCreateStatus: (e: React.KeyboardEvent) => void | null
     handleDeleteBacklog: () => Promise<void>;
     handleMoveStatusChanges: (statusId: number, direction: "up" | "down") => Promise<void>
     handleAssignDefaultStatus: (statusId: number) => Promise<void>

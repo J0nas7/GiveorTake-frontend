@@ -24,7 +24,7 @@ export type BacklogProps = {
     createTaskPending: boolean
     handleSort: (column: string) => void;
     handleCreateTask: () => void;
-    ifEnter: (e: React.KeyboardEvent) => Promise<void> | null
+    ifEnter: (e: React.KeyboardEvent) => void | null
     handleChangeNewTask: (field: TaskFields, value: string) => Promise<void>
     setTaskDetail: (task: Task) => void;
     handleCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void

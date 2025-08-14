@@ -10,6 +10,7 @@ import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
 import { AppDispatch, selectAuthUser, setSnackMessage, useTypedSelector } from "@/redux";
 import { Backlog, BacklogFields } from "@/types";
+import { useMutation } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
 
 export const BacklogCreateView: React.FC = () => {
@@ -36,7 +37,7 @@ export const BacklogCreateView: React.FC = () => {
         Backlog_StartDate: "",
         Backlog_EndDate: "",
     })
-    const [createPending, setCreatePending] = useState<boolean>(false)
+    // const [createPending, setCreatePending] = useState<boolean>(false)
     const submittingRef = useRef<boolean>(false)
 
     // ---- Effects ----
@@ -58,20 +59,35 @@ export const BacklogCreateView: React.FC = () => {
         }));
     };
 
-    const handleCreateBacklog = async () => {
-        if (submittingRef.current) return
-        if (!projectById) return
-        if (!newBacklog.Backlog_Name.trim()) {
-            dispatch(setSnackMessage("Please enter a backlog name."))
-            return
-        }
-        submittingRef.current = true
-        setCreatePending(true)
+    const { mutate: doCreateBacklog, isPending: createPending } = useMutation({
+        mutationFn: () => addBacklog(parseInt(projectId), newBacklog),
+    });
 
-        await addBacklog(parseInt(projectId), newBacklog);
-        submittingRef.current = false
-        setCreatePending(false)
-        router.push(`/project/${convertID_NameStringToURLFormat(parseInt(projectId), projectById.Project_Name)}`);
+    const handleSubmit = async () => {
+        if (submittingRef.current) return;
+        if (!projectById) return;
+        if (!newBacklog.Backlog_Name.trim()) {
+            dispatch(setSnackMessage("Please enter a backlog name."));
+            return;
+        }
+
+        submittingRef.current = true;
+        doCreateBacklog(undefined, {
+            onSuccess: () => {
+                router.push(
+                    `/project/${convertID_NameStringToURLFormat(
+                        parseInt(projectId),
+                        projectById.Project_Name
+                    )}`
+                );
+            },
+            onError: (error: any) => {
+                console.error("Error creating backlog:", error);
+            },
+            onSettled: () => {
+                submittingRef.current = false;
+            },
+        });
     };
 
     const backlogCreateProps: BacklogCreateProps = {
@@ -80,7 +96,7 @@ export const BacklogCreateView: React.FC = () => {
         newBacklog,
         createPending,
         handleInputChange,
-        handleCreateBacklog,
+        handleSubmit,
         convertID_NameStringToURLFormat
     }
 

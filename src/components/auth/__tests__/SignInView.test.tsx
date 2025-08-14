@@ -107,7 +107,10 @@ describe('SignInView Components', () => {
                 fireEvent.click(screen.getByTestId('login-submit'));
             });
 
-            expect(screen.getByTestId('login-submit')).toContainElement(screen.getByAltText(/Loading/i));
+            // Wait for React to update the DOM
+            await waitFor(() => {
+                expect(screen.getByTestId('login-submit')).toContainElement(screen.getByAltText(/Loading/i));
+            })
 
             // Clean up: resolve to avoid act warning
             await act(async () => {
@@ -192,18 +195,19 @@ describe('SignInView Components', () => {
                         resolveLogin = resolve;
                     })
             );
-
             renderSignInView();
-
             fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'busy@test.com' } });
             fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'lockedout' } });
 
             await act(async () => {
                 fireEvent.click(screen.getByRole('button', { name: /Login/i }));
-            })
+            });
 
-            expect(screen.getByLabelText(/Email/i)).toBeDisabled();
-            expect(screen.getByLabelText(/Password/i)).toBeDisabled();
+            // Wait for React to update the DOM
+            await waitFor(() => {
+                expect(screen.getByDisplayValue('busy@test.com')).toBeDisabled();
+                expect(screen.getByDisplayValue('lockedout')).toBeDisabled();
+            });
 
             await act(async () => {
                 resolveLogin!(); // resolve pending login

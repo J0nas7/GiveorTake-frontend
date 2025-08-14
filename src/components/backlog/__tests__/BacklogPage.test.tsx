@@ -1,4 +1,4 @@
-import { mockConvertID_NameStringToURLFormat } from '@/__tests__/test-utils';
+import { mockConvertID_NameStringToURLFormat, TestProvider } from '@/__tests__/test-utils';
 import { BacklogHeader, BacklogNewTaskRow, BacklogStatusActionMenu, BacklogTaskRow, BacklogTaskTableHeader, TaskBulkActionMenu } from '@/components/backlog';
 import * as redux from '@/redux';
 import { BacklogStates, Task } from '@/types';
@@ -30,13 +30,15 @@ describe('BacklogPage Components', () => {
 
         const renderBacklogHeader = (props = {}) =>
             render(
-                <BacklogHeader
-                    renderBacklog={mockRenderBacklog}
-                    setStatusUrlEditing={mockSetStatusUrlEditing}
-                    statusUrlEditing={false}
-                    convertID_NameStringToURLFormat={mockConvertID}
-                    {...props}
-                />
+                <TestProvider>
+                    <BacklogHeader
+                        renderBacklog={mockRenderBacklog}
+                        setStatusUrlEditing={mockSetStatusUrlEditing}
+                        statusUrlEditing={false}
+                        convertID_NameStringToURLFormat={mockConvertID}
+                        {...props}
+                    />
+                </TestProvider>
             );
 
         beforeEach(() => {
@@ -66,15 +68,17 @@ describe('BacklogPage Components', () => {
         it('does not render anything if renderBacklog is undefined', () => {
             cleanup();
             const { container } = render(
-                <BacklogHeader
-                    renderBacklog={undefined}
-                    setStatusUrlEditing={mockSetStatusUrlEditing}
-                    statusUrlEditing={false}
-                    convertID_NameStringToURLFormat={mockConvertID}
-                />
+                <TestProvider>
+                    <BacklogHeader
+                        renderBacklog={undefined}
+                        setStatusUrlEditing={mockSetStatusUrlEditing}
+                        statusUrlEditing={false}
+                        convertID_NameStringToURLFormat={mockConvertID}
+                    />
+                </TestProvider>
             );
 
-            expect(container.firstChild).toBeNull();
+            expect(container.textContent?.trim()).toBe('');
         });
     });
 
@@ -133,19 +137,21 @@ describe('BacklogPage Components', () => {
 
         const renderNewTaskRow = (props = {}) =>
             render(
-                <table>
-                    <tbody>
-                        <BacklogNewTaskRow
-                            newTask={{ Task_Title: '', Status_ID: 1, Backlog_ID: 1, Assigned_User_ID: 0 }}
-                            handleChangeNewTask={mockHandleChangeNewTask}
-                            handleCreateTask={mockHandleCreateTask}
-                            ifEnter={mockIfEnter}
-                            renderBacklog={mockRenderBacklog}
-                            createTaskPending={false}
-                            {...props}
-                        />
-                    </tbody>
-                </table>
+                <TestProvider>
+                    <table>
+                        <tbody>
+                            <BacklogNewTaskRow
+                                newTask={{ Task_Title: '', Status_ID: 1, Backlog_ID: 1, Assigned_User_ID: 0 }}
+                                handleChangeNewTask={mockHandleChangeNewTask}
+                                handleCreateTask={mockHandleCreateTask}
+                                ifEnter={mockIfEnter}
+                                renderBacklog={mockRenderBacklog}
+                                createTaskPending={false}
+                                {...props}
+                            />
+                        </tbody>
+                    </table>
+                </TestProvider>
             );
 
         beforeEach(() => {
@@ -225,11 +231,13 @@ describe('BacklogPage Components', () => {
 
         const renderBacklogStatusActionMenu = (selectedStatusIds: string[] = []) =>
             render(
-                <BacklogStatusActionMenu
-                    renderBacklog={mockRenderBacklog}
-                    selectedStatusIds={selectedStatusIds}
-                    statusUrlEditing={true}
-                />
+                <TestProvider>
+                    <BacklogStatusActionMenu
+                        renderBacklog={mockRenderBacklog}
+                        selectedStatusIds={selectedStatusIds}
+                        statusUrlEditing={true}
+                    />
+                </TestProvider>
             );
 
         beforeEach(() => {
@@ -309,13 +317,15 @@ describe('BacklogPage Components', () => {
         it('does not render when statusUrlEditing is false', () => {
             cleanup();
             const { container } = render(
-                <BacklogStatusActionMenu
-                    renderBacklog={mockRenderBacklog}
-                    selectedStatusIds={[]}
-                    statusUrlEditing={false}
-                />
+                <TestProvider>
+                    <BacklogStatusActionMenu
+                        renderBacklog={mockRenderBacklog}
+                        selectedStatusIds={[]}
+                        statusUrlEditing={false}
+                    />
+                </TestProvider>
             );
-            expect(container.firstChild).toBeNull();
+            expect(container.textContent?.trim()).toBe('');
         });
     });
 
@@ -370,19 +380,21 @@ describe('BacklogPage Components', () => {
 
         const renderBacklogTaskRow = (overrides = {}) =>
             render(
-                <table>
-                    <tbody>
-                        <BacklogTaskRow
-                            task={mockTask}
-                            selectedTaskIds={[]}
-                            selectedStatusIds={['1']}
-                            handleCheckboxChange={mockHandleCheckboxChange}
-                            setTaskDetail={mockSetTaskDetail}
-                            renderBacklog={mockRenderBacklog}
-                            {...overrides}
-                        />
-                    </tbody>
-                </table>
+                <TestProvider>
+                    <table>
+                        <tbody>
+                            <BacklogTaskRow
+                                task={mockTask}
+                                selectedTaskIds={[]}
+                                selectedStatusIds={['1']}
+                                handleCheckboxChange={mockHandleCheckboxChange}
+                                setTaskDetail={mockSetTaskDetail}
+                                renderBacklog={mockRenderBacklog}
+                                {...overrides}
+                            />
+                        </tbody>
+                    </table>
+                </TestProvider>
             );
 
         beforeEach(() => {
@@ -439,16 +451,18 @@ describe('BacklogPage Components', () => {
 
         const renderBacklogTaskTableHeader = (props = {}) =>
             render(
-                <table>
-                    <BacklogTaskTableHeader
-                        selectAll={false}
-                        handleSelectAllChange={mockHandleSelectAllChange}
-                        currentSort={'1'}
-                        currentOrder={'asc'}
-                        handleSort={mockHandleSort}
-                        {...props}
-                    />
-                </table>
+                <TestProvider>
+                    <table>
+                        <BacklogTaskTableHeader
+                            selectAll={false}
+                            handleSelectAllChange={mockHandleSelectAllChange}
+                            currentSort={'1'}
+                            currentOrder={'asc'}
+                            handleSort={mockHandleSort}
+                            {...props}
+                        />
+                    </table>
+                </TestProvider>
             );
 
         beforeEach(() => {
@@ -565,12 +579,20 @@ describe('TaskBulkActionMenu', () => {
             get: (key: string) => null,
         } as any);
 
-        const { container } = render(<TaskBulkActionMenu />);
-        expect(container.firstChild).toBeNull();
+        const { container } = render(
+            <TestProvider>
+                <TaskBulkActionMenu />
+            </TestProvider>
+        );
+        expect(container.textContent?.trim()).toBe('');
     });
 
     it('renders task count and menu options', () => {
-        render(<TaskBulkActionMenu />);
+        render(
+            <TestProvider>
+                <TaskBulkActionMenu />
+            </TestProvider>
+        );
         expect(screen.getByText('3 tasks selected')).toBeInTheDocument();
         expect(screen.getByText('Edit')).toBeInTheDocument();
         expect(screen.getByText('Copy to clipboard')).toBeInTheDocument();
@@ -578,7 +600,11 @@ describe('TaskBulkActionMenu', () => {
     });
 
     it('copies to clipboard and shows success message', async () => {
-        render(<TaskBulkActionMenu />);
+        render(
+            <TestProvider>
+                <TaskBulkActionMenu />
+            </TestProvider>
+        );
         fireEvent.click(screen.getByText('Copy to clipboard'));
 
         await waitFor(() => {
@@ -592,7 +618,11 @@ describe('TaskBulkActionMenu', () => {
         // Confirm override
         global.confirm = jest.fn(() => true);
 
-        render(<TaskBulkActionMenu />);
+        render(
+            <TestProvider>
+                <TaskBulkActionMenu />
+            </TestProvider>
+        );
         fireEvent.click(screen.getByText('Delete'));
 
         await waitFor(() => {
@@ -601,7 +631,11 @@ describe('TaskBulkActionMenu', () => {
     });
 
     it('updates URL on focus toggle', async () => {
-        render(<TaskBulkActionMenu />);
+        render(
+            <TestProvider>
+                <TaskBulkActionMenu />
+            </TestProvider>
+        );
         const toggleButton = screen.getByTestId('task-bulk-focus-toggle');
         expect(toggleButton).toBeInTheDocument(); // sanity check
         fireEvent.click(toggleButton);
@@ -613,7 +647,11 @@ describe('TaskBulkActionMenu', () => {
     });
 
     it('shows bulk edit when "Edit" is clicked', async () => {
-        render(<TaskBulkActionMenu />);
+        render(
+            <TestProvider>
+                <TaskBulkActionMenu />
+            </TestProvider>
+        );
         fireEvent.click(screen.getByText('Edit'));
 
         await waitFor(() => {

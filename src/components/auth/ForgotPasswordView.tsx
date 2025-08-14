@@ -3,8 +3,9 @@
 import { Block, Field, Heading } from '@/components'
 import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAuth } from '@/hooks'
+import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
-import React, { FormEvent, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const ForgotPasswordView = () => {
@@ -15,35 +16,32 @@ export const ForgotPasswordView = () => {
     const { t } = useTranslation(['guest'])
     const [userEmail, setUserEmail] = useState<string>('')
     const [forgotPending, setForgotPending] = useState<boolean>(false)
-    const submittingRef = useRef(false) // Logic: Immediate update, avoids race condition
+    const submittingRef = useRef<boolean>(false) // Logic: Immediate update, avoids race condition
 
     // Methods
-    const doForgot = (e?: FormEvent) => {
-        e?.preventDefault()
+    const { mutate: doForgot, isPending: resetPending, error } = useMutation({
+        mutationFn: () => handleForgotRequest(userEmail)
+    });
 
-        if (submittingRef.current) return
-        submittingRef.current = true
-        setForgotPending(true)
+    const handleSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+        doForgot(undefined, {
+            onSettled: () => {
+                submittingRef.current = false;
+            },
+        });
+    };
 
-        handleForgotRequest(userEmail)
-            .catch((error) => {
-                console.error('Failed to send reset email:', error)
-                // optionally show a user-facing message here
-            })
-            .finally(() => {
-                submittingRef.current = false
-                setForgotPending(false)
-            })
-    }
-
-    const ifEnter = (e: React.KeyboardEvent) => e.key === 'Enter' && doForgot(e as any)
+    const ifEnter = (e: React.KeyboardEvent) => e.key === 'Enter' && handleSubmit(e as any)
 
     return (
         <Block className="forgot-page">
             <Heading variant="h2">
                 {t('guest:h2:Forgot password')}
             </Heading>
-            <form onSubmit={doForgot} className="guest-form">
+            <form onSubmit={handleSubmit} className="guest-form">
                 <Field
                     type="text"
                     lbl={t('guest:forms:Email')}

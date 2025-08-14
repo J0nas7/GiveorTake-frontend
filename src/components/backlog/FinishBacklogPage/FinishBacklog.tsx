@@ -30,7 +30,7 @@ export type FinishBacklogProps = {
     finishBacklogPending: boolean
     setMoveAction: React.Dispatch<React.SetStateAction<string>>
     setNewBacklog: React.Dispatch<React.SetStateAction<Backlog>>
-    doFinishBacklog: () => Promise<void>
+    handleFinishBacklog: () => void
     convertID_NameStringToURLFormat: (id: number, name: string) => string
 }
 
@@ -82,7 +82,7 @@ export const FinishBacklog: React.FC<FinishBacklogProps> = (props) => props.rend
                             <Block className="mt-3">
                                 <button
                                     className={props.finishBacklogPending ? "button-blue" : "blue-link"}
-                                    onClick={props.doFinishBacklog}
+                                    onClick={props.handleFinishBacklog}
                                     disabled={props.finishBacklogPending}
                                 >
                                     {props.finishBacklogPending ? (

@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { Block, Field, Heading } from "@/components"
 import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAuth } from "@/hooks"
+import { useMutation } from '@tanstack/react-query'
 
 export const SignInView = () => {
     // Hooks
@@ -21,26 +22,24 @@ export const SignInView = () => {
     const [userEmail, setUserEmail] = useState<string>('')
     const [userPassword, setUserPassword] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
-    const [loginPending, setLoginPending] = useState<boolean>(false) // UI: Reactive
-    const submittingRef = useRef(false) // Logic: Immediate update, avoids race condition
+    // const [loginPending, setLoginPending] = useState<boolean>(false) // UI: Reactive
+    const submittingRef = useRef<boolean>(false) // Logic: Immediate update, avoids race condition
 
     // Methods
-    const doLogin = (e?: React.FormEvent) => {
-        e?.preventDefault()
+    const { mutate: doLogin, isPending: loginPending, error } = useMutation({
+        mutationFn: () => handleLoginSubmit(userEmail, userPassword),
+    });
 
-        if (submittingRef.current) return
-        submittingRef.current = true
-        setLoginPending(true)
-
-        handleLoginSubmit(userEmail, userPassword)
-            .then((loginResult) => {
-                // if (loginResult) router.push('/')
-            })
-            .finally(() => {
-                submittingRef.current = false
-                setLoginPending(false)
-            })
-    }
+    const handleSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+        doLogin(undefined, {
+            onSettled: () => {
+                submittingRef.current = false;
+            },
+        });
+    };
 
     const ifEnter = (e: React.KeyboardEvent) => {
         if (
@@ -48,7 +47,7 @@ export const SignInView = () => {
             userEmail.trim() !== '' &&
             userPassword.trim() !== ''
         ) {
-            doLogin();
+            handleSubmit();
         }
     }
 
@@ -61,7 +60,10 @@ export const SignInView = () => {
             <Heading variant="h2">
                 {t('guest:h2:Login')}
             </Heading>
-            <form onSubmit={doLogin} className="guest-form">
+            <form
+                onSubmit={handleSubmit}
+                className="guest-form"
+            >
                 <Field
                     type="text"
                     lbl={t('guest:forms:Email')}

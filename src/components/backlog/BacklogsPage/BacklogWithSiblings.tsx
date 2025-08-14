@@ -14,6 +14,7 @@ import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
 import { BacklogStates, Status, Task, TaskFields } from "@/types";
+import { useMutation } from '@tanstack/react-query';
 import clsx from 'clsx';
 
 type BacklogWithSiblingsProps = {
@@ -32,8 +33,8 @@ export type BacklogSiblingsProps = {
     canAccessBacklog: boolean | undefined
     createTaskPending: boolean
     handleSort: (column: string) => void;
-    handleCreateTask: () => void;
-    ifEnter: (e: React.KeyboardEvent) => Promise<void> | null
+    handleCreateTask: () => void
+    ifEnter: (e: React.KeyboardEvent) => void | null
     handleChangeLocalNewTask: (field: TaskFields, value: string) => Promise<void>
     setTaskDetail: (task: Task) => void;
     handleCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void
@@ -60,7 +61,7 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
-    const [createTaskPending, setCreateTaskPending] = useState<boolean>(false)
+    // const [createTaskPending, setCreateTaskPending] = useState<boolean>(false)
     const createTaskRef = useRef<boolean>(false)
 
     const { canAccessBacklog } = useRoleAccess(
@@ -89,30 +90,39 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
     const ifEnter = (e: React.KeyboardEvent) => (e.key === 'Enter') ? handleCreateTask() : null
 
     // Prepares and creates a new task in the backlog.
-    const handleCreateTask = async () => {
-        if (createTaskRef.current) return
-        if (!localBacklog || !localBacklog.Backlog_ID) return
-        createTaskRef.current = true
-        setCreateTaskPending(true)
+    const { mutate: doCreateTask, isPending: createTaskPending } = useMutation({
+        mutationFn: async () => {
+            if (!localBacklog || !localBacklog.Backlog_ID) return false;
 
-        const newTaskPlaceholder: Task = {
-            Backlog_ID: parseInt(localBacklog.Backlog_ID.toString()),
-            Team_ID: localBacklog?.project?.team?.Team_ID ? localBacklog?.project?.team?.Team_ID : 0,
-            Task_Title: localNewTask?.Task_Title || "",
-            Status_ID: localNewTask?.Status_ID || 0,
-            Assigned_User_ID: localNewTask?.Assigned_User_ID
-        }
+            const newTaskPlaceholder: Task = {
+                Backlog_ID: parseInt(localBacklog.Backlog_ID.toString()),
+                Team_ID: localBacklog?.project?.team?.Team_ID ? localBacklog?.project?.team?.Team_ID : 0,
+                Task_Title: localNewTask?.Task_Title || "",
+                Status_ID: localNewTask?.Status_ID || 0,
+                Assigned_User_ID: localNewTask?.Assigned_User_ID
+            };
+            return addTask(localBacklog.Backlog_ID, newTaskPlaceholder);
+        },
+        onSuccess: async () => {
+            if (!localBacklog || !localBacklog.Backlog_ID) return
 
-        await addTask(localBacklog.Backlog_ID, newTaskPlaceholder)
+            const theTasks = await readTasksByBacklogId(localBacklog.Backlog_ID, undefined, true);
+            if (theTasks && theTasks.length === 0 && renderTasks) setRenderTasks(undefined);
+            if (theTasks && theTasks.length) setRenderTasks(theTasks);
+        },
+    });
 
-        const theTasks = await readTasksByBacklogId(localBacklog.Backlog_ID, undefined, true)
-        if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
+    const handleCreateTask = () => {
+        if (createTaskRef.current) return;
+        if (!localBacklog || !localBacklog.Backlog_ID) return;
 
-        if (theTasks && theTasks.length) setRenderTasks(theTasks)
-
-        createTaskRef.current = false
-        setCreateTaskPending(false)
-    }
+        createTaskRef.current = true;
+        doCreateTask(undefined, {
+            onSettled: () => {
+                createTaskRef.current = false;
+            },
+        });
+    };
 
     // Archives a task by removing it from the backlog and updating the rendered tasks.
     const archiveTask = async (task: Task) => {

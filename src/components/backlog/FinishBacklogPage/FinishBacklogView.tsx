@@ -9,6 +9,7 @@ import { useURLLink } from '@/hooks';
 import useRoleAccess from '@/hooks/useRoleAccess';
 import { setSnackMessage, useAppDispatch } from '@/redux';
 import { Backlog, Task } from '@/types';
+import { useMutation } from '@tanstack/react-query';
 
 void React.createElement
 
@@ -38,27 +39,39 @@ export const FinishBacklogView = () => {
         Project_ID: 0,
         Backlog_IsPrimary: false,
     })
-    const [finishBacklogPending, setFinishBacklogPending] = useState<boolean>(false)
+    // const [finishBacklogPending, setFinishBacklogPending] = useState<boolean>(false)
     const finishBacklogRef = useRef<boolean>(false)
 
     // ---- Methods ----
     // Handles the finishing of the current backlog and redirects accordingly
-    const doFinishBacklog = async () => {
-        if (!renderBacklog) return
-        if (finishBacklogRef.current) return; // Prevent multiple submissions
+    const { mutate: doFinishBacklog, isPending: finishBacklogPending } = useMutation({
+        mutationFn: () => finishBacklog(backlogId, moveAction, newBacklog),
+        onSuccess: (targetBacklog) => {
+            if (targetBacklog) {
+                router.push(
+                    `/backlog/${convertID_NameStringToURLFormat(targetBacklog.id, targetBacklog.name)}`
+                );
+            } else {
+                dispatch(setSnackMessage("Error happened while finishing backlog. Try again."));
+            }
+        },
+        onError: (error) => {
+            console.error("Error finishing backlog:", error);
+            dispatch(setSnackMessage("Error happened while finishing backlog. Try again."));
+        },
+    });
+
+    const handleFinishBacklog = () => {
+        if (!renderBacklog) return;
+        if (finishBacklogRef.current) return;
+
         finishBacklogRef.current = true;
-        setFinishBacklogPending(true)
-
-        const targetBacklog = await finishBacklog(backlogId, moveAction, newBacklog)
-        if (targetBacklog) {
-            router.push(`/backlog/${convertID_NameStringToURLFormat(targetBacklog.id, targetBacklog.name)}`); // Redirect to new backlog page
-        } else {
-            dispatch(setSnackMessage("Error happened while finishing backlog. Try again."))
-        }
-
-        finishBacklogRef.current = false;
-        setFinishBacklogPending(false)
-    }
+        doFinishBacklog(undefined, {
+            onSettled: () => {
+                finishBacklogRef.current = false;
+            },
+        });
+    };
 
     // ---- Effects ----
     useEffect(() => {
@@ -104,7 +117,7 @@ export const FinishBacklogView = () => {
         finishBacklogPending,
         setMoveAction,
         setNewBacklog,
-        doFinishBacklog,
+        handleFinishBacklog,
         convertID_NameStringToURLFormat
     }
 

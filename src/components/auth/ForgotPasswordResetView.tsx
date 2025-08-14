@@ -3,8 +3,9 @@
 import { Block, Field, Heading } from '@/components'
 import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAuth } from '@/hooks'
+import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
-import React, { FormEvent, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const ForgotPasswordResetView = () => {
@@ -17,33 +18,33 @@ export const ForgotPasswordResetView = () => {
     const [rememberToken, setRememberToken] = useState<string>('')
     const [password1, setPassword1] = useState<string>('')
     const [password2, setPassword2] = useState<string>('')
-    const [resetPending, setResetPending] = useState<boolean>(false)
+    // const [resetPending, setResetPending] = useState<boolean>(false)
     const submittingRef = useRef<boolean>(false)
 
     // Methods
-    const doReset = async (e?: FormEvent) => {
-        e?.preventDefault()
+    const { mutate: doReset, isPending: resetPending, error } = useMutation({
+        mutationFn: () => handleResetRequest(userEmail, rememberToken, password1, password2) // Trigger password reset
+    });
 
-        if (submittingRef.current) return
-        submittingRef.current = true
-        setResetPending(true)
+    const handleSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+        doReset(undefined, {
+            onSettled: () => {
+                submittingRef.current = false;
+            },
+        });
+    };
 
-        try {
-            await handleResetRequest(userEmail, rememberToken, password1, password2) // Trigger password reset
-        } finally {
-            submittingRef.current = false
-            setResetPending(false)
-        }
-    }
-
-    const ifEnter = (e: React.KeyboardEvent) => e.key === 'Enter' && doReset(e as any)
+    const ifEnter = (e: React.KeyboardEvent) => e.key === 'Enter' && handleSubmit(e as any)
 
     return (
         <Block className="forgot-page">
             <Heading variant="h2">
                 {t('guest:h2:Reset password')}
             </Heading>
-            <form onSubmit={doReset} className="guest-form">
+            <form onSubmit={handleSubmit} className="guest-form">
                 <Field
                     type="text"
                     lbl={t('guest:forms:Email')}
