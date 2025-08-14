@@ -1,6 +1,15 @@
-Implement dependency injection into the component, by abstracting the TSX out of it, into a ComponentNameView.
+## Docker
+Build Docker image targeting amd64:
+docker build --platform linux/amd64 -t giveortake-nextjs-frontend .
 
+Running locally:
 
+Re-tag and push:
+docker tag giveortake-nextjs-frontend rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:12-aug-2025__11.36.59
+
+docker push rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:12-aug-2025__11.36.59
+
+## Refactoring
 Insert comments for sections in the TS logic:
 // ---- Hooks ----
 (and for state, methods, effects and render as well)
@@ -8,21 +17,18 @@ Insert comments for sections in the TS logic:
 Make method-level comments for all methods and effects.
 
 Integrate dependency injection, so we split TS logic (ComponentNameContainer) and TSX (ComponentNameContainerView) from each other.
+Implement dependency injection into the component, by abstracting the TSX out of it, into a ComponentNameView.
 
-
-
+## Jest
 Create testing of UserDetailsView, including UserDetailsViewProps variables being undefined/null.
-
-
 Add a second describe() => {}, testing 5 new edge cases.
 Arrow to search in tests:  ›
 
-
-
-
+## Running on network
 Network hosting:
 npm run dev -- -H 192.168.50.132
 
+## NPM packages
 npm i:
     sass
     clsx
@@ -41,6 +47,7 @@ npm i:
     react-dnd react-dnd-html5-backend
     next-qrcode
     yup
+    @tanstack/react-query
 
     --save-dev:
         jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
