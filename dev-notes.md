@@ -2,12 +2,12 @@
 Build Docker image targeting amd64:
 docker build --platform linux/amd64 -t giveortake-nextjs-frontend .
 
-Running locally:
-
 Re-tag and push:
-docker tag giveortake-nextjs-frontend rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:12-aug-2025__11.36.59
+docker tag giveortake-nextjs-frontend rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:14-Aug-2025__12.28.32 && docker push rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:14-Aug-2025__12.28.32
 
-docker push rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:12-aug-2025__11.36.59
+## Running bash script (.sh)
+Make it executable: chmod +x deploy.sh
+Run it: ./deploy.sh
 
 ## Refactoring
 Insert comments for sections in the TS logic:
