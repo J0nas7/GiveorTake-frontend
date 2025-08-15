@@ -2,14 +2,10 @@ name: Deploy to Scaleway
 
 on:
   push:
-    branches: [ main ]  # Trigger on push to main branch
+    branches: [ main ]
 
 env:
-  SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
-  SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
-  SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
-  SCW_DEFAULT_REGION: fr-par
-  CONTAINER_ID: ${{ secrets.SCW_CONTAINER_ID }}
+  CONTAINER_ID: "b341b9a7-51e4-437f-9dfe-46d6198f40ce"
 
 jobs:
   deploy:
@@ -36,6 +32,9 @@ jobs:
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
       - name: Update Scaleway Serverless Container
-        run: |
-          scw init --access-key ${{ env.SCW_ACCESS_KEY }} --secret-key ${{ env.SCW_SECRET_KEY }} --default-project-id ${{ env.SCW_DEFAULT_PROJECT_ID }} --default-region ${{ env.SCW_DEFAULT_REGION }}
-          scw container container update ${{ env.CONTAINER_ID }} registry-image=${{ env.IMAGE }}
+        run: scw container container update ${{ env.CONTAINER_ID }} registry-image=${{ env.IMAGE }}
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          SCW_DEFAULT_REGION: fr-par
