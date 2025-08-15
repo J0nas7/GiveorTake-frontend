@@ -23,13 +23,21 @@ jobs:
         run: |
           echo "${{ secrets.SCW_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud -u nologin --password-stdin
 
-      - name: Build and push Docker image
+      - name: Set up Docker image tag
         run: |
           TIMESTAMP=$(date +%d-%b-%Y__%H.%M.%S)
           IMAGE="rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:$TIMESTAMP"
-          docker build --platform linux/amd64 -t $IMAGE .
-          docker push $IMAGE
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Build and push Docker image (with caching)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
 
       - name: Update Scaleway Serverless Container
         run: scw container container update ${{ env.CONTAINER_ID }} registry-image=${{ env.IMAGE }}
