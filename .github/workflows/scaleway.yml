@@ -1,0 +1,41 @@
+name: Deploy to Scaleway
+
+on:
+  push:
+    branches: [ main ]  # Trigger on push to main branch
+
+env:
+  SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+  SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+  SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+  SCW_DEFAULT_REGION: fr-par
+  CONTAINER_ID: ${{ secrets.SCW_CONTAINER_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Scaleway CLI
+        run: |
+          curl -s https://raw.githubusercontent.com/scaleway/scaleway-cli/master/install.sh | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Log in to Scaleway Container Registry
+        run: |
+          echo "${{ secrets.SCW_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud -u nologin --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          TIMESTAMP=$(date +%d-%b-%Y__%H.%M.%S)
+          IMAGE="rg.fr-par.scw.cloud/namespace-giveortake-nextjs-frontend/giveortake-nextjs-frontend:$TIMESTAMP"
+          docker build --platform linux/amd64 -t $IMAGE .
+          docker push $IMAGE
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Update Scaleway Serverless Container
+        run: |
+          scw init --access-key ${{ env.SCW_ACCESS_KEY }} --secret-key ${{ env.SCW_SECRET_KEY }} --default-project-id ${{ env.SCW_DEFAULT_PROJECT_ID }} --default-region ${{ env.SCW_DEFAULT_REGION }}
+          scw container container update ${{ env.CONTAINER_ID }} registry-image=${{ env.IMAGE }}
