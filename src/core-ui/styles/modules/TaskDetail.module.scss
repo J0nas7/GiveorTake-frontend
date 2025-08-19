@@ -53,7 +53,8 @@
     margin-bottom: 15px;
 }
 
-.titlePlaceholder, .descriptionPlaceholder {
+.titlePlaceholder,
+.descriptionPlaceholder {
     &:hover {
         @apply bg-gray-100 cursor-text;
     }
@@ -86,7 +87,7 @@
 }
 
 .content {
-    @apply gap-4 !flex;
+    @apply gap-4 !flex h-full;
 }
 
 .leftPanel,
@@ -97,8 +98,11 @@
 }
 
 .withModal {
-    .leftPanel, .rightPanel {
-        height: calc(100vh - 20% - 66px);
+
+    .leftPanel,
+    .rightPanel {
+        // height: calc(100vh - 20% - 66px);
+        height: 100%;
     }
 }
 
@@ -151,7 +155,8 @@
     }
 }
 
-.editDescriptionActions, .newCommentActions {
+.editDescriptionActions,
+.newCommentActions {
     @apply gap-3 !flex;
 }
 

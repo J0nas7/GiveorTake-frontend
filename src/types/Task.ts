@@ -1,4 +1,4 @@
-import { Backlog, LoadingStateType, Status, TaskComment, TaskMediaFile, TaskTimeTrack } from "./"
+import { Backlog, LoadingStateType, Status, TaskComment, TaskMediaFile, TaskTimeTrack, User } from "./"
 
 // Task Type
 export type Task = {
@@ -16,6 +16,7 @@ export type Task = {
     Task_UpdatedAt?: string
 
     // Relationships
+    user?: User
     status?: Status
     backlog?: Backlog
     comments?: TaskComment[]
