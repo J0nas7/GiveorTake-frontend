@@ -231,7 +231,7 @@ interface CommentsAreaViewProps {
     setIsAnsweringCommentVisible: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
     task: Task;
     authUser: User | undefined
-    addTaskComment: (taskId: number, comment: TaskComment) => Promise<void>
+    addTaskComment: (taskId: number, comment?: TaskComment) => Promise<false | TaskComment>
     handleAddComment: () => Promise<void>
     handleCommentCancel: () => void
     handleEditComment: () => Promise<void>

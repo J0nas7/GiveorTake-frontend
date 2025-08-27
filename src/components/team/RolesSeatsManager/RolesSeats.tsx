@@ -24,7 +24,7 @@ export type RolesSeatsProps = {
     availablePermissions: string[]
     canManageTeamMembers: boolean | undefined
     rolesAndPermissionsByTeamId: Role[] | undefined
-    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
+    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<false | TeamUserSeat>
     addRole: (parentId: number, object?: Role | undefined) => Promise<void>
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     readRolesAndPermissionsByTeamId: (teamId: number) => Promise<boolean>

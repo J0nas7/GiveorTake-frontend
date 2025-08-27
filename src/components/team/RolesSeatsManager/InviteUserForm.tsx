@@ -20,7 +20,7 @@ export type InviteUserFormProps = {
     t: TFunction
     rolesAndPermissionsByTeamId: Role[] | undefined
     displayInviteForm: string | undefined
-    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
+    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<false | TeamUserSeat>
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
     setDisplayInviteForm: React.Dispatch<React.SetStateAction<string | undefined>>
