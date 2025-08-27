@@ -4,22 +4,31 @@
 import { faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from 'react';
 
 // Internal
 import { Card } from '@/components/task/taskdetails/TaskCard';
-import { Block } from '@/components/ui/block-text';
+import { Block, Text } from '@/components/ui/block-text';
 import { Heading } from '@/components/ui/heading';
 import { useProjectsContext, useTasksContext, useTaskTimeTrackContext } from '@/contexts';
+import { LoadingButton } from '@/core-ui/components/LoadingState';
 import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
-import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '@/redux';
+import { useURLLink } from '@/hooks';
+import { AppDispatch, selectAuthUser, selectAuthUserTaskTimeTrack, setSnackMessage, useTypedSelector } from '@/redux';
 import { ProjectStates, Task, TaskTimeTracksStates } from '@/types';
+import { useMutation } from '@tanstack/react-query';
+import { useDispatch } from 'react-redux';
 
 export const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
+    // ---- Hooks ----
+    const dispatch = useDispatch<AppDispatch>()
     const { readTasksByBacklogId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext()
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, addTaskTimeTrack, saveTaskTimeTrackChanges, handleTaskTimeTrack } = useTaskTimeTrackContext()
 
+    // ---- State ----
     const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0) // Total amount of seconds spend
 
     useEffect(() => {
@@ -45,7 +54,19 @@ export const TaskDetailsArea: React.FC<{ task: Task }> = ({ task }) => {
 
     // Handle status change
     const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        if (!task) return
         const newStatus = event.target.value as unknown as Task["Status_ID"]
+        const status = task.backlog?.statuses?.find(status => status.Status_ID == newStatus)
+
+        const taskHasOpenSubTasks = task.sub_tasks?.filter(subtask => {
+            console.log("subtask", subtask)
+            return !subtask.status?.Status_Is_Closed
+        })
+        if (status?.Status_Is_Closed && taskHasOpenSubTasks?.length) {
+            dispatch(setSnackMessage("You cannot close this task. It has open subtasks."))
+            return
+        }
+
         handleTaskChanges("Status_ID", newStatus.toString())
     };
 
@@ -150,6 +171,8 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
 
     return (
         <Card className={styles.detailsSection}>
+            <TaskRelation task={task} />
+
             <Heading variant="h2" className="font-bold">Task Details</Heading>
 
             <TaskProgress task={task} />
@@ -166,6 +189,109 @@ export const TaskDetailsView: React.FC<TaskDetailsViewProps> = ({
         </Card>
     );
 };
+
+export const TaskRelation: React.FC<{ task: Task; }> = ({ task }) => {
+    // ---- Hooks ----
+    const { convertID_NameStringToURLFormat } = useURLLink("-")
+    const router = useRouter();
+    const { addTask } = useTasksContext();
+
+    // ---- Variables ----
+    const createSubTaskRef = useRef<boolean>(false)
+    const taskURL = convertID_NameStringToURLFormat(task.parent_task?.Task_ID || 0, task.parent_task?.Task_Title || "")
+
+    // ---- Methods ----
+    const handleSubTaskChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedSubTaskId = e.target.value;
+        const selectedSubTask = task.sub_tasks?.find(subTask => subTask.Task_ID === parseInt(selectedSubTaskId));
+        if (selectedSubTask) {
+            const subTaskURL = convertID_NameStringToURLFormat(selectedSubTask.Task_ID || 0, selectedSubTask.Task_Title);
+            router.push(`/task/${task.backlog?.project?.Project_Key}/${subTaskURL}`);
+        }
+    };
+
+    // Prepares and creates a new task in the backlog.
+    const { mutate: doCreateSubTask, isPending: createSubTaskPending } = useMutation({
+        mutationFn: async () => {
+            if (!task.backlog) return false
+
+            const newTaskPlaceholder: Task = {
+                Parent_Task_ID: task.Task_ID,
+                Backlog_ID: task.Backlog_ID,
+                Team_ID: task.Team_ID,
+                Task_Title: task.Task_Title + " (copy)",
+                Status_ID: task.Status_ID,
+                Assigned_User_ID: task.Assigned_User_ID
+            };
+
+            return await addTask(task.Backlog_ID, newTaskPlaceholder);
+        },
+        onSuccess: (newTask) => {
+            if (newTask) {
+                const newTaskURL = convertID_NameStringToURLFormat(newTask.Task_ID || 0, newTask.Task_Title);
+                router.push(`/task/${newTask.backlog?.project?.Project_Key}/${newTaskURL}`); // Redirect to the new task
+            }
+        },
+    });
+
+    const handleCreateSubTask = () => {
+        if (createSubTaskRef.current) return;
+        if (!task.backlog) return;
+
+        createSubTaskRef.current = true;
+        doCreateSubTask(undefined, {
+            onSettled: () => {
+                createSubTaskRef.current = false;
+            },
+        });
+    };
+
+    return (
+        <Block className="mb-4">
+            <Block className="text-sm">
+                {task.Parent_Task_ID && (
+                    <>
+                        <strong>Task Belongs To:</strong>{" "}
+                        <Link
+                            href={`/task/${task.backlog?.project?.Project_Key}/${taskURL}`}
+                            className="text-blue-500 hover:underline"
+                        >
+                            {task.parent_task?.Task_Title}
+                        </Link>
+                    </>
+
+                )}
+                {task.sub_tasks && task.sub_tasks.length > 0 && (
+                    <Block className="mt-2">
+                        <strong>Sub-Tasks:</strong>{" "}
+                        <select
+                            onChange={handleSubTaskChange}
+                            className="p-2 border rounded"
+                        >
+                            <option value="" disabled selected>{task.sub_tasks.length} subtasks</option>
+                            {task.sub_tasks.map(subTask => (
+                                <option key={subTask.Task_ID} value={subTask.Task_ID}>{subTask.Task_Title}</option>
+                            ))}
+                        </select>
+                    </Block>
+                )}
+            </Block>
+            <Block className="text-xs">
+                <button
+                    className={"blue-link"}
+                    onClick={handleCreateSubTask}
+                    disabled={createSubTaskPending}
+                >
+                    {createSubTaskPending ? (
+                        <LoadingButton />
+                    ) : (
+                        <Text variant="span">Add subtask</Text>
+                    )}
+                </button>
+            </Block>
+        </Block>
+    );
+}
 
 export const TaskProgress: React.FC<{ task: Task; }> = ({ task }) => {
     if (!task.Task_Due_Date || !task.Task_CreatedAt) return null;

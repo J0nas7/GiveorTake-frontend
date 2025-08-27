@@ -12,6 +12,7 @@ void React.createElement
 type BacklogSiblingsHeaderProps = Pick<
     BacklogSiblingsProps,
     'localBacklog' |
+    'numberOfTasks' |
     'convertID_NameStringToURLFormat'
 >
 
@@ -20,7 +21,7 @@ export const BacklogSiblingsHeader: React.FC<BacklogSiblingsHeaderProps> = (prop
         <Block className="actions-wrapper sm:justify-between">
             <Block className="flex gap-4 items-center">
                 <Text>{props.localBacklog.Backlog_Name}</Text>
-                <Text className="text-sm text-gray-600">{props.localBacklog.tasks?.length} tasks</Text>
+                <Text className="text-sm text-gray-600">{props.numberOfTasks} tasks</Text>
             </Block>
             <Block className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 my-2">
                 {[

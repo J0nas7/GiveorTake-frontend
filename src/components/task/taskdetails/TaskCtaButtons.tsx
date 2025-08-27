@@ -28,6 +28,16 @@ export const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return
 
+        const taskHasOpenSubTasks = task.sub_tasks?.filter(subtask => {
+            console.log("subtask", subtask)
+            return !subtask.status?.Status_Is_Closed
+        })
+
+        if (taskHasOpenSubTasks?.length) {
+            dispatch(setSnackMessage("You cannot archive this task. It has open subtasks."))
+            return
+        }
+
         const removed = await removeTask(
             task.Task_ID,
             task.Backlog_ID,

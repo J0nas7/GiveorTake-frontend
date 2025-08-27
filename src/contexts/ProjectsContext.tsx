@@ -17,7 +17,7 @@ export type ProjectsContextType = {
     readProjectById: (itemId: number) => Promise<void>
     setProjectDetail: React.Dispatch<React.SetStateAction<Project | undefined>>
     handleChangeNewProject: (field: ProjectFields, value: string) => Promise<void>
-    addProject: (parentId: number, object?: Project) => Promise<void>
+    addProject: (parentId: number, object?: Project) => Promise<false | Project>
     saveProjectChanges: (projectChanges: Project, parentId: number) => Promise<boolean>
     removeProject: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }

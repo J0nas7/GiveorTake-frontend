@@ -27,6 +27,7 @@ describe('BacklogsPage Components', () => {
             render(
                 <BacklogSiblingsHeader
                     localBacklog={localBacklog}
+                    numberOfTasks={3}
                     convertID_NameStringToURLFormat={mockConvertID}
                     {...props}
                 />
@@ -69,6 +70,7 @@ describe('BacklogsPage Components', () => {
             const { container } = render(
                 <BacklogSiblingsHeader
                     localBacklog={undefined}
+                    numberOfTasks={0}
                     convertID_NameStringToURLFormat={mockConvertID_NameStringToURLFormat}
                 />
             );

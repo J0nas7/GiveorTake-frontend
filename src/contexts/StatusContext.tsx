@@ -16,7 +16,7 @@ export type StatusContextType = {
     readStatusById: (itemId: number, reply?: boolean) => Promise<any>
     setStatusDetail: React.Dispatch<React.SetStateAction<Status | undefined>>
     handleChangeNewStatus: (field: StatusFields, value: string) => Promise<void>
-    addStatus: (parentId: number, object?: Status) => Promise<void>
+    addStatus: (parentId: number, object?: Status) => Promise<false | Status>
     saveStatusChanges: (statusChanges: Status, parentId: number) => Promise<boolean>
     removeStatus: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     moveOrder: (statusId: number, direction: "up" | "down") => Promise<boolean>

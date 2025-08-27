@@ -20,6 +20,7 @@ export const mockConvertID_NameStringToURLFormat = jest.fn(
         return `${id}-${safeName}`;
     }
 );
+export const mockHttpPostWithData = jest.fn(() => Promise.resolve({ success: true }));
 export const pushMock = jest.fn();
 
 // Create mock store
@@ -44,7 +45,10 @@ jest.mock('next/navigation', () => ({
         organisationLink: '1-test-org',
     })),
     useSearchParams: jest.fn(() => ({
-        get: jest.fn().mockReturnValue(null),
+        get: jest.fn((key) => {
+            if (key === 'taskIds') return '1,2,3'; // Return taskIds for the test
+            return null;
+        }),
     })),
 }));
 
@@ -54,7 +58,7 @@ jest.mock('@/hooks', () => ({
     })),
     useAxios: jest.fn(() => ({
         httpGetRequest: jest.fn(),
-        httpPostWithData: jest.fn(() => Promise.resolve({ success: true })),
+        httpPostWithData: mockHttpPostWithData
     })),
     useAuth: jest.fn(() => ({
         handleLoginSubmit: mockHandleLoginSubmit,

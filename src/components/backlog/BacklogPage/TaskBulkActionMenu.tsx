@@ -12,15 +12,17 @@ import { Block, Field, Heading, Text } from '@/components'
 import { useBacklogsContext, useTasksContext } from '@/contexts'
 import { LoadingButton } from '@/core-ui/components/LoadingState'
 import { useAxios, useURLLink } from '@/hooks'
-import { selectSnackMessage, useTypedSelector } from '@/redux'
+import { AppDispatch, selectSnackMessage, setSnackMessage, useTypedSelector } from '@/redux'
 import { Project, Task } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import clsx from 'clsx'
+import { useDispatch } from 'react-redux'
 
 export const TaskBulkActionMenu: React.FC<{ project?: Project | undefined }> = ({
     project
 }) => {
     // Hooks
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
     const { backlogLink, projectLink } = useParams<{ backlogLink: string, projectLink: string }>() // Get backlogLink from URL
     const searchParams = useSearchParams()
@@ -67,20 +69,49 @@ export const TaskBulkActionMenu: React.FC<{ project?: Project | undefined }> = (
     const handleEdit = async () => setTaskBulkEditing(true)
 
     const handleDelete = async () => {
-        if (!selectedTaskIds.length) return
+        if (!selectedTaskIds.length || !project) return;
 
-        if (!confirm("Are you sure you want to delete the items?")) return
+        // Fetch all tasks for all backlogs
+        const backlogPromises = project.backlogs?.map(async (backlog) => {
+            if (backlog.Backlog_ID) {
+                return await readTasksByBacklogId(backlog.Backlog_ID, false, true);
+            }
+            return [];
+        });
+
+        // Wait for all promises to resolve and flatten the result
+        const allTasksArrays = await Promise.all(backlogPromises || []);
+        const allTasks = allTasksArrays.flat();
+
+        // Filter out tasks with Status_Is_Closed: false
+        const tasksToDelete = selectedTaskIds.filter(taskId => {
+            const task = allTasks?.find(t => t.Task_ID == parseInt(taskId));
+            return task?.status?.Status_Is_Closed !== false;
+        });
+
+        // Count how many tasks were not deleted
+        const notDeletedCount = selectedTaskIds.length - tasksToDelete.length;
+
+        if (!confirm("Are you sure you want to delete the items?")) return;
+
+        if (tasksToDelete.length === 0) {
+            dispatch(setSnackMessage("No tasks were deleted because all selected tasks are open."))
+            return;
+        }
 
         const result = await httpPostWithData("tasks/bulk-destroy", {
-            task_ids: JSON.stringify(selectedTaskIds)
-        })
+            task_ids: JSON.stringify(tasksToDelete)
+        });
 
         if (result.success) {
-            await readTasksByBacklogId(parseInt(backlogId), true)
+            if (notDeletedCount > 0) {
+                dispatch(setSnackMessage(`${notDeletedCount} task(s) were not deleted because they are open.`))
+            }
 
-            updateURLParams()
+            await readTasksByBacklogId(parseInt(backlogId), true);
+            updateURLParams();
         }
-    }
+    };
 
     const handleFocus = (newFocus: boolean) => {
         const url = new URL(window.location.href)

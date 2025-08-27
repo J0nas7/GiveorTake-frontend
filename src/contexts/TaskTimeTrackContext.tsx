@@ -17,7 +17,7 @@ export type TaskTimeTrackContextType = {
     readTaskTimeTracksByTaskId: (taskId: number) => Promise<void>
     setTaskTimeTrackDetail: React.Dispatch<React.SetStateAction<TaskTimeTrack | undefined>>
     handleChangeNewTaskTimeTrack: (field: keyof TaskTimeTrack, value: string, object?: TaskTimeTrack | undefined) => Promise<void>
-    addTaskTimeTrack: (taskId: number, object?: TaskTimeTrack | undefined) => Promise<void>
+    addTaskTimeTrack: (parentId: number, object?: TaskTimeTrack) => Promise<false | TaskTimeTrack>
     saveTaskTimeTrackChanges: (taskTimeTrackChanges: TaskTimeTrack, taskId: number) => Promise<boolean>
     removeTaskTimeTrack: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>

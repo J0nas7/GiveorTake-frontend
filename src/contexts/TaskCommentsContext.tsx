@@ -18,7 +18,7 @@ export type TaskCommentsContextType = {
     readCommentById: (itemId: number, reply?: boolean) => Promise<any>
     setTaskCommentDetail: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
     handleChangeNewTaskComment: (field: TaskCommentFields, value: string, object?: TaskComment | undefined) => Promise<void>
-    addTaskComment: (parentId: number, object?: TaskComment | undefined) => Promise<void>
+    addTaskComment: (parentId: number, object?: TaskComment) => Promise<false | TaskComment>
     saveTaskCommentChanges: (taskCommentChanges: TaskComment, parentId: number) => Promise<boolean>
     removeTaskComment: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }

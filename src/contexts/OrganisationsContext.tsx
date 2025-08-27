@@ -17,7 +17,7 @@ export type OrganisationsContextType = {
     readOrganisationById: (itemId: number) => Promise<void>
     setOrganisationDetail: React.Dispatch<React.SetStateAction<Organisation | undefined>>
     handleChangeNewOrganisation: (field: OrganisationFields, value: string) => Promise<void>
-    addOrganisation: (parentId: number, object?: Organisation) => Promise<void>
+    addOrganisation: (parentId: number, object?: Organisation) => Promise<false | Organisation>
     saveOrganisationChanges: (organisationChanges: Organisation, parentId: number) => Promise<boolean>
     removeOrganisation: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }

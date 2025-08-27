@@ -18,7 +18,7 @@ export type BacklogsContextType = {
     readBacklogById: (itemId: number, reply?: boolean) => Promise<any>
     setBacklogDetail: React.Dispatch<React.SetStateAction<Backlog | undefined>>;
     handleChangeNewBacklog: (field: BacklogFields, value: string) => Promise<void>;
-    addBacklog: (parentId: number, object?: Backlog) => Promise<void>;
+    addBacklog: (parentId: number, object?: Backlog) => Promise<false | Backlog>
     saveBacklogChanges: (backlogChanges: Backlog, parentId: number) => Promise<boolean>
     removeBacklog: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     finishBacklog: (backlogId: string, moveAction: string, newBacklog: Backlog) => Promise<false | {

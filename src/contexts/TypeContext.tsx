@@ -58,8 +58,10 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
                     setItemsById(data)
                     setNewItem(undefined)
                 }
+                return createdItem as unknown as T
             }
         }
+        return false
     }
 
     const handleChangeNewItem = async (field: keyof T, value: string, object?: T) => {

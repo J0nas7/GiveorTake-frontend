@@ -45,7 +45,7 @@ export const SnackBar = () => {
     if (!snackMessage && deleteConfirm === undefined) return null
 
     return (
-        <Block className="taskplayer-container flex items-center justify-between">
+        <Block className="taskplayer-container snack-bar flex items-center justify-between">
             {deleteConfirm ? (
                 <Block className="w-full flex gap-2 items-center justify-between">
                     <Text className="font-semibold">

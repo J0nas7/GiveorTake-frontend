@@ -393,22 +393,27 @@ const SearchBar = () => {
                                                 {tableToLabel[table] || table} {/* Default to the table name if no mapping exists */}
                                             </Heading>
                                             <div className="space-y-2">
-                                                {Array.isArray(items) &&
-                                                    items.map((item, index) => {
-                                                        searchIndex++
-                                                        const itemIndex = searchIndex
-                                                        const itemId = item[`${table}ID`] || item.id; // Get unique ID (adjust based on your structure)
-                                                        const isSelected = selectedIndex === searchIndex; // Check if item is selected
-                                                        return (
-                                                            <div
-                                                                key={itemId}
-                                                                onMouseOver={() => setSelectedIndex(itemIndex)}
-                                                                className={`p-3 border rounded-md shadow-sm ${isSelected ? 'bg-blue-100' : ''}`} // Highlight selected item
-                                                            >
-                                                                {formatResultItem(item, table)}
-                                                            </div>
-                                                        );
-                                                    })}
+                                                {Array.isArray(items) ? (
+                                                    <>
+                                                        {items.map((item, index) => {
+                                                            searchIndex++
+                                                            const itemIndex = searchIndex
+                                                            const itemId = item[`${table}ID`] || item.id; // Get unique ID (adjust based on your structure)
+                                                            const isSelected = selectedIndex === searchIndex; // Check if item is selected
+                                                            return (
+                                                                <div
+                                                                    key={itemId}
+                                                                    onMouseOver={() => setSelectedIndex(itemIndex)}
+                                                                    className={`p-3 border rounded-md shadow-sm ${isSelected ? 'bg-blue-100' : ''}`} // Highlight selected item
+                                                                >
+                                                                    {formatResultItem(item, table)}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </>
+                                                ) : (
+                                                    <>{items}</>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

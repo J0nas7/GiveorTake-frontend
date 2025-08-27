@@ -68,7 +68,7 @@ export const useTypeAPI = <T extends { [key: string]: any }, IDKey extends keyof
             const response: APIResponse<T> = await httpPostWithData(resource, newItem);
 
             console.log(`${resource} postItem`, response)
-            if (response) return true
+            if (response) return response
 
             throw new Error(`Failed to add ${resource}`);
         } catch (error: any) {

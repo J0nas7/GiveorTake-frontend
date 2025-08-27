@@ -1,7 +1,7 @@
-import { mockConvertID_NameStringToURLFormat, TestProvider } from '@/__tests__/test-utils';
+import { mockConvertID_NameStringToURLFormat, mockHttpPostWithData, pushMock, TestProvider } from '@/__tests__/test-utils';
 import { BacklogHeader, BacklogNewTaskRow, BacklogStatusActionMenu, BacklogTaskRow, BacklogTaskTableHeader, TaskBulkActionMenu } from '@/components/backlog';
 import * as redux from '@/redux';
-import { BacklogStates, Task } from '@/types';
+import { BacklogStates, Project, Task } from '@/types';
 import '@testing-library/jest-dom';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import * as nextNavigation from 'next/navigation';
@@ -519,10 +519,12 @@ describe('BacklogPage Components', () => {
     });
 })
 
+const mockReadTasksByBacklogId = jest.fn();
+
 jest.mock('@/contexts', () => ({
     ...jest.requireActual('@/contexts'),
     useTasksContext: () => ({
-        readTasksByBacklogId: jest.fn(),
+        readTasksByBacklogId: mockReadTasksByBacklogId,
     }),
     useBacklogsContext: () => ({
         backlogById: { Project_ID: 1 },
@@ -538,7 +540,6 @@ jest.mock('@/redux', () => ({
 
 describe('TaskBulkActionMenu', () => {
 
-    let pushMock: jest.Mock;
     let clipboardWriteTextMock: jest.Mock;
 
     beforeEach(() => {
@@ -548,8 +549,6 @@ describe('TaskBulkActionMenu', () => {
                 writeText: clipboardWriteTextMock,
             },
         });
-
-        pushMock = jest.fn();
 
         // Override the mocked useSearchParams from the jest.mock
         (nextNavigation.useSearchParams as jest.Mock).mockImplementation(() => ({
@@ -615,18 +614,56 @@ describe('TaskBulkActionMenu', () => {
     });
 
     it('calls API and clears URL on delete', async () => {
-        // Confirm override
+        // Mock confirm to return true
         global.confirm = jest.fn(() => true);
+
+        const project: Project = {
+            Team_ID: 1,
+            Project_Name: "Test Project",
+            Project_Key: "Test",
+            Project_Status: 'Planned',
+            backlogs: [
+                {
+                    Backlog_IsPrimary: false,
+                    Backlog_Name: "Test Backlog",
+                    Project_ID: 1
+                }
+            ]
+        };
+
+        const deletableTask: Task = {
+            Task_ID: 1,
+            Backlog_ID: 1,
+            Task_Title: "Task Test",
+            Status_ID: 1,
+            status: {
+                Status_ID: 1,
+                Backlog_ID: 1,
+                Status_Name: "Test",
+                Status_Is_Closed: true
+            }
+        };
+
+        // Set the return value for your mock
+        mockReadTasksByBacklogId.mockResolvedValueOnce([deletableTask]);
 
         render(
             <TestProvider>
-                <TaskBulkActionMenu />
+                <TaskBulkActionMenu project={project} />
             </TestProvider>
         );
+
+        // Trigger delete action
         fireEvent.click(screen.getByText('Delete'));
 
+        // Wait for async operations to complete
         await waitFor(() => {
+            // Assert that the API was called
+            expect(mockHttpPostWithData).toHaveBeenCalled();
+            // Assert that the URL was cleared
             expect(pushMock).toHaveBeenCalled();
+            // Clears task_id from the URL
+            expect(window.location.search).not.toContain('task_id');
         });
     });
 

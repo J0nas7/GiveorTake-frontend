@@ -19,7 +19,7 @@ export type TasksContextType = {
     // readTaskById: (itemId: number) => Promise<void>
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     handleChangeNewTask: (field: TaskFields, value: string, object?: Task) => Promise<void>
-    addTask: (parentId: number, object?: Task) => Promise<void>
+    addTask: (parentId: number, object?: Task) => Promise<false | Task>
     saveTaskChanges: (taskChanges: Task, parentId: number) => Promise<boolean>
     removeTask: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     taskByKeys: Task | undefined

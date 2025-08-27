@@ -2,9 +2,14 @@
     max-width: 600px;
     @apply fixed z-50 bg-gray-200 shadow-lg rounded-lg w-full p-4;
     @apply top-auto bottom-20 left-1/2 transform -translate-x-1/2;
+
+    &.snack-bar {
+        z-index: 2000;
+    }
 }
 
-.timetrack-metric, .timespent-metric {
+.timetrack-metric,
+.timespent-metric {
     @apply flex items-center gap-3;
 }
 
@@ -12,12 +17,15 @@
     .timetrack-button {
         @apply w-8 h-8 text-white rounded-full;
     }
+
     .timetrack-playbutton {
         @apply bg-green-400;
     }
+
     .timetrack-stopbutton {
         @apply bg-red-400;
     }
+
     .timetrack-changetask {
         @apply p-2 border rounded inline w-full max-w-full min-w-0;
         @apply bg-gray-300;

@@ -14,7 +14,7 @@ export type UsersContextType = {
     newUser: User | undefined;
     setUserDetail: React.Dispatch<React.SetStateAction<User | undefined>>;
     handleChangeNewUser: (field: UserFields, value: string) => Promise<void>
-    addUser: (parentId: number, object?: User) => Promise<void>
+    addUser: (parentId: number, object?: User) => Promise<false | User>
     saveUserChanges: (itemChanges: User, parentId: number) => Promise<boolean>
     removeUser: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     // userLoading: boolean;

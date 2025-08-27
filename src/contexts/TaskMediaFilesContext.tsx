@@ -16,7 +16,7 @@ export type TaskMediaFilesContextType = {
     readTaskMediaFilesByTaskId: (parentId: number) => Promise<void>
     setTaskMediaFileDetail: React.Dispatch<React.SetStateAction<TaskMediaFile | undefined>>
     handleChangeNewTaskMediaFile: (field: TaskMediaFileFields, value: string) => Promise<void>
-    addTaskMediaFile: (parentId: number, object?: TaskMediaFile | undefined) => Promise<void>
+    addTaskMediaFile: (parentId: number, object?: TaskMediaFile) => Promise<false | TaskMediaFile>
     saveTaskMediaFileChanges: (taskMediaFileChanges: TaskMediaFile, parentId: number) => Promise<boolean>
     removeTaskMediaFile: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }

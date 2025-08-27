@@ -17,7 +17,7 @@ export type TeamsContextType = {
     readTeamById: (itemId: number) => Promise<void>
     setTeamDetail: React.Dispatch<React.SetStateAction<Team | undefined>>
     handleChangeNewTeam: (field: TeamFields, value: string) => Promise<void>
-    addTeam: (parentId: number, object?: Team) => Promise<void>
+    addTeam: (parentId: number, object?: Team) => Promise<false | Team>
     saveTeamChanges: (teamChanges: Team, parentId: number) => Promise<boolean>
     removeTeam: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
 }

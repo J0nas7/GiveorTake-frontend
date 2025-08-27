@@ -13,8 +13,8 @@ import { LoadingState } from "@/core-ui/components/LoadingState";
 import styles from "@/core-ui/styles/modules/Backlog.module.scss";
 import { useURLLink } from "@/hooks";
 import useRoleAccess from "@/hooks/useRoleAccess";
-import { BacklogStates, Status, Task, TaskFields } from "@/types";
-import { useMutation } from '@tanstack/react-query';
+import { BacklogStates, Task, TaskFields } from "@/types";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 
 type BacklogWithSiblingsProps = {
@@ -24,6 +24,7 @@ type BacklogWithSiblingsProps = {
 export type BacklogSiblingsProps = {
     localBacklog?: BacklogStates;
     sortedTasks: Task[];
+    numberOfTasks: number;
     localNewTask: Task | undefined;
     currentSort: string;
     currentOrder: string;
@@ -48,15 +49,43 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
     // ---- Hooks ----
     const searchParams = useSearchParams();
     const router = useRouter();
+    const queryClient = useQueryClient();
     const { t } = useTranslation(['backlog'])
     const { readBacklogById } = useBacklogsContext()
     const { readTasksByBacklogId, setTaskDetail, addTask, removeTask } = useTasksContext()
     const { convertID_NameStringToURLFormat } = useURLLink("-")
 
+    // ---- Tanstack Query ----
+    // Fetch backlog by backlogId
+    const { data: localBacklog } = useQuery<BacklogStates>({
+        queryKey: ["backlog", backlogId],
+        queryFn: () => backlogId ? readBacklogById(backlogId, true) : Promise.resolve(null),
+        enabled: !!backlogId,
+        select: (theBacklog: BacklogStates | null) => {
+            if (!theBacklog) return undefined;
+
+            return {
+                ...theBacklog,
+                statuses: theBacklog.statuses?.sort(
+                    (a, b) => (a.Status_Order || 0) - (b.Status_Order || 0)
+                ),
+            };
+        }
+    });
+
+    // Fetch tasks by backlogId
+    const { data: renderTasks } = useQuery<Task[] | undefined>({
+        queryKey: ["tasks", backlogId],
+        queryFn: () => backlogId ?
+            readTasksByBacklogId(backlogId, undefined, true) : Promise.resolve(null),
+        enabled: !!backlogId,
+        select: (tasks: Task[] | undefined) => tasks ?? [], // fallback for null
+    });
+
     // ---- State and other Variables ----
     const [localNewTask, setLocalNewTask] = useState<Task | undefined>(undefined)
-    const [localBacklog, setLocalBacklog] = useState<BacklogStates>(undefined)
-    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
+    // const [localBacklog, setLocalBacklog] = useState<BacklogStates>(undefined)
+    // const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const urlTaskIds = searchParams.get("taskIds")
     const urlTaskBulkFocus = searchParams.get("taskBulkFocus")
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
@@ -101,15 +130,63 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
                 Status_ID: localNewTask?.Status_ID || 0,
                 Assigned_User_ID: localNewTask?.Assigned_User_ID
             };
+
+            // inline delay using setTimeout
+            // await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
+
             return addTask(localBacklog.Backlog_ID, newTaskPlaceholder);
         },
-        onSuccess: async () => {
-            if (!localBacklog || !localBacklog.Backlog_ID) return
+        // Optimistic update
+        onMutate: async () => {
+            if (!localBacklog || !localBacklog.Backlog_ID) return;
 
-            const theTasks = await readTasksByBacklogId(localBacklog.Backlog_ID, undefined, true);
-            if (theTasks && theTasks.length === 0 && renderTasks) setRenderTasks(undefined);
-            if (theTasks && theTasks.length) setRenderTasks(theTasks);
+            // Cancel any outgoing refetches, so they don’t overwrite optimistic update
+            await queryClient.cancelQueries({ queryKey: ["tasks", localBacklog.Backlog_ID] });
+
+            // Snapshot the previous tasks
+            const previousTasks = queryClient.getQueryData<Task[]>(["tasks", localBacklog.Backlog_ID]);
+
+            // Create a temporary task with a fake ID
+            const optimisticTask: Task = {
+                Task_ID: 0, // temporary client-side ID
+                Backlog_ID: parseInt(localBacklog.Backlog_ID.toString()),
+                Team_ID: localBacklog?.project?.team?.Team_ID || 0,
+                Task_Title: localNewTask?.Task_Title || "",
+                Status_ID: localNewTask?.Status_ID || 0,
+                Assigned_User_ID: localNewTask?.Assigned_User_ID,
+            };
+
+            // Optimistically update the cache
+            queryClient.setQueryData<Task[]>(["tasks", localBacklog.Backlog_ID], old => [
+                ...(old || []),
+                optimisticTask,
+            ]);
+
+            // Return rollback snapshot
+            return { previousTasks };
         },
+        // If the mutation fails, rollback
+        onError: (err, _, context) => {
+            if (localBacklog && context?.previousTasks) {
+                queryClient.setQueryData(["tasks", localBacklog.Backlog_ID], context.previousTasks);
+            }
+        },
+        // Sync with server after mutation
+        onSettled: async () => {
+            if (!localBacklog || !localBacklog.Backlog_ID) return;
+
+            await queryClient.invalidateQueries({
+                queryKey: ["tasks", localBacklog.Backlog_ID],
+            });
+        },
+        onSuccess: async () => {
+            if (localNewTask) {
+                setLocalNewTask({
+                    ...localNewTask,
+                    Task_Title: ""
+                })
+            }
+        }
     });
 
     const handleCreateTask = () => {
@@ -123,18 +200,6 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
             },
         });
     };
-
-    // Archives a task by removing it from the backlog and updating the rendered tasks.
-    const archiveTask = async (task: Task) => {
-        if (!task.Task_ID || !localBacklog || !localBacklog.Backlog_ID) return
-
-        await removeTask(task.Task_ID, task.Backlog_ID, undefined)
-
-        const theTasks = await readTasksByBacklogId(localBacklog.Backlog_ID, undefined, true)
-        if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
-
-        if (theTasks && theTasks.length) setRenderTasks(theTasks)
-    }
 
     // Handles the change event for a checkbox input, updating the selected task IDs and URL parameters.
     const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,30 +260,18 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
     };
 
     // ---- Effects ----
-    // Fetch and set backlog and tasks when backlogId changes
+    // Set Status ID for new task row, when localBacklog changes
     useEffect(() => {
-        const fetchBacklog = async () => {
-            if (backlogId) {
-                const theBacklog = await readBacklogById(backlogId, true)
-                if (theBacklog) {
-                    setLocalBacklog(theBacklog)
+        if (!localBacklog) return;
 
-                    const firstStatus: Status | undefined = theBacklog.statuses?.
-                        // Status_Order low to high:
-                        sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
-                    handleChangeLocalNewTask("Status_ID", (firstStatus?.Status_ID ?? "").toString());
+        const firstStatus = localBacklog.statuses?.[0];
+        handleChangeLocalNewTask(
+            "Status_ID",
+            (firstStatus?.Status_ID ?? "").toString()
+        );
+    }, [localBacklog]);
 
-                    const theTasks = await readTasksByBacklogId(backlogId, undefined, true)
-                    if (theTasks && theTasks.length == 0 && renderTasks) setRenderTasks(undefined)
-
-                    if (theTasks && theTasks.length && !renderTasks) setRenderTasks(theTasks)
-                }
-            }
-        }
-        fetchBacklog()
-    }, [backlogId])
-
-    // Get user IDs from URL
+    // Get task IDs from URL
     useEffect(() => {
         if (urlTaskIds) {
             // If userIds exist in the URL, use them
@@ -251,31 +304,39 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
 
     // Sorting logic based on URL query parameters
     const sortedTasks = useMemo(() => {
-        console.log("renderTasks sortedTasks = ")
-        if (!Array.isArray(renderTasks)) return []; // Ensure tasks is an array
+        if (!Array.isArray(renderTasks)) return [];
 
-        let arrayToSort: Task[] = renderTasks
+        let arrayToSort: Task[] = renderTasks;
 
         if (urlTaskBulkFocus && urlTaskIds) {
-            const taskIdsBulkFocus: string[] = urlTaskIds.split(",")
-
-            arrayToSort = arrayToSort.filter(task => taskIdsBulkFocus.includes(task.Task_ID!.toString()))
+            const taskIdsBulkFocus: string[] = urlTaskIds.split(",");
+            arrayToSort = arrayToSort.filter(task => taskIdsBulkFocus.includes(task.Task_ID!.toString()));
         }
 
-        const sortField = SORT_KEYS[Number(currentSort)] || DEFAULT_SORT_KEY; // Convert number to field name
+        const sortField = SORT_KEYS[Number(currentSort)] || DEFAULT_SORT_KEY;
 
-        return [...arrayToSort].sort((a, b) => {
+        // Separate tasks with Task_ID === 0 from the rest
+        const optimisticTasks = arrayToSort.filter(task => task.Task_ID === 0);
+        const normalTasks = arrayToSort.filter(task => task.Task_ID !== 0);
+
+        // Sort normal tasks
+        const sortedNormalTasks = [...normalTasks].sort((a, b) => {
             const aValue = a[sortField] ?? "";
             const bValue = b[sortField] ?? "";
 
             if (typeof aValue === "string" && typeof bValue === "string") {
-                return currentOrder === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                return currentOrder === "asc"
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
             } else if (typeof aValue === "number" && typeof bValue === "number") {
                 return currentOrder === "asc" ? aValue - bValue : bValue - aValue;
             }
             return 0;
         });
-    }, [renderTasks, currentSort, currentOrder, urlTaskBulkFocus, urlTaskIds]);
+
+        // Place optimistic tasks at the top
+        return [...optimisticTasks, ...sortedNormalTasks];
+    }, [localBacklog, renderTasks, currentSort, currentOrder, urlTaskBulkFocus, urlTaskIds]);
 
     // ---- Render ----
     return (
@@ -284,6 +345,7 @@ export const BacklogWithSiblings: React.FC<BacklogWithSiblingsProps> = ({
                 <Block>
                     <BacklogSiblingsHeader
                         localBacklog={localBacklog}
+                        numberOfTasks={sortedTasks.length}
                         convertID_NameStringToURLFormat={convertID_NameStringToURLFormat}
                     />
 

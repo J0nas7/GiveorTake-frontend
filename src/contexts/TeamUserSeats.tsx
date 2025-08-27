@@ -17,7 +17,7 @@ export type TeamUserSeatsContextType = {
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     setTeamUserSeatDetail: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
     handleChangeNewTeamUserSeat: (field: TeamUserSeatFields, value: string) => Promise<void>
-    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<void>
+    addTeamUserSeat: (parentId: number, object?: TeamUserSeat) => Promise<false | TeamUserSeat>
     saveTeamUserSeatChanges: (teamUserSeatChanges: TeamUserSeat, parentId: number) => Promise<boolean>
     removeTeamUserSeat: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     rolesAndPermissionsByTeamId: Role[] | undefined

@@ -21,7 +21,10 @@ export const BacklogSiblingsTaskTableBody: React.FC<BacklogSiblingsTaskTableBody
             const status = props.localBacklog.statuses?.find(s => s.Status_ID === task.Status_ID);
             const assignee = props.localBacklog.project?.team?.user_seats?.find(u => u.User_ID === task.Assigned_User_ID)?.user;
             return (
-                <tr key={task.Task_ID}>
+                <tr
+                    key={task.Task_ID}
+                    className={task.Task_ID === 0 ? "text-gray-400" : ""}
+                >
                     <td>
                         <input
                             type="checkbox"
