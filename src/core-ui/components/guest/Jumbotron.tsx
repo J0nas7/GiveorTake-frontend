@@ -1,20 +1,22 @@
 // External
 import { CSSProperties } from 'react'
-import Image from 'next/image'
 
 // Internal
 import { Block } from "@/components"
 
 export const Jumbotron = () => {
-    const random1to4 = Math.floor(Math.random() * (4 - 1 + 1) + 1)
-    const requireImg = "/app-" + random1to4 + ".jpeg"
+    const numberOfImages = 8
+    const randomImage = Math.floor(Math.random() * (numberOfImages - 1 + 1) + 1)
+    const requireImg = "/signin/signin-" + randomImage + ".jpg"
 
     const jumbotronCSS: CSSProperties = {
-        backgroundImage: `url('${requireImg}')`
+        height: '100vh',
+        backgroundImage: `url('${requireImg}')`,
+        backgroundPosition: 'center',
+        backgroundSize: 'contain'
     }
 
     return (
-        <Block className="jumbotron-wrapper" style={jumbotronCSS}>
-        </Block>
+        <Block className="jumbotron-wrapper" style={jumbotronCSS} />
     )
 }

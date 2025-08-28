@@ -3,13 +3,14 @@
 // External
 import { faPaperPlane, faPencil, faReply, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
 // Internal
 import { Card } from '@/components/task/taskdetails/TaskCard';
 import { Block, Text } from '@/components/ui/block-text';
 import { useTaskCommentsContext, useTasksContext } from '@/contexts';
-import { LoadingState } from '@/core-ui/components/LoadingState';
+import { LoadingButton, LoadingState } from '@/core-ui/components/LoadingState';
 import { CreatedAtToTimeSince } from '@/core-ui/components/TaskTimeTrackPlayer';
 import styles from "@/core-ui/styles/modules/TaskDetail.module.scss";
 import { selectAuthUser, useTypedSelector } from '@/redux';
@@ -32,43 +33,113 @@ const loadQuill = async () => {
 };
 
 export const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { addTaskComment, saveTaskCommentChanges, removeTaskComment } = useTaskCommentsContext();
+    // ---- Hooks ----
+    const { addTaskComment, readTaskCommentsByTaskId, saveTaskCommentChanges, removeTaskComment } = useTaskCommentsContext();
     const { readTasksByBacklogId, readTaskByKeys } = useTasksContext()
     const authUser = useTypedSelector(selectAuthUser)
+    const queryClient = useQueryClient()
 
+    // ---- Tanstack Query ----
+    // Fetch comments by taskId
+    const { data: renderComments } = useQuery<TaskComment[] | undefined>({
+        queryKey: ["taskComments", task.Task_ID],
+        queryFn: () => task.Task_ID ?
+            readTaskCommentsByTaskId(task.Task_ID, undefined, true) : Promise.resolve(null),
+        enabled: !!task.Task_ID,
+        select: (comments: TaskComment[] | undefined) => comments ?? [], // fallback for null
+    });
+
+    useEffect(() => {
+        console.log("renderComments updated", renderComments)
+    }, [renderComments])
+
+    // ---- State ----
     const [createComment, setCreateComment] = useState<string>("");
     const [editComment, setEditComment] = useState<string>("");
     const [isCreateCommentVisible, setIsCreateCommentVisible] = useState<boolean>(false);
     const [isEditCommentVisible, setIsEditCommentVisible] = useState<TaskComment | undefined>(undefined);
     const [isAnsweringCommentVisible, setIsAnsweringCommentVisible] = useState<TaskComment | undefined>(undefined);
 
-    const handleAddComment = async () => {
-        if (!authUser) return
+    // Add new comment with optimistic update
+    const { mutate: doAddComment, isPending: addCommentPending } = useMutation({
+        mutationFn: async (newComment: TaskComment) => {
+            return addTaskComment(newComment.Task_ID, newComment);
+        },
+        // Optimistic update
+        onMutate: async (newComment: TaskComment) => {
+            if (!task?.Task_ID) return;
 
-        if (createComment.trim() && authUser.User_ID) {
-            const theNewComment: TaskComment = {
-                Task_ID: task.Task_ID ?? 0,
-                User_ID: authUser.User_ID,
-                Comment_Text: createComment.trim()
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ["taskComments", task.Task_ID] });
+
+            // Snapshot previous comments
+            const previousComments = queryClient.getQueryData<TaskComment[]>([
+                "taskComments",
+                task.Task_ID,
+            ]);
+
+            // Create optimistic comment with a temporary ID
+            const optimisticComment: TaskComment = {
+                ...newComment,
+                Comment_ID: 0, // fake client-side ID
+                user: authUser, // if you show user info in UI
+            };
+
+            // Optimistically update cache
+            queryClient.setQueryData<TaskComment[]>(
+                ["taskComments", task.Task_ID],
+                old => (Array.isArray(old) ? [...old, optimisticComment] : [optimisticComment])
+            );
+
+            // Return rollback context
+            return { previousComments };
+        },
+        // Rollback on error
+        onError: (err, newComment, context) => {
+            if (task?.Task_ID && context?.previousComments) {
+                queryClient.setQueryData(
+                    ["taskComments", task.Task_ID],
+                    context.previousComments
+                );
             }
+        },
+        // After mutation: refetch to sync with server
+        onSettled: async () => {
+            if (!task?.Task_ID) return;
 
-            if (isAnsweringCommentVisible) {
-                theNewComment.Parent_Comment_ID = isAnsweringCommentVisible.Comment_ID;
-            }
-
-            console.log("theNewComment", theNewComment)
-            await addTaskComment(theNewComment.Task_ID, theNewComment)
-
+            await queryClient.invalidateQueries({
+                queryKey: ["taskComments", task.Task_ID],
+            });
+        },
+        // Success cleanup (clear input, close UI, etc.)
+        onSuccess: () => {
             setCreateComment("");
-            setIsCreateCommentVisible(false)
-            setIsAnsweringCommentVisible(undefined)
+            setIsCreateCommentVisible(false);
+            setIsAnsweringCommentVisible(undefined);
 
             //// Task changed
-            if (task) {
+            /*if (task) {
                 if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true)
                 if (task.Task_Key && task.backlog?.project?.Project_Key) await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString())
-            }
-        }
+            }*/
+        },
+    });
+
+    // Handler just calls mutate
+    const handleAddComment = () => {
+        if (!authUser || !authUser.User_ID || !task?.Task_ID) return;
+        if (!createComment.trim()) return;
+
+        const newComment: TaskComment = {
+            Task_ID: task.Task_ID,
+            User_ID: authUser.User_ID,
+            Comment_Text: createComment.trim(),
+            ...(isAnsweringCommentVisible && {
+                Parent_Comment_ID: isAnsweringCommentVisible.Comment_ID,
+            }),
+        };
+
+        doAddComment(newComment);
     }
 
     // Handle new comment cancel
@@ -205,10 +276,11 @@ export const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
             setIsEditCommentVisible={setIsEditCommentVisible}
             isAnsweringCommentVisible={isAnsweringCommentVisible}
             setIsAnsweringCommentVisible={setIsAnsweringCommentVisible}
-            task={task}
+            renderComments={renderComments}
             authUser={authUser}
             addTaskComment={addTaskComment}
             handleAddComment={handleAddComment}
+            addCommentPending={addCommentPending}
             handleCommentCancel={handleCommentCancel}
             handleEditComment={handleEditComment}
             handleEditCommentCancel={handleEditCommentCancel}
@@ -229,10 +301,11 @@ interface CommentsAreaViewProps {
     setIsEditCommentVisible: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
     isAnsweringCommentVisible: TaskComment | undefined
     setIsAnsweringCommentVisible: React.Dispatch<React.SetStateAction<TaskComment | undefined>>
-    task: Task;
+    renderComments: TaskComment[] | undefined
     authUser: User | undefined
     addTaskComment: (taskId: number, comment?: TaskComment) => Promise<false | TaskComment>
-    handleAddComment: () => Promise<void>
+    handleAddComment: () => void
+    addCommentPending: boolean
     handleCommentCancel: () => void
     handleEditComment: () => Promise<void>
     handleEditCommentCancel: () => void
@@ -260,10 +333,11 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
     setIsEditCommentVisible,
     isAnsweringCommentVisible,
     setIsAnsweringCommentVisible,
-    task,
+    renderComments,
     authUser,
     addTaskComment,
     handleAddComment,
+    addCommentPending,
     handleCommentCancel,
     handleEditComment,
     handleEditCommentCancel,
@@ -273,14 +347,14 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
     <Card className={styles.commentsSection}>
         <Block className="flex gap-2 items-center">
             <h2>Comments</h2>
-            <Text className="text-xs">({task.comments?.length})</Text>
+            <Text className="text-xs">({renderComments?.length ?? 0})</Text>
         </Block>
         {isEditCommentVisible ? (
             <Block className={styles.commentEditor}>
                 <ReactQuill
                     value={editComment}
                     onChange={setEditComment}
-                    placeholder="Write a comment..."
+                    placeholder="Edit your comment..."
                     className={styles.commentInput}
                     theme="snow"
                     modules={quillModule}
@@ -314,8 +388,16 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                             modules={quillModule}
                         />
                         <Block className={styles.newCommentActions}>
-                            <button className={styles.sendButton} onClick={handleAddComment}>
-                                <FontAwesomeIcon icon={faPaperPlane} />
+                            <button
+                                className={styles.sendButton}
+                                onClick={handleAddComment}
+                                disabled={addCommentPending}
+                            >
+                                {addCommentPending ? (
+                                    <LoadingButton />
+                                ) : (
+                                    <FontAwesomeIcon icon={faPaperPlane} />
+                                )}
                             </button>
                             <button className={styles.cancelButton} onClick={handleCommentCancel}>
                                 Cancel
@@ -325,9 +407,9 @@ export const CommentsAreaView: React.FC<CommentsAreaViewProps> = ({
                 )}
             </>
         )}
-        {task.comments?.filter(comment => !comment.Parent_Comment_ID).map((comment: TaskComment, index) => (
+        {Array.isArray(renderComments) && renderComments?.filter(comment => !comment.Parent_Comment_ID).map((comment: TaskComment, index) => (
             <CommentItem
-                key={index}
+                key={comment.Comment_ID}
                 comment={comment}
                 setCreateComment={setCreateComment}
                 setEditComment={setEditComment}
@@ -368,6 +450,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 const result = await readCommentById(comment.Comment_ID, true)
 
                 if (result) setTheComment(result)
+            } else if (comment.Comment_ID === 0) {
+                setTheComment(comment)
             }
         }
         readComment()
@@ -384,32 +468,36 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                         />
                         <Block className={styles.commentMeta}>
                             <Block>
-                                <Block>
-                                    Created:{" "}
-                                    {theComment.Comment_CreatedAt && (
+                                <Block className="flex gap-1 items-center">
+                                    <>({theComment.Comment_ID}) Created:{" "}</>
+                                    {theComment.Comment_ID && theComment.Comment_ID > 0 && theComment.Comment_CreatedAt ? (
                                         <CreatedAtToTimeSince dateCreatedAt={theComment.Comment_CreatedAt} />
+                                    ) : (
+                                        <LoadingButton />
                                     )}
                                 </Block>
                                 <Block>
                                     By: {theComment.user?.User_FirstName} {theComment.user?.User_Surname}
                                 </Block>
                             </Block>
-                            <Block className={styles.commentActions}>
-                                <FontAwesomeIcon icon={faReply} className={styles.icon} onClick={() => {
-                                    setCreateComment("");
-                                    setIsAnsweringCommentVisible(theComment);
-                                }} />
-                                <FontAwesomeIcon icon={faPencil} className={styles.icon} onClick={() => {
-                                    setEditComment(theComment.Comment_Text || "");
-                                    setIsEditCommentVisible(theComment);
-                                }} />
-                                <button
-                                    className={styles.mediaActions}
-                                    onClick={() => handleDeleteComment(theComment)}
-                                >
-                                    <FontAwesomeIcon icon={faTrashCan} className={styles.icon} />
-                                </button>
-                            </Block>
+                            {Boolean(theComment.Comment_ID && theComment.Comment_ID > 0) && (
+                                <Block className={styles.commentActions}>
+                                    <FontAwesomeIcon icon={faReply} className={styles.icon} onClick={() => {
+                                        setCreateComment("");
+                                        setIsAnsweringCommentVisible(theComment);
+                                    }} />
+                                    <FontAwesomeIcon icon={faPencil} className={styles.icon} onClick={() => {
+                                        setEditComment(theComment.Comment_Text || "");
+                                        setIsEditCommentVisible(theComment);
+                                    }} />
+                                    <button
+                                        className={styles.mediaActions}
+                                        onClick={() => handleDeleteComment(theComment)}
+                                    >
+                                        <FontAwesomeIcon icon={faTrashCan} className={styles.icon} />
+                                    </button>
+                                </Block>
+                            )}
                         </Block>
                     </Block>
                     {Array.isArray(theComment.children_comments) && theComment.children_comments.length > 0 && (

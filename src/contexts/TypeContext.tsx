@@ -18,6 +18,7 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
 
     const readItemsById = async (parentId: number, refresh?: boolean | undefined, reply?: boolean) => {
+        console.log("mutation query")
         if (refresh) setItemsById([])
 
         const data = await fetchItemsByParent(parentId) // Fetch all items by parentId

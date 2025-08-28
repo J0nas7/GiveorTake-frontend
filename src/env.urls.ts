@@ -15,7 +15,7 @@ const prod = {
 const dev = {
     url: {
         APP_URL: "http://localhost:3000",
-        API_URL: "http://localhost:8000",
+        API_URL: "http://localhost:8080",
         // API_URL: "http://192.168.50.132:8000",
         // API_URL: "http://192.168.0.139:8000",
         // API_URL: "https://nsgiveortakelaravelb2kbaxb8x-container-giveortake-laravel-backe.functions.fnc.fr-par.scw.cloud",
