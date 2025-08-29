@@ -5,7 +5,7 @@ import { CSSProperties } from 'react'
 import { Block } from "@/components"
 
 export const Jumbotron = () => {
-    const numberOfImages = 8
+    const numberOfImages = 10
     const randomImage = Math.floor(Math.random() * (numberOfImages - 1 + 1) + 1)
     const requireImg = "/signin/signin-" + randomImage + ".jpg"
 
