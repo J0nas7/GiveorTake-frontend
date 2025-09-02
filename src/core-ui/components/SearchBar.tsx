@@ -104,7 +104,7 @@ const SearchBar = () => {
 
         setLoading(true);
         try {
-            const data = await httpGetRequest(`search/${authUser.User_ID}/${query}`);
+            const data = await httpGetRequest(`search/${query}`);
             console.log("Search results:", data);
 
             if (data) {

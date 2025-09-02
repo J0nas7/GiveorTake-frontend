@@ -67,6 +67,11 @@ export const useAxios = () => {
             // dataToSend = { postContent: JSON.stringify(postContent) };
         }
 
+        if (process.env.NODE_ENV === 'development') {
+            // Inline delay using setTimeout
+            await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
+        }
+
         try {
             if (actionType === "get") {
                 // Perform a HTTP GET request
